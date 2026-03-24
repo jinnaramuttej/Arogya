@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Clock, CheckCircle, Star } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import GlassCard from "@/components/ui/GlassCard";
 import { useLanguage } from "@/lib/i18n/context";
 import { t } from "@/lib/i18n/translations";
@@ -52,6 +53,18 @@ export default function BookPage() {
   const [booked, setBooked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+
+  /* Auto-select doctor when coming from /symptom with ?specialty= */
+  useEffect(() => {
+    const specialty = searchParams.get("specialty");
+    if (specialty) {
+      const match = doctors.find(
+        (d) => d.specialty.toLowerCase() === specialty.toLowerCase()
+      );
+      if (match) setSelectedDoctor(match.id);
+    }
+  }, [searchParams]);
 
   const handleBook = async () => {
     if (!selectedDoctor || !selectedSlot) return;

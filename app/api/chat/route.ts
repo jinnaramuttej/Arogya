@@ -4,52 +4,58 @@ export const maxDuration = 30;
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const SYSTEM_PROMPT = `You are Arogya, an intelligent healthcare assistant.
-Your goal is to help users understand their symptoms.
-First, ask 1 or 2 follow-up questions to gather more specific details.
-Then provide a structured response with:
-1. Possible conditions (brief list)
-2. Urgency level (Low / Medium / High)
-3. Next action (e.g., Book an appointment, Go to Emergency)
-4. Disclaimer: "This is an AI analysis, not professional medical advice."
-Keep responses concise and compassionate.`;
+const SYSTEM_PROMPT = `You are a medical assistant for Arogya, a healthcare app in India.
+The user will provide symptoms, age, gender, duration, and severity.
+
+Respond ONLY with a valid JSON object in this exact structure:
+{
+  "emergency": boolean,
+  "conditions": [
+    {
+      "name": "Disease name",
+      "probability": "High | Medium | Low",
+      "description": "One sentence explanation",
+      "doctor_type": "e.g. Cardiologist, General Physician",
+      "action": "home | book | emergency"
+    }
+  ],
+  "immediate_warning": "string or null",
+  "general_advice": "One sentence of general advice",
+  "disclaimer": "This analysis is for preliminary guidance only and not a substitute for professional medical advice."
+}
+
+Return 2-3 conditions maximum. Be conservative — when in doubt mark higher risk.
+If any symptom suggests cardiac, respiratory, or neurological emergency, set emergency: true.
+Do NOT wrap the JSON in markdown code fences. Return ONLY the raw JSON object.`;
+
+interface SymptomInput {
+  symptom: string;
+  age: number;
+  gender: string;
+  duration: string;
+  severity: string;
+}
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  const body: SymptomInput = await req.json();
 
-  // Filter to only valid Anthropic message roles
-  const anthropicMessages = (messages as Array<{ role: string; content: string }>)
-    .filter((m) => m.role === "user" || m.role === "assistant")
-    .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+  const userMessage = `Symptoms: ${body.symptom}
+Age: ${body.age}
+Gender: ${body.gender}
+Duration: ${body.duration}
+Severity: ${body.severity}`;
 
-  const stream = await client.messages.stream({
-    model: "claude-3-5-haiku-20241022",
+  const message = await client.messages.create({
+    model: "claude-haiku-4-5-20251001",
     max_tokens: 1024,
     system: SYSTEM_PROMPT,
-    messages: anthropicMessages,
+    messages: [{ role: "user", content: userMessage }],
   });
 
-  // Return as a native ReadableStream (text/event-stream) that useChat can consume
-  const readable = new ReadableStream({
-    async start(controller) {
-      for await (const chunk of stream) {
-        if (
-          chunk.type === "content_block_delta" &&
-          chunk.delta.type === "text_delta"
-        ) {
-          const data = `0:${JSON.stringify(chunk.delta.text)}\n`;
-          controller.enqueue(new TextEncoder().encode(data));
-        }
-      }
-      controller.enqueue(new TextEncoder().encode("0:\"\"\n"));
-      controller.close();
-    },
-  });
+  const textBlock = message.content.find((block) => block.type === "text");
+  const text = textBlock && "text" in textBlock ? textBlock.text : "";
 
-  return new Response(readable, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Vercel-AI-Data-Stream": "v1",
-    },
+  return new Response(text, {
+    headers: { "Content-Type": "application/json" },
   });
 }
