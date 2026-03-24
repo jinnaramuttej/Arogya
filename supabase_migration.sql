@@ -178,3 +178,22 @@ create policy "Users can upload reports"
 create policy "Reports are publicly readable"
   on storage.objects for select
   using (bucket_id = 'reports');
+
+-- ── 10. user_prescriptions (E-Commerce Store Orders) ──
+create table if not exists public.user_prescriptions (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    medication_name TEXT NOT NULL,
+    dosage TEXT,
+    price NUMERIC NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'pending',
+    ordered_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+alter table public.user_prescriptions enable row level security;
+
+create policy "Users can view own prescriptions"
+  on public.user_prescriptions for select using (auth.uid() = user_id);
+
+create policy "Users can insert own prescriptions"
+  on public.user_prescriptions for insert with check (auth.uid() = user_id);

@@ -6,6 +6,8 @@ import { ChevronDown, Activity, Menu, ShoppingCart, X, Languages } from "lucide-
 import { useCart } from "@/lib/cart";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import { translations, Language } from "@/lib/i18n/translations";
+import { useUser } from "@/lib/hooks/useUser";
+import { createClient } from "@/lib/supabase/client";
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -13,6 +15,7 @@ const Navbar = () => {
   const [userName, setUserName] = useState<string | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
   const { count } = useCart();
+  const { user, loading: userLoading } = useUser();
   const [theme, setTheme] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
@@ -29,16 +32,24 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
-    const syncUser = () => {
-      const stored = localStorage.getItem("az_user_name");
-      const isLogged = localStorage.getItem("az_logged_in") === "true";
-      setUserName(stored);
-      setLoggedIn(isLogged);
-    };
-    syncUser();
-    window.addEventListener("storage", syncUser);
-    return () => window.removeEventListener("storage", syncUser);
-  }, []);
+    if (!userLoading) {
+      if (user) {
+        setLoggedIn(true);
+        const name = user.user_metadata?.full_name || user.user_metadata?.name;
+        if (name) {
+          setUserName(name);
+        } else {
+          setUserName(localStorage.getItem("az_user_name"));
+        }
+      } else {
+        setLoggedIn(false);
+        setUserName(null);
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("az_logged_in");
+        }
+      }
+    }
+  }, [user, userLoading]);
 
   useEffect(() => {
     if (theme === "dark") {
@@ -226,16 +237,28 @@ const Navbar = () => {
             </label>
 
           {firstName ? (
-            <span className={`hidden lg:inline-flex text-sm font-semibold ${navText}`}>
-              Hi, {firstName}
-            </span>
+            <div className="hidden lg:flex items-center gap-4">
+              <span className={`text-sm font-semibold ${navText}`}>
+                Hi, {firstName}
+              </span>
+              <button 
+                onClick={async () => {
+                   const supabase = createClient();
+                   await supabase.auth.signOut();
+                   window.location.href = "/";
+                }}
+                className={`text-sm font-bold transition-colors ${navMuted} ${navHover}`}
+              >
+                Sign Out
+              </button>
+            </div>
           ) : (
-            <Link href="/login" className={`hidden lg:inline-flex text-sm font-bold transition-colors ${navMuted} ${navHover}`}>
+            <Link href="/auth" className={`hidden lg:inline-flex text-sm font-bold transition-colors ${navMuted} ${navHover}`}>
               Login
             </Link>
           )}
             {!loggedIn && (
-              <Link href="/login" className="btn-orange hidden md:flex items-center shadow-orange-500/20">
+              <Link href="/auth" className="btn-orange hidden md:flex items-center shadow-orange-500/20">
                 Get Started
               </Link>
             )}
@@ -314,13 +337,26 @@ const Navbar = () => {
                     transition={{ delay: 0.4 }}
                     className="w-full mt-4"
                   >
-                    <Link
-                      href="/login"
-                      onClick={() => setMobileOpen(false)}
-                      className="btn-orange w-full block text-center py-4 rounded-3xl"
-                    >
-                      Get Started
-                    </Link>
+                    {!loggedIn ? (
+                      <Link
+                        href="/auth"
+                        onClick={() => setMobileOpen(false)}
+                        className="btn-orange w-full block text-center py-4 rounded-3xl"
+                      >
+                        Get Started
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={async () => {
+                          const supabase = createClient();
+                          await supabase.auth.signOut();
+                          window.location.href = "/";
+                        }}
+                        className="btn-orange w-full block text-center py-4 rounded-3xl bg-destructive text-white"
+                      >
+                        Sign Out
+                      </button>
+                    )}
                   </motion.div>
                 </div>
               </motion.div>

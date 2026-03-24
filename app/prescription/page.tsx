@@ -1,115 +1,182 @@
 "use client";
 
-import { FileUp, ShieldCheck, ShoppingBag, Sparkles } from "lucide-react";
-import { useCart } from "@/lib/cart";
-import { toast } from "@/components/ui/sonner";
+import { useState, useMemo } from "react";
+import { Search, ShoppingCart, Filter, Tag, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
+import { useUser } from "@/lib/hooks/useUser";
+import { useRouter } from "next/navigation";
 
-const recommendations = [
-  { id: "metformin-xr", name: "Metformin XR 500 mg", note: "30 tablets • Rx", price: 420 },
-  { id: "glucose-strips", name: "Blood Glucose Strips", note: "50 strips • Device", price: 699 },
-  { id: "vitamin-d3", name: "Vitamin D3 1000 IU", note: "60 caps • OTC", price: 399 }
+const products = [
+  { id: "bp-1", name: "Omron Blood Pressure Monitor", category: "Devices", dosage: "N/A", price: 2499, img: "/images/products/bp_monitor.png" },
+  { id: "el-2", name: "Electrolytes Powder", category: "Supplements", dosage: "1 Sachet/day", price: 350, img: "/images/products/electrolytes.png" },
+  { id: "fa-3", name: "Comprehensive First Aid Kit", category: "Devices", dosage: "N/A", price: 1200, img: "/images/products/first_aid_kit.png" },
+  { id: "in-4", name: "Insulin Glargine Pen", category: "Prescription", dosage: "As prescribed", price: 850, img: "/images/products/insulin.png" },
+  { id: "me-5", name: "Metformin XR 500mg", category: "Prescription", dosage: "500mg tablet", price: 120, img: "/images/products/metformin.png" },
+  { id: "pa-6", name: "Lidocaine Pain Relief Patch", category: "Supplements", dosage: "1 patch/12 hrs", price: 450, img: "/images/products/pain_patch.png" },
+  { id: "sy-7", name: "Sterile Insulin Syringes", category: "Devices", dosage: "N/A", price: 299, img: "/images/products/syringes.png" },
+  { id: "vd-8", name: "Vitamin D3 60K IU", category: "Supplements", dosage: "1 cap/week", price: 180, img: "/images/products/vitamin_d3.png" }
 ];
 
 const EPrescription = () => {
-  const { addItem } = useCart();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [purchasing, setPurchasing] = useState<string | null>(null);
+  
+  const { user } = useUser();
+  const supabase = createClient();
+  const router = useRouter();
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCat = activeCategory === "All" || p.category === activeCategory;
+      return matchesSearch && matchesCat;
+    });
+  }, [searchQuery, activeCategory]);
+
+  const handleBuy = async (product: typeof products[0]) => {
+    if (!user) {
+      toast.error("Please log in to make a purchase.");
+      router.push("/auth");
+      return;
+    }
+    setPurchasing(product.id);
+    
+    const { error } = await supabase.from('user_prescriptions').insert([{
+      user_id: user.id,
+      medication_name: product.name,
+      dosage: product.dosage,
+      price: product.price,
+      status: 'pending'
+    }]);
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success(`${product.name} ordered! Check your dashboard.`);
+    }
+    setPurchasing(null);
+  };
+
+  const categories = ["All", "Prescription", "Supplements", "Devices"];
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-<main className="pt-28 pb-24">
-      <section className="container mx-auto px-6">
-        <div className="rounded-[2.5rem] border border-border/60 bg-gradient-to-br from-card via-background to-card/70 p-8 md:p-12 shadow-xl shadow-primary/5 relative overflow-hidden">
-          <div className="absolute -top-24 right-0 h-64 w-64 rounded-full bg-primary/10 blur-[100px]" />
-          <div className="absolute -bottom-20 left-10 h-64 w-64 rounded-full bg-secondary/10 blur-[110px]" />
-          <div className="relative z-10 grid lg:grid-cols-[1.05fr_0.95fr] gap-10 items-center">
+      <main className="pt-28 pb-24">
+        {/* Header Section */}
+        <section className="container mx-auto px-6 mb-12">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-border/40 pb-8">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
-                <Sparkles className="w-4 h-4" />
-                E-Prescription Assistant
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary mb-4">
+                <ShoppingCart className="w-4 h-4" />
+                Arogya E-Pharmacy
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold mt-6 leading-tight">
-                Upload your prescription and get a personalized summary + product list.
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+                Authentic Medicines <br className="hidden md:block"/> Delivered Fast.
               </h1>
               <p className="text-lg text-muted-foreground mt-4 max-w-xl">
-                Our AI extracts medicines, dosage, and care notes, then recommends verified products you can
-                purchase instantly.
+                Order prescriptions, medical devices, and health supplements securely with AI-verified routing.
               </p>
-
-              <div className="mt-6 flex flex-wrap gap-4 text-sm">
-                <div className="flex items-center gap-2 rounded-full border border-border/60 bg-card/70 px-4 py-2">
-                  <ShieldCheck className="w-4 h-4 text-primary" />
-                  Prescription-safe review
-                </div>
-                <div className="flex items-center gap-2 rounded-full border border-border/60 bg-card/70 px-4 py-2">
-                  <ShoppingBag className="w-4 h-4 text-primary" />
-                  Add to cart in one click
-                </div>
+            </div>
+            
+            {/* Search and Filter */}
+            <div className="w-full md:w-auto space-y-4">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <input 
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full md:w-80 rounded-2xl border border-border/60 bg-card/50 px-12 py-3 text-sm focus:border-primary/50 focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {categories.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className={`px-4 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                      activeCategory === cat 
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
+                      : "bg-card/50 border border-border/50 text-muted-foreground hover:bg-card"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
               </div>
             </div>
-
-            <div className="rounded-[2rem] border border-border/60 bg-card/80 p-6 shadow-lg shadow-primary/5">
-              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Upload Prescription</p>
-              <label className="mt-4 flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/70 bg-background/70 px-6 py-8 text-center cursor-pointer hover:border-primary/40 transition">
-                <FileUp className="w-6 h-6 text-primary" />
-                <span className="mt-3 text-sm font-semibold">Drop PDF or image here</span>
-                <span className="text-xs text-muted-foreground mt-1">Max 10 MB • JPG, PNG, PDF</span>
-                <input type="file" className="hidden" />
-              </label>
-              <button className="mt-5 w-full rounded-xl bg-primary text-primary-foreground py-2 text-sm font-semibold">
-                Analyze prescription
-              </button>
-              <p className="text-[11px] text-muted-foreground mt-3">
-                This is demo-only. No files are uploaded.
-              </p>
-            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="container mx-auto px-6 mt-14">
-        <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-8">
-          <div className="rounded-3xl border border-border/60 bg-card/80 p-7 shadow-lg shadow-primary/5">
-            <h2 className="text-2xl font-semibold">AI Summary</h2>
-            <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
-              Demo summary: Patient with Type 2 Diabetes and mild hypertension. Prescription includes Metformin XR 500 mg
-              daily after breakfast, Vitamin D3 supplementation, and a follow-up lab panel in 6 weeks. Suggested focus
-              on hydration and post-meal walks.
-            </p>
-            <div className="mt-5 rounded-2xl border border-border/60 bg-background/70 p-4 text-sm">
-              Key instructions: Monitor fasting glucose, avoid excess sodium, and log daily steps.
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-border/60 bg-card/80 p-7 shadow-lg shadow-primary/5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold">Recommended Products</h2>
-              <button className="text-sm font-semibold text-primary hover:underline">View all</button>
-            </div>
-            <div className="mt-5 space-y-4">
-              {recommendations.map((item) => (
-                <div key={item.name} className="rounded-2xl border border-border/60 bg-background/70 p-4 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="font-semibold">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">{item.note}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold">₹{item.price}</p>
+        {/* Product Grid */}
+        <section className="container mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filteredProducts.map(product => (
+              <div 
+                key={product.id} 
+                className="group relative flex flex-col rounded-[2rem] border border-border/50 bg-card/30 p-4 transition-all hover:bg-card/80 hover:shadow-xl hover:-translate-y-1"
+              >
+                <div className="absolute top-6 left-6 z-10">
+                  <span className="inline-flex items-center gap-1.5 rounded-lg bg-background/80 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground shadow-sm">
+                    <Tag className="w-3 h-3" />
+                    {product.category}
+                  </span>
+                </div>
+                
+                <div className="relative aspect-square w-full overflow-hidden rounded-3xl bg-white mb-4 p-6 flex items-center justify-center border border-black/5">
+                  <img 
+                    src={product.img} 
+                    alt={product.name}
+                    className="object-contain w-full h-full transition-transform duration-500 group-hover:scale-110"
+                  />
+                </div>
+                
+                <div className="flex flex-col flex-grow px-2">
+                  <h3 className="font-semibold text-lg leading-tight mb-1 group-hover:text-primary transition-colors">
+                    {product.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {product.dosage}
+                  </p>
+                  
+                  <div className="mt-auto flex items-center justify-between">
+                    <p className="text-xl font-bold tracking-tight">
+                      ₹{product.price}
+                    </p>
                     <button
-                      className="mt-2 rounded-xl border border-border/60 bg-card/70 px-3 py-2 text-xs font-semibold hover:bg-primary hover:text-primary-foreground transition"
-                      onClick={() => {
-                        addItem({ id: item.id, name: item.name, price: item.price, note: item.note });
-                        toast(`${item.name} added to cart`);
-                      }}
+                      onClick={() => handleBuy(product)}
+                      disabled={purchasing === product.id}
+                      className="rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white px-4 py-2 text-sm font-semibold transition-all disabled:opacity-50 disabled:pointer-events-none"
                     >
-                      Add
+                      {purchasing === product.id ? "Processing..." : "Buy Now"}
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-        </div>
-      </section>
-    </main>
-</div>
+          
+          {filteredProducts.length === 0 && (
+            <div className="text-center py-20 flex flex-col items-center">
+              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4 text-muted-foreground">
+                <Search className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">No products found</h3>
+              <p className="text-muted-foreground max-w-sm">We couldn't find anything matching "{searchQuery}" in {activeCategory}.</p>
+              <button 
+                onClick={() => { setSearchQuery(""); setActiveCategory("All"); }}
+                className="mt-6 text-primary font-semibold hover:underline"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
+        </section>
+      </main>
+    </div>
   );
 };
 

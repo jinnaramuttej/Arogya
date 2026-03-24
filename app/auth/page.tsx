@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { useUser } from "@/lib/hooks/useUser";
+import { toast } from "sonner";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,7 +19,15 @@ const Login = () => {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [signupErrors, setSignupErrors] = useState<{ name?: string; email?: string; password?: string; confirm?: string }>({});
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const supabase = createClient();
+  const { user, loading: userLoading } = useUser();
 
+  useEffect(() => {
+    if (user && !userLoading) {
+      router.push("/dashboard");
+    }
+  }, [user, userLoading, router]);
   const deriveNameFromEmail = (value: string) => {
     const base = value.split("@")[0] || "";
     return base
@@ -67,21 +78,53 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+    setLoading(true);
+
     if (mode === "login") {
       if (validate()) {
-        console.log("Login successful");
-        const derivedName = deriveNameFromEmail(email) || "Aarav";
-        localStorage.setItem("az_user_name", derivedName);
-        localStorage.setItem("az_logged_in", "true");
-        router.push("/");
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          toast.error(error.message);
+          setErrors({ email: error.message });
+        } else {
+          toast.success("Welcome back to Arogya");
+          const derivedName = deriveNameFromEmail(email) || "Aarav";
+          if (typeof window !== "undefined") localStorage.setItem("az_user_name", derivedName);
+          router.push("/dashboard");
+        }
       }
-    } else if (validateSignup()) {
-      console.log("Signup successful");
-      localStorage.setItem("az_user_name", name.trim());
-      localStorage.setItem("az_logged_in", "true");
-      router.push("/");
+    } else {
+      if (validateSignup()) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { name, full_name: name } }
+        });
+        if (error) {
+          toast.error(error.message);
+          setSignupErrors({ email: error.message });
+        } else {
+          toast.success("Account created successfully! Please sign in.");
+          if (typeof window !== "undefined") localStorage.setItem("az_user_name", name.trim());
+          setMode("login");
+        }
+      }
+    }
+    setLoading(false);
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: typeof window !== "undefined" ? `${window.location.origin}/dashboard` : undefined }
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      toast.error(error.message || "Failed to initialize Google login");
     }
   };
 
@@ -96,7 +139,7 @@ const Login = () => {
         preload="auto"
         className="absolute inset-0 w-full h-full object-cover pointer-events-none object-[20%_center]"
       >
-        <source src="/login-bg.mp4" type="video/mp4" />
+        <source src="/videos/login-bg.mp4" type="video/mp4" />
       </video>
 
       {/* Overlay */}
@@ -290,10 +333,11 @@ const Login = () => {
 
                   <button
                     type="submit"
-                    className="w-full rounded-2xl py-3 font-semibold text-sm text-white bg-gradient-to-r from-primary to-secondary shadow-lg shadow-primary/30 hover:translate-y-[-1px] transition"
+                    disabled={loading}
+                    className="w-full rounded-2xl py-3 font-semibold text-sm text-white bg-gradient-to-r from-primary to-secondary shadow-lg shadow-primary/30 hover:translate-y-[-1px] transition disabled:opacity-50"
                   >
-                    {mode === "login" ? "Sign In" : "Create Account"}{" "}
-                    <ArrowRight className="inline-block ml-2 w-4 h-4" />
+                    {loading ? "Please wait..." : (mode === "login" ? "Sign In" : "Create Account")}{" "}
+                    {!loading && <ArrowRight className="inline-block ml-2 w-4 h-4" />}
                   </button>
                 </form>
 
@@ -303,7 +347,12 @@ const Login = () => {
                   <div className="flex-1 h-px bg-white/15" />
                 </div>
 
-                <button className="w-full rounded-2xl border border-white/20 bg-white/10 py-3 text-xs font-semibold text-white/80 hover:text-white hover:bg-white/15 transition-colors flex items-center justify-center gap-3">
+                <button 
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  disabled={loading}
+                  className="w-full rounded-2xl border border-white/20 bg-white/10 py-3 text-xs font-semibold text-white/80 hover:text-white hover:bg-white/15 transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
+                >
                   <svg className="w-4 h-4" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
