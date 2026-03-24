@@ -15,6 +15,7 @@ import {
   Moon,
   Droplet,
   ShoppingBag,
+  ShieldCheck,
 } from "lucide-react";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useLanguage } from "@/lib/i18n/context";
@@ -91,6 +92,21 @@ export default function Navbar() {
               </li>
             );
           })}
+          {user && (user.email === "admin@arogya.com" || user.app_metadata?.role === "admin") && (
+            <li>
+              <Link
+                href="/admin"
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors no-underline ${
+                  pathname === "/admin"
+                    ? "bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-400"
+                }`}
+              >
+                <ShieldCheck className="w-4 h-4" />
+                Admin
+              </Link>
+            </li>
+          )}
         </ul>
 
         {/* Right area */}
@@ -173,6 +189,20 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+            {user && (user.email === "admin@arogya.com" || user.app_metadata?.role === "admin") && (
+              <Link
+                href="/admin"
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium no-underline transition-colors ${
+                  pathname === "/admin"
+                    ? "bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400"
+                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+              >
+                <ShieldCheck className="w-5 h-5" />
+                Admin
+              </Link>
+            )}
           </nav>
 
           <div className="mt-auto flex flex-col gap-3">
