@@ -10,7 +10,7 @@ import { useChat } from "ai/react";
 
 interface Message {
   id: string;
-  role: "system" | "user" | "assistant" | "data";
+  role: "system" | "user" | "assistant" | "data" | "function" | "tool";
   content: string;
 }
 
