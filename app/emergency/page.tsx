@@ -23,7 +23,7 @@ import EmergencyTimeline from "@/components/features/EmergencyTimeline";
 import SOSOverlay from "@/components/features/SOSOverlay";
 import GlassCard from "@/components/ui/GlassCard";
 import SOSButton from "@/components/ui/SOSButton";
-import { useLanguage } from "@/lib/i18n/context";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { t } from "@/lib/i18n/translations";
 
 interface Coords {
@@ -133,7 +133,7 @@ function getShareLocation(): Promise<Coords> {
 }
 
 function EmergencyContent() {
-  const { lang } = useLanguage();
+  const { language: lang } = useLanguage();
   const searchParams = useSearchParams();
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [dismissedSuggestion, setDismissedSuggestion] = useState(false);

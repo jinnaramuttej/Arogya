@@ -19,7 +19,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import EmergencyTimeline, {
   type TimelineStatus,
 } from "@/components/features/EmergencyTimeline";
-import { useLanguage } from "@/lib/i18n/context";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { t, type TranslationKey } from "@/lib/i18n/translations";
 
 const AmbulanceMap = dynamic(() => import("@/components/features/AmbulanceMap"), {
@@ -160,7 +160,7 @@ interface SOSOverlayProps {
 }
 
 export default function SOSOverlay({ onClose }: SOSOverlayProps) {
-  const { lang } = useLanguage();
+  const { language: lang } = useLanguage();
   const [userLocation, setUserLocation] = useState<Coords | null>(null);
   const [ambulance, setAmbulance] = useState<AmbulanceUnit | null>(null);
   const [ambulancePosition, setAmbulancePosition] = useState<Coords | null>(null);

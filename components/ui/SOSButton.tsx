@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
-import { useLanguage } from "@/lib/i18n/context";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { t } from "@/lib/i18n/translations";
 
 interface SOSButtonProps {
@@ -27,7 +27,7 @@ export default function SOSButton({
   ariaLabel,
   title,
 }: SOSButtonProps) {
-  const { lang } = useLanguage();
+  const { language: lang } = useLanguage();
   const pathname = usePathname();
 
   if (pathname?.startsWith("/admin")) return null;

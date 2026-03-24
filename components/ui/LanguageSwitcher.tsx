@@ -1,10 +1,10 @@
 "use client";
 
-import { useLanguage } from "@/lib/i18n/context";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import type { Language } from "@/lib/i18n/translations";
 
 export default function LanguageSwitcher() {
-  const { lang, setLang } = useLanguage();
+  const { language: lang, setLanguage: setLang } = useLanguage();
 
   return (
     <select

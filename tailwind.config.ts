@@ -1,129 +1,98 @@
 import type { Config } from "tailwindcss";
-import plugin from "tailwindcss/plugin";
 
-const config: Config = {
-  darkMode: "class",
-  content: [
-    "./app/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./lib/**/*.{ts,tsx}",
-  ],
+export default {
+  darkMode: ["class"],
+  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  prefix: "",
   theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
     extend: {
-      colors: {
-        // Primary Stitch Blue
-        brand: {
-          50:  "#eff6ff",
-          100: "#dbeafe",
-          200: "#bfdbfe",
-          300: "#93c5fd",
-          400: "#60a5fa",
-          500: "#3b82f6",
-          600: "#2563eb",
-          700: "#1d4ed8",
-          800: "#1e40af",
-          900: "#1e3a8a",
-          950: "#172554",
-        },
-        // Surface tokens
-        surface: {
-          light:  "#ffffff",
-          muted:  "#f9fafb",
-          border: "#e5e7eb",
-          dark:   "#111827",
-          "dark-card":   "#1f2937",
-          "dark-border": "#374151",
-        },
-        // Stitch Coral/Pink Accent
-        accent: {
-          DEFAULT: "#f43f5e",
-          light:   "#fb7185",
-          lighter: "#fda4af",
-        },
-        danger: {
-          DEFAULT: "#ef4444",
-          light:   "#f87171",
-        },
-        success: {
-          DEFAULT: "#10b981",
-          light:   "#4ade80",
-        },
-        warning: {
-          DEFAULT: "#f59e0b",
-          light:   "#fbbf24",
-        },
-      },
       fontFamily: {
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        heading: ['"Plus Jakarta Sans"', 'sans-serif'],
+        body: ['Inter', 'sans-serif'],
       },
-      boxShadow: {
-        card:          "0 1px 3px 0 rgba(0,0,0,0.06), 0 1px 2px -1px rgba(0,0,0,0.06)",
-        "card-hover":  "0 4px 16px 0 rgba(0,0,0,0.10)",
-        brand:         "0 4px 15px rgba(220,38,38,0.25)",
-        "brand-hover": "0 6px 20px rgba(220,38,38,0.35)",
-        danger:        "0 4px 20px rgba(239,68,68,0.4)",
+      colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
+        },
       },
-      animation: {
-        "pulse-danger": "pulse-danger 2s infinite",
-        "pop-in":       "pop-in 0.3s cubic-bezier(0.23,1,0.32,1)",
-        "fade-in-up":   "fade-in-up 0.4s ease-out",
-        typing:         "typing 1.2s infinite ease-in-out",
-        bounce:         "bounce-scroll 2s infinite",
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
-        "pulse-danger": {
-          "0%":   { boxShadow: "0 0 0 0 rgba(239,68,68,0.7)" },
-          "70%":  { boxShadow: "0 0 0 30px rgba(239,68,68,0)" },
-          "100%": { boxShadow: "0 0 0 0 rgba(239,68,68,0)" },
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
-        "pop-in": {
-          from: { opacity: "0", transform: "scale(0.8)" },
-          to:   { opacity: "1", transform: "scale(1)" },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
-        "fade-in-up": {
-          from: { opacity: "0", transform: "translateY(20px)" },
-          to:   { opacity: "1", transform: "translateY(0)" },
+        float: {
+          "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
+          "33%": { transform: "translateY(-20px) rotate(2deg)" },
+          "66%": { transform: "translateY(10px) rotate(-1deg)" },
         },
-        typing: {
-          "0%, 100%": { opacity: "0.3", transform: "translateY(0)" },
-          "50%":      { opacity: "1",   transform: "translateY(-5px)" },
+        "pulse-glow": {
+          "0%, 100%": { boxShadow: "0 0 20px hsla(180, 87%, 35%, 0.1)" },
+          "50%": { boxShadow: "0 0 40px hsla(180, 87%, 35%, 0.3)" },
         },
-        "bounce-scroll": {
-          "0%, 20%, 50%, 80%, 100%": { transform: "translateY(0)" },
-          "40%":  { transform: "translateY(-15px)" },
-          "60%":  { transform: "translateY(-5px)" },
-        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+        float: "float 8s ease-in-out infinite",
+        "pulse-glow": "pulse-glow 3s ease-in-out infinite",
       },
     },
   },
-  plugins: [
-    plugin(function ({ addUtilities }) {
-      addUtilities({
-        ".card": {
-          backgroundColor: "#ffffff",
-          border:          "1px solid #e5e7eb",
-          borderRadius:    "0.75rem",
-          boxShadow:       "0 1px 3px 0 rgba(0,0,0,0.06)",
-        },
-        ".dark .card": {
-          backgroundColor: "#1f2937",
-          borderColor:     "#374151",
-        },
-        ".text-primary": {
-          color: "#111827",
-        },
-        ".dark .text-primary": {
-          color: "#f9fafb",
-        },
-        ".text-secondary": {
-          color: "#6b7280",
-        },
-        ".dark .text-secondary": {
-          color: "#9ca3af",
-        },
-      });
-    }),
-  ],
-};
-
-export default config;
+  plugins: [require("tailwindcss-animate")],
+} satisfies Config;

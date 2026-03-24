@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import SOSButton from "@/components/ui/SOSButton";
-import { LanguageProvider } from "@/lib/i18n/context";
-import { ThemeProvider } from "@/lib/theme/ThemeProvider";
+import { LanguageProvider } from "@/lib/context/LanguageContext";
+import { CartProvider } from "@/lib/cart";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,15 +27,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className="font-sans antialiased">
-        <ThemeProvider>
-          <LanguageProvider>
+      <body className="font-sans antialiased min-h-screen bg-background text-foreground">
+        <LanguageProvider>
+          <CartProvider>
             <Navbar />
-            <main className="pt-24 min-h-screen">{children}</main>
+            {children}
             <Footer />
-            <SOSButton />
-          </LanguageProvider>
-        </ThemeProvider>
+            <Sonner />
+          </CartProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

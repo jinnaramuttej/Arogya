@@ -11,7 +11,7 @@ import {
   Truck,
   type LucideIcon,
 } from "lucide-react";
-import { useLanguage } from "@/lib/i18n/context";
+import { useLanguage } from "@/lib/context/LanguageContext";
 import { t } from "@/lib/i18n/translations";
 
 export type TimelineStatus =
@@ -51,7 +51,7 @@ interface EmergencyTimelineProps {
 export default function EmergencyTimeline({
   currentStatus,
 }: EmergencyTimelineProps) {
-  const { lang } = useLanguage();
+  const { language: lang } = useLanguage();
   const activeIndex = stepIndex(currentStatus);
 
   return (
