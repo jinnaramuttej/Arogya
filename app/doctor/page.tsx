@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { useUser } from '@/lib/hooks/useUser';
-import { Search, User, PlusCircle, BookText, Stethoscope, AlertCircle, CheckCircle2, Loader2, Activity, Droplets, FileText, Hash, CalendarDays, Clock, Upload, Download, Check, XCircle, Ticket } from 'lucide-react';
+import { Search, User, PlusCircle, BookText, Stethoscope, AlertCircle, CheckCircle2, Loader2, Activity, Droplets, FileText, Hash, CalendarDays, Clock, Upload, Download, Check, XCircle, Ticket, ChevronRight } from 'lucide-react';
 
 interface Doctor {
   id: string;
@@ -391,15 +392,17 @@ const DoctorDashboardPage = () => {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {upcomingAppointments.map(appt => (
-              <div key={appt.id} className="border border-gray-100 bg-gray-50 rounded-lg p-5 hover:bg-emerald-50/50 transition-colors">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <p className="font-bold text-gray-800 text-lg">{appt.patient_name}</p>
-                    <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
-                      <span className="flex items-center gap-1"><CalendarDays className="w-4 h-4"/> {new Date(appt.date).toLocaleDateString()}</span>
-                      <span className="flex items-center gap-1"><Clock className="w-4 h-4"/> {appt.time}</span>
+              <div key={appt.id} className="border border-gray-100 bg-gray-50 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                {/* Clickable header area -> goes to session page */}
+                <Link href={`/doctor/appointments/${appt.id}`} className="block p-5 hover:bg-emerald-50/50 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="font-bold text-gray-800 text-lg">{appt.patient_name}</p>
+                      <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
+                        <span className="flex items-center gap-1"><CalendarDays className="w-4 h-4"/> {new Date(appt.date).toLocaleDateString()}</span>
+                        <span className="flex items-center gap-1"><Clock className="w-4 h-4"/> {appt.time}</span>
+                      </div>
                     </div>
-                  </div>
                   <div className="flex items-center gap-2">
                     {appt.token_number && (
                       <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200 flex items-center gap-1">
@@ -417,15 +420,19 @@ const DoctorDashboardPage = () => {
                     </span>
                   </div>
                 </div>
-                {appt.booking_number && (
-                  <div className="mt-3 pt-2 border-t border-gray-200 flex items-center justify-between">
-                    <span className="text-xs text-gray-500 uppercase font-semibold">Booking ID</span>
-                    <span className="font-mono text-sm font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">{appt.booking_number}</span>
+                  {appt.booking_number && (
+                    <div className="mt-3 pt-2 border-t border-gray-200 flex items-center justify-between">
+                      <span className="text-xs text-gray-500 uppercase font-semibold">Booking ID</span>
+                      <span className="font-mono text-sm font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">{appt.booking_number}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-end mt-2 text-xs text-emerald-600 font-semibold gap-1">
+                    View Session <ChevronRight className="w-3.5 h-3.5" />
                   </div>
-                )}
-                {/* Approve / Reject Buttons */}
+                </Link>
+                {/* Approve / Reject Buttons - outside the link */}
                 {appt.status === 'pending' && (
-                  <div className="mt-4 flex gap-3">
+                  <div className="px-5 pb-4 flex gap-3">
                     <button
                       onClick={() => handleApproveAppointment(appt.id)}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-emerald-500 text-white rounded-md hover:bg-emerald-600 transition-colors font-semibold text-sm"
