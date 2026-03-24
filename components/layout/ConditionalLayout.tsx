@@ -2,9 +2,8 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import Navbar from './Navbar';
-import Footer from './Footer';
-import ParticleCanvas from "@/components/features/ParticleCanvas";
+import Navbar from '../Navbar';
+import Footer from '../Footer';
 import SOSButton from "@/components/ui/SOSButton";
 
 const ConditionalLayout = ({ children }: { children: React.ReactNode }) => {
@@ -29,17 +28,8 @@ const ConditionalLayout = ({ children }: { children: React.ReactNode }) => {
     // For all other routes, wrap with the full public site layout
     return (
       <>
-        <div
-          style={{
-            position: "fixed",
-            width: "100vw",
-            height: "100vh",
-            zIndex: -1,
-          }}
-        />
-        <ParticleCanvas />
         <Navbar />
-        <main className="pt-24 min-h-screen">{children}</main>
+        <main className="min-h-screen">{children}</main>
         <Footer />
         <SOSButton />
       </>

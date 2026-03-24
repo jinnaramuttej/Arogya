@@ -321,7 +321,7 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-8">
         <div className="mb-6 flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-danger sos-pulse">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-destructive sos-pulse">
               <AlertTriangle className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -358,12 +358,12 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
         </div>
 
         {locationSource === "fallback" && (
-          <div className="mb-6 rounded-xl bg-warning/20 border border-warning/30 p-4 text-warning-light">
+          <div className="mb-6 rounded-xl bg-warning/20 border border-warning/30 p-4 text-amber-500">
             <div className="flex items-center gap-2 font-semibold mb-1">
               <AlertTriangle className="w-5 h-5 flex-shrink-0" />
               Location Detection Failed
             </div>
-            <p className="text-sm text-warning-light/80">
+            <p className="text-sm text-amber-500/80">
               We couldn't access your precise live GPS location. Using fallback coordinates. Please contact the driver to confirm your exact location.
             </p>
           </div>
@@ -371,7 +371,7 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
 
         <div className="mb-6 grid gap-4 sm:grid-cols-3">
           <GlassCard noHover>
-            <div className="mb-2 flex items-center gap-2 text-danger-light">
+            <div className="mb-2 flex items-center gap-2 text-destructive">
               <Clock3 className="h-4 w-4" />
               <span className="text-xs font-semibold uppercase tracking-[0.18em]">
                 {t("emergencyOverlayEta", lang)}
@@ -401,7 +401,7 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
           </GlassCard>
 
           <GlassCard noHover>
-            <div className="mb-2 flex items-center gap-2 text-success-light">
+            <div className="mb-2 flex items-center gap-2 text-emerald-500">
               <Radio className="h-4 w-4" />
               <span className="text-xs font-semibold uppercase tracking-[0.18em]">
                 {t("emergencyOverlayStatus", lang)}
@@ -472,8 +472,8 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
           <div className="space-y-6">
             <GlassCard noHover>
               <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-danger/15">
-                  <Truck className="h-6 w-6 text-danger-light" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/15">
+                  <Truck className="h-6 w-6 text-destructive" />
                 </div>
                 <div className="min-w-0">
                   <h3 className="truncate font-semibold text-gray-900 dark:text-white">
@@ -564,7 +564,7 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
           </button>
           <a
             href="tel:108"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-danger px-6 py-3 text-sm font-semibold text-white no-underline shadow-danger transition-transform hover:scale-[1.02]"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-destructive px-6 py-3 text-sm font-semibold text-white no-underline shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-transform hover:scale-[1.02]"
           >
             <Phone className="h-4 w-4" />
             {t("emergencyOverlayCallAmbulance", lang)}
@@ -574,3 +574,4 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
     </motion.div>
   );
 }
+

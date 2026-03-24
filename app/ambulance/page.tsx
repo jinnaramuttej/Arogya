@@ -1,175 +1,488 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Ambulance, MapPin, Siren, Activity, PhoneCall, ShieldCheck, Timer, HeartPulse } from "lucide-react";
-import dynamic from "next/dynamic";
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Ambulance,
+  Droplet,
+  Flame,
+  HeartPulse,
+  Hospital,
+  MapPin,
+  Phone,
+  ShieldAlert,
+  ShieldCheck,
+  Siren,
+  Thermometer,
+  Wind,
+  AlertTriangle,
+  type LucideIcon,
+} from "lucide-react";
+import EmergencyTimeline from "@/components/features/EmergencyTimeline";
+import SOSOverlay from "@/components/features/SOSOverlay";
+import GlassCard from "@/components/ui/GlassCard";
+import SOSButton from "@/components/ui/SOSButton";
+import { useLanguage } from "@/lib/context/LanguageContext";
+import { t } from "@/lib/i18n/translations";
 
-const AmbulanceSOSMap = dynamic(() => import("@/components/features/AmbulanceSOSMap"), { ssr: false });
+interface Coords {
+  lat: number;
+  lng: number;
+}
 
-const AmbulanceSOS = () => {
-  const [sosStatus, setSosStatus] = useState<"idle" | "dispatching" | "dispatched">("idle");
-  const [location, setLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
+interface ActionCard {
+  labelKey:
+    | "callAmbulance"
+    | "findHospital"
+    | "shareLocation"
+    | "emergencyContact";
+  descKey:
+    | "ambulanceDesc"
+    | "hospitalDesc"
+    | "locationDesc"
+    | "contactDesc";
+  btnKey:
+    | "callNow"
+    | "locateNow"
+    | "shareNow"
+    | "contactNow";
+  icon: LucideIcon;
+  color: string;
+  action: () => void | Promise<void>;
+}
 
-  const etaTrend = [
-    { time: "Now", eta: 9 },
-    { time: "2m", eta: 8 },
-    { time: "4m", eta: 7 },
-    { time: "6m", eta: 6 },
-    { time: "8m", eta: 5 }
-  ];
+const FALLBACK_COORDS: Coords = { lat: 17.385, lng: 78.4867 };
 
-  const triggerSOS = () => {
-    setSosStatus("dispatching");
-    // Simulate GPS fetch
-    setTimeout(() => {
-      setLocation({
-        lat: 12.9716,
-        lng: 77.5946,
-        address: "Bengaluru Central, Karnataka, India"
-      });
-      setSosStatus("dispatched");
-    }, 2500);
-  };
+const emergencyContacts = [
+  {
+    labelKey: "ambulanceService" as const,
+    descKey: "ambulanceServiceDesc" as const,
+    number: "108",
+    icon: Ambulance,
+    color: "text-destructive",
+  },
+  {
+    labelKey: "police" as const,
+    descKey: "policeDesc" as const,
+    number: "100",
+    icon: ShieldAlert,
+    color: "text-primary",
+  },
+  {
+    labelKey: "fireService" as const,
+    descKey: "fireServiceDesc" as const,
+    number: "101",
+    icon: Flame,
+    color: "text-amber-500",
+  },
+  {
+    labelKey: "womenHelpline" as const,
+    descKey: "womenHelplineDesc" as const,
+    number: "1091",
+    icon: Phone,
+    color: "text-primary-light",
+  },
+];
 
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-<main className="pt-28 pb-24">
-        <section className="container mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="rounded-[2.5rem] border border-border/60 bg-gradient-to-br from-card via-background to-card/70 p-8 md:p-12 shadow-xl shadow-primary/5"
-          >
-            <div className="flex flex-col lg:flex-row gap-10 lg:items-center lg:justify-between">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-destructive/20 bg-destructive/10 px-4 py-2 text-sm font-semibold text-destructive">
-                  <Siren className="w-4 h-4" />
-                  Emergency SOS
-                </div>
-                <h1 className="text-4xl md:text-5xl font-bold mt-6 leading-tight">
-                  One tap to dispatch urgent care.
-                </h1>
-                <p className="text-lg text-muted-foreground mt-4 max-w-xl">
-                  Real-time triage, priority dispatch, and live tracking when every second counts.
-                </p>
-                <div className="mt-6 flex flex-wrap gap-4 text-sm">
-                  <div className="flex items-center gap-2 rounded-full border border-border/60 bg-card/70 px-4 py-2">
-                    <ShieldCheck className="w-4 h-4 text-primary" />
-                    Verified responders
-                  </div>
-                  <div className="flex items-center gap-2 rounded-full border border-border/60 bg-card/70 px-4 py-2">
-                    <Timer className="w-4 h-4 text-primary" />
-                    Fast ETA updates
-                  </div>
-                  <div className="flex items-center gap-2 rounded-full border border-border/60 bg-card/70 px-4 py-2">
-                    <HeartPulse className="w-4 h-4 text-primary" />
-                    Critical care ready
-                  </div>
-                </div>
-              </div>
+const firstAidTips = [
+  {
+    titleKey: "heartAttack" as const,
+    icon: HeartPulse,
+    color: "text-destructive",
+    tips: ["heartTip1", "heartTip2", "heartTip3", "heartTip4"] as const,
+  },
+  {
+    titleKey: "choking" as const,
+    icon: Wind,
+    color: "text-primary",
+    tips: ["chokingTip1", "chokingTip2", "chokingTip3", "chokingTip4"] as const,
+  },
+  {
+    titleKey: "fever" as const,
+    icon: Thermometer,
+    color: "text-amber-500",
+    tips: ["feverTip1", "feverTip2", "feverTip3", "feverTip4"] as const,
+  },
+];
 
-              <div className="flex flex-col items-center gap-6">
-                <div className={`w-36 h-36 rounded-full flex items-center justify-center transition-all duration-700 ${
-                  sosStatus === "idle" ? "bg-muted shadow-[0_0_40px_rgba(59,130,246,0.1)]" :
-                  sosStatus === "dispatching" ? "bg-destructive/20 animate-ping" : "bg-destructive shadow-[0_0_80px_rgba(239,68,68,0.4)]"
-                }`}>
-                  <Siren className={`w-16 h-16 ${sosStatus === "idle" ? "text-muted-foreground" : "text-white"}`} />
-                </div>
-                <button
-                  onClick={triggerSOS}
-                  disabled={sosStatus !== "idle"}
-                  className={`px-10 py-5 rounded-3xl text-2xl font-black tracking-tight transition-all transform active:scale-95 ${
-                    sosStatus === "idle" ? "bg-destructive text-white shadow-2xl shadow-destructive/20 hover:opacity-90" : "bg-muted text-muted-foreground cursor-not-allowed"
-                  }`}
-                >
-                  {sosStatus === "idle" ? "ACTIVATE SOS" : "SOS ACTIVE"}
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </section>
-
-        <section className="container mx-auto px-6 mt-12">
-          <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-10">
-            <div className="glass-card text-left space-y-8">
-              <h3 className="font-bold text-2xl flex items-center gap-3">
-                <Activity className="w-6 h-6 text-primary" />
-                Command Center
-              </h3>
-
-              {sosStatus === "dispatched" ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-5"
-                >
-                  <div className="p-6 bg-secondary/10 border border-secondary/20 rounded-3xl flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center">
-                      <Ambulance className="w-8 h-8 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Response Status</p>
-                      <p className="font-bold text-lg">Unit #402 Dispatched</p>
-                      <p className="text-xs text-secondary font-bold">Priority traffic pre-emption active</p>
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl border border-border/60 bg-background/70 p-4 text-sm text-muted-foreground">
-                    ETA: 6–8 minutes • Trauma unit notified • Oxygen support onboard
-                  </div>
-                  <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-                    <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">ETA trend</p>
-                    <div className="mt-3 h-32">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={etaTrend}>
-                          <XAxis dataKey="time" tick={{ fontSize: 10 }} />
-                          <YAxis tick={{ fontSize: 10 }} domain={[0, 10]} />
-                          <Tooltip />
-                          <Area type="monotone" dataKey="eta" stroke="#0EA5A4" fill="rgba(14,165,164,0.2)" strokeWidth={2} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-
-                  <button className="w-full btn-outline flex items-center justify-center gap-3 py-4 text-lg">
-                    <PhoneCall className="w-5 h-5" />
-                    Direct Dispatch Line
-                  </button>
-                </motion.div>
-              ) : (
-                <div className="rounded-2xl border border-border/60 bg-background/70 p-5 text-sm text-muted-foreground">
-                  Trigger SOS to start live tracking, automated dispatch, and emergency contact alerts.
-                </div>
-              )}
-            </div>
-
-            <div className="glass-card p-0 h-[560px] relative overflow-hidden">
-              <AmbulanceSOSMap location={location} />
-              {location ? (
-                <div className="absolute bottom-6 left-6 right-6 p-5 glass rounded-2xl text-left shadow-2xl border-white/20">
-                  <p className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em] mb-2">Live Telemetry Data</p>
-                  <p className="font-mono text-sm font-bold text-primary">
-                    {location.lat.toFixed(4)} / {location.lng.toFixed(4)}
-                  </p>
-                  <p className="text-lg font-extrabold mt-3 truncate">{location.address}</p>
-                </div>
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground bg-muted/10">
-                  <div className="relative mb-6">
-                    <MapPin className="w-16 h-16 opacity-10" />
-                    <div className="absolute inset-0 animate-pulse bg-primary/5 rounded-full blur-2xl" />
-                  </div>
-                  <p className="text-sm font-bold tracking-widest uppercase opacity-40">Awaiting Signal Activation...</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-      </main>
-</div>
-  );
+const container = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } };
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
-export default AmbulanceSOS;
+function getShareLocation(): Promise<Coords> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Geolocation unavailable"));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      () => reject(new Error("Unable to access location")),
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    );
+  });
+}
+
+function EmergencyContent() {
+  const { language: lang } = useLanguage();
+  const searchParams = useSearchParams();
+  const [overlayOpen, setOverlayOpen] = useState(false);
+  const [dismissedSuggestion, setDismissedSuggestion] = useState(false);
+  const showSuggestion =
+    searchParams.get("emergency") === "true" && !dismissedSuggestion;
+
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => setCooldown((c) => c - 1), 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
+  const handleSOSClick = () => {
+    if (cooldown > 0 || overlayOpen) return;
+    setShowConfirm(true);
+  };
+
+  const confirmEmergency = () => {
+    setShowConfirm(false);
+    setDismissedSuggestion(true);
+    setOverlayOpen(true);
+  };
+
+  const cancelEmergency = () => {
+    setShowConfirm(false);
+  };
+
+  const handleCloseOverlay = () => {
+    setOverlayOpen(false);
+    setCooldown(60);
+  };
+
+  const actionCards: ActionCard[] = [
+    {
+      labelKey: "callAmbulance",
+      descKey: "ambulanceDesc",
+      btnKey: "callNow",
+      icon: Ambulance,
+      color: "text-destructive",
+      action: () => {
+        window.open("tel:108");
+      },
+    },
+    {
+      labelKey: "findHospital",
+      descKey: "hospitalDesc",
+      btnKey: "locateNow",
+      icon: Hospital,
+      color: "text-emerald-500",
+      action: handleSOSClick,
+    },
+    {
+      labelKey: "shareLocation",
+      descKey: "locationDesc",
+      btnKey: "shareNow",
+      icon: MapPin,
+      color: "text-primary",
+      action: async () => {
+        let coords = FALLBACK_COORDS;
+
+        try {
+          coords = await getShareLocation();
+        } catch {
+          coords = FALLBACK_COORDS;
+        }
+
+        const shareUrl = `https://maps.google.com/?q=${coords.lat},${coords.lng}`;
+
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: t("shareLocation", lang),
+              text: t("emergencyShareMessage", lang),
+              url: shareUrl,
+            });
+            return;
+          } catch {
+            return;
+          }
+        }
+
+        window.open(shareUrl, "_blank", "noopener,noreferrer");
+      },
+    },
+    {
+      labelKey: "emergencyContact",
+      descKey: "contactDesc",
+      btnKey: "contactNow",
+      icon: Phone,
+      color: "text-amber-500",
+      action: handleSOSClick,
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background pt-32 pb-24">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8 text-center"
+      >
+        <h1 className="text-3xl font-semibold text-gray-900 dark:text-white sm:text-4xl">
+          {t("emergencyTitle", lang)}
+        </h1>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">{t("emergencySubtitle", lang)}</p>
+      </motion.div>
+
+      {showSuggestion && !overlayOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <GlassCard noHover className="border-destructive/30 bg-destructive/10">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+              <div className="max-w-2xl">
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-destructive/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-destructive">
+                  <span className="h-2 w-2 rounded-full bg-destructive" />
+                  {t("emergencySuggestionBadge", lang)}
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  {t("emergencySuggestionTitle", lang)}
+                </h2>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                  {t("emergencySuggestionBody", lang)}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={handleSOSClick}
+                  className="inline-flex items-center justify-center rounded-full bg-destructive px-5 py-3 text-sm font-semibold text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-transform hover:scale-[1.02]"
+                >
+                  {t("emergencySuggestionPrimary", lang)}
+                </button>
+                <a
+                  href="tel:108"
+                  className="inline-flex items-center justify-center rounded-full border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-5 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 no-underline transition-colors hover:bg-gray-100 dark:hover:bg-gray-600"
+                >
+                  {t("emergencySuggestionSecondary", lang)}
+                </a>
+              </div>
+            </div>
+          </GlassCard>
+        </motion.div>
+      )}
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="mb-12 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]"
+      >
+        <GlassCard noHover className="text-center relative">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-destructive/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-destructive">
+            <Siren className="h-4 w-4" />
+            {t("emergencyDispatchBadge", lang)}
+          </div>
+
+          <h2 className="mx-auto max-w-xl text-2xl font-semibold text-gray-900 dark:text-white sm:text-3xl">
+            {t("emergencyDispatchTitle", lang)}
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-sm text-gray-600 dark:text-gray-400 sm:text-base">
+            {t("emergencyDispatchBody", lang)}
+          </p>
+
+          <div className="mt-8 flex flex-col items-center">
+            <SOSButton
+              fixed={false}
+              size="hero"
+              onClick={handleSOSClick}
+              disabled={overlayOpen || cooldown > 0}
+              className="mx-auto"
+              ariaLabel={t("sosText", lang)}
+              title={t("sosText", lang)}
+            />
+            {cooldown > 0 ? (
+              <p className="mt-4 text-sm font-medium text-amber-500">
+                Cooldown: {cooldown}s
+              </p>
+            ) : (
+              <p className="mt-4 text-sm font-medium text-gray-700 dark:text-gray-200">
+                {t("sosText", lang)}
+              </p>
+            )}
+          </div>
+        </GlassCard>
+
+        <GlassCard noHover>
+          <div className="mb-4 flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {t("emergencyPreviewTitle", lang)}
+            </h3>
+          </div>
+
+          <div className="space-y-4">
+            {[
+              { icon: MapPin, titleKey: "emergencyPreviewStepOne" as const },
+              { icon: Ambulance, titleKey: "emergencyPreviewStepTwo" as const },
+              { icon: Siren, titleKey: "emergencyPreviewStepThree" as const },
+            ].map((step) => (
+              <div
+                key={step.titleKey}
+                className="flex items-start gap-3 rounded-2xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 p-4"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15">
+                  <step.icon className="h-5 w-5 text-primary" />
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-300">{t(step.titleKey, lang)}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 p-4">
+            <EmergencyTimeline currentStatus="en_route" />
+          </div>
+        </GlassCard>
+      </motion.div>
+
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="visible"
+        className="mb-16 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+      >
+        {actionCards.map((card) => (
+          <motion.div key={card.labelKey} variants={item}>
+            <GlassCard className="cursor-pointer text-center" onClick={() => void card.action()}>
+              <card.icon className={`mx-auto mb-3 h-10 w-10 ${card.color}`} />
+              <h3 className="mb-1 font-semibold text-gray-900 dark:text-white">
+                {t(card.labelKey, lang)}
+              </h3>
+              <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">{t(card.descKey, lang)}</p>
+              <span className="inline-block rounded-full bg-red-600 px-4 py-1.5 text-xs font-semibold text-white">
+                {t(card.btnKey, lang)}
+              </span>
+            </GlassCard>
+          </motion.div>
+        ))}
+      </motion.div>
+
+      <section className="mb-16">
+        <h2 className="mb-8 text-center text-2xl font-semibold text-gray-900 dark:text-white">
+          {t("emergencyNumbers", lang)}
+        </h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {emergencyContacts.map((contact) => (
+            <GlassCard key={contact.number} noHover className="text-center">
+              <contact.icon className={`mx-auto mb-2 h-8 w-8 ${contact.color}`} />
+              <div className="text-sm text-gray-500 dark:text-gray-400">{t(contact.labelKey, lang)}</div>
+              <div className="my-2 text-3xl font-semibold text-gray-900 dark:text-white">
+                {contact.number}
+              </div>
+              <div className="text-xs text-gray-400 dark:text-gray-500">{t(contact.descKey, lang)}</div>
+            </GlassCard>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-8 text-center text-2xl font-semibold text-gray-900 dark:text-white">
+          {t("firstAidTips", lang)}
+        </h2>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          {firstAidTips.map((tip) => (
+            <GlassCard key={tip.titleKey} noHover>
+              <div className="mb-4 flex items-center gap-3">
+                <tip.icon className={`h-6 w-6 ${tip.color}`} />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {t(tip.titleKey, lang)}
+                </h3>
+              </div>
+              <ul className="space-y-2">
+                {tip.tips.map((tipKey) => (
+                  <li key={tipKey} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                    {t(tipKey, lang)}
+                  </li>
+                ))}
+              </ul>
+            </GlassCard>
+          ))}
+        </div>
+      </section>
+
+
+
+      {/* Confirmation Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 dark:bg-black/60 px-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-sm"
+          >
+            <GlassCard noHover className="border-red-200 dark:border-red-800 !bg-white dark:!bg-gray-800 shadow-2xl">
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/20 text-destructive">
+                  <AlertTriangle className="h-7 w-7" />
+                </div>
+                <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
+                  Confirm Emergency
+                </h3>
+                <p className="mb-6 text-sm text-gray-600 dark:text-gray-300">
+                  Are you sure this is an emergency? This will immediately alert response teams and assign an ambulance to your location.
+                </p>
+                <div className="flex w-full flex-col gap-3">
+                  <button
+                    onClick={confirmEmergency}
+                    className="w-full rounded-xl bg-destructive py-3 text-sm font-semibold text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-transform hover:scale-[1.02]"
+                  >
+                    Yes, Request Help
+                  </button>
+                  <button
+                    onClick={cancelEmergency}
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors hover:bg-gray-100 dark:hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </GlassCard>
+          </motion.div>
+        </div>
+      )}
+
+      {overlayOpen && <SOSOverlay onClose={handleCloseOverlay} />}
+    </div>
+    </div>
+  );
+}
+
+export default function EmergencyPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center px-4 py-12">
+          <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        </div>
+      }
+    >
+      <EmergencyContent />
+    </Suspense>
+  );
+}
+

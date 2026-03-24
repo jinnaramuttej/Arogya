@@ -232,7 +232,8 @@ function EmergencyContent() {
   ];
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+    <div className="min-h-screen bg-background pt-32 pb-24">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -466,6 +467,7 @@ function EmergencyContent() {
       )}
 
       {overlayOpen && <SOSOverlay onClose={handleCloseOverlay} />}
+    </div>
     </div>
   );
 }

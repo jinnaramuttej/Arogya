@@ -1,22 +1,17 @@
-const OPENROUTER_API_KEY = "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";
-
 export interface Message {
-  role: "user" | "assistant";
+  role: "system" | "user" | "assistant";
   content: string;
 }
 
 export const getAIResponse = async (messages: Message[], language: string = "English") => {
   try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch("http://localhost:11434/api/chat", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-        "HTTP-Referer": "https://arogya-zenith.vercel.app", // Placeholder
-        "X-Title": "Arogya Zenith",
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "google/gemini-2.0-flash-001",
+        model: "phi3",
         messages: [
           {
             role: "system",
@@ -41,14 +36,19 @@ export const getAIResponse = async (messages: Message[], language: string = "Eng
             If a user mentions a medical emergency, prioritize advising them to use the SOS feature or call emergency services immediately.`
           },
           ...messages
-        ]
+        ],
+        stream: false
       })
     });
 
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const data = await response.json();
-    return data.choices[0].message.content;
+    return data.message.content;
   } catch (error) {
     console.error("AI Error:", error);
-    return "I'm sorry, I'm having trouble connecting right now. Please try again or consult a doctor directly.";
+    return "I'm sorry, I'm having trouble connecting to the local Ollama instance (phi3). Please ensure Ollama is running or consult a doctor directly.";
   }
 };

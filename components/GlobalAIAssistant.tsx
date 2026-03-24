@@ -167,7 +167,7 @@ const GlobalAIAssistant = () => {
                 </div>
                 <div>
                   <h3 className="text-white font-semibold text-sm">{t("bot_header_title") || "AI Health Assistant"}</h3>
-                  <p className="text-white/70 text-[10px]">{t("global_ai_powered") || "Powered by OpenRouter AI"}</p>
+                  <p className="text-white/70 text-[10px]">{t("global_ai_powered") || "Powered by Ollama"}</p>
                 </div>
               </div>
               <button 

@@ -18,13 +18,11 @@ export default function GlassCard({
   onClick,
 }: GlassCardProps) {
   const base =
-    "rounded-xl p-6 " +
-    "bg-white border border-gray-200 shadow-card " +
-    "dark:bg-gray-800 dark:border-gray-700 " +
+    "rounded-2xl p-6 " +
+    "bg-card/90 border border-border/60 shadow-lg shadow-primary/5 " +
     (noHover
       ? ""
-      : "transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover ") +
-    "card-shimmer " +
+      : "transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:bg-card ") +
     className;
 
   if (as === "a" && href) {

@@ -42,7 +42,7 @@ export default function SOSButton({
   const classes = [
     fixedClasses,
     sizeClasses,
-    "inline-flex items-center justify-center rounded-full bg-danger text-white shadow-danger transition-transform sos-pulse",
+    "inline-flex items-center justify-center rounded-full bg-destructive text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-transform sos-pulse",
     disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:scale-105",
     className,
   ]
@@ -78,3 +78,4 @@ export default function SOSButton({
     </Link>
   );
 }
+

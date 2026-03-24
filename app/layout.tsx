@@ -3,8 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/lib/context/LanguageContext";
 import { CartProvider } from "@/lib/cart";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import ConditionalLayout from "@/components/layout/ConditionalLayout";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 
 const inter = Inter({
@@ -30,9 +29,7 @@ export default function RootLayout({
       <body className="font-sans antialiased min-h-screen bg-background text-foreground">
         <LanguageProvider>
           <CartProvider>
-            <Navbar />
-            {children}
-            <Footer />
+            <ConditionalLayout>{children}</ConditionalLayout>
             <Sonner />
           </CartProvider>
         </LanguageProvider>
