@@ -307,6 +307,14 @@ function VerifyContent() {
       setStatusMsg(e.message || "An error occurred during verification.");
       setIsProcessing(false);
       setHasFailed(true);
+
+      // If face verification fails in 2FA mode, sign out immediately
+      // so the user can't bypass facial auth by navigating to dashboard
+      if (mode === "2fa") {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        sessionStorage.removeItem('needs_2fa');
+      }
     }
   };
 
