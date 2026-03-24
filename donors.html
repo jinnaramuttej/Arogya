@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Donors - Arogya</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #007aff;
+            --primary-light: #00b4d8;
+            --primary-lighter: #90e0ef;
+            --white: rgba(255, 255, 255, 0.9);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --gradient: linear-gradient(135deg, var(--primary-light), var(--primary));
+            --success: #10b981;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #003b5c, #001a29);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* --- Video Background & Overlays (Matching index.html) --- */
+        #video-background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -3;
+            overflow: hidden;
+        }
+
+        #bg-video {
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+        }
+
+        #gradient-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 180, 216, 0.3), rgba(0, 122, 255, 0.5));
+            z-index: -2;
+        }
+
+        #particle-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* --- Glassmorphism Helper (Matching index.html) --- */
+        .glass-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Disable hover for static panels */
+        .glass-panel.no-hover:hover {
+            transform: none;
+            box-shadow: var(--shadow);
+            border-color: var(--glass-border);
+        }
+
+        .glass-panel.no-hover::before {
+            display: none;
+        }
+
+        .glass-panel:hover:not(.no-hover)::before {
+            left: 150%;
+        }
+
+        /* Shimmer Effect (from your index.html) */
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 75%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: skewX(-25deg);
+            transition: left 0.7s ease-in-out;
+        }
+
+
+        /* --- Button Styles (Matching index.html) --- */
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: var(--text-primary);
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 122, 255, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        /* --- Header / Navbar (Matching index.html) --- */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.25rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            padding: 1rem 5%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .navbar-logo i {
+            margin-right: 0.5rem;
+            color: var(--primary-lighter);
+        }
+
+        .navbar-nav {
+            list-style: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-item {
+            margin-left: 1.5rem;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding: 0.5rem 0;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link i {
+            margin-right: 8px;
+            font-size: 1rem;
+            color: var(--primary-lighter);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary-lighter);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--text-primary);
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        /* Language & Role Selectors (Matching index.html) */
+        .settings-nav {
+            display: flex;
+            align-items: center;
+            margin-left: 1.5rem;
+        }
+
+        .glass-select-wrapper {
+            position: relative;
+            margin-left: 1rem;
+        }
+
+        .glass-select {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.5rem 2.5rem 0.5rem 1rem;
+            border-radius: 10px;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        .glass-select option {
+            background: #001a29;
+            color: var(--text-primary);
+        }
+
+        .glass-select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary-lighter);
+        }
+
+        .glass-select-wrapper::after {
+            content: '\f078';
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        /* Mobile Nav (Matching index.html) */
+        .hamburger-menu {
+            display: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .mobile-nav {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: left 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            z-index: 1000;
+        }
+
+        .mobile-nav.open {
+            left: 0;
+        }
+
+        .mobile-nav .nav-item {
+            margin: 1.5rem 0;
+        }
+
+        .mobile-nav .nav-link {
+            font-size: 1.5rem;
+        }
+
+        /* --- Main Content --- */
+        .main-container {
+            padding: 8rem 5% 4rem;
+            width: 100%;
+            min-height: 100vh;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* --- Filter Bar --- */
+        .filter-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            min-width: 200px;
+        }
+
+        .filter-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            margin-left: 0.5rem;
+        }
+
+        .glass-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .glass-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .glass-input:focus,
+        .glass-select:focus {
+            outline: none;
+            border-color: var(--primary-lighter);
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+        /* --- Donors Table --- */
+        .table-container {
+            padding: 2rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .glass-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .glass-table th,
+        .glass-table td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .glass-table thead {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .glass-table th {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .glass-table tbody tr {
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            /* Animated row */
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeInRow 0.5s ease forwards;
+        }
+
+        /* Staggered animation for rows */
+        .glass-table tbody tr:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .glass-table tbody tr:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .glass-table tbody tr:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .glass-table tbody tr:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .glass-table tbody tr:nth-child(5) {
+            animation-delay: 0.5s;
+        }
+
+        @keyframes fadeInRow {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .glass-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .glass-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: scale(1.02);
+        }
+
+        .blood-group {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--danger-light, #f87171);
+        }
+
+        /* --- Toast Notification --- */
+        .toast-notification {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            /* Will be on right, opposite of Back-to-Top */
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-left: 5px solid var(--success);
+            color: var(--text-primary);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .toast-notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast-notification i {
+            font-size: 1.5rem;
+            color: var(--success);
+        }
+
+        /* --- Footer (Matching index.html) --- */
+        .footer {
+            margin-top: 4rem;
+            padding: 4rem 5% 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .footer-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-column h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .footer-column h4::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background: var(--primary-light);
+        }
+
+        .footer-column p,
+        .footer-column a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 0.75rem;
+            display: block;
+            transition: color 0.3s ease;
+        }
+
+        .footer-column a:hover {
+            color: var(--primary-lighter);
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-icons a {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        .social-icons a:hover {
+            color: var(--primary-lighter);
+            transform: scale(1.1);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* --- Page Loader (Matching index.html) --- */
+        .loader-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #001a29;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loader-logo {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            filter: blur(5px);
+            opacity: 0.5;
+            animation: pulse-blur 2s infinite ease-in-out;
+        }
+
+        .loader-logo i {
+            margin-right: 0.5rem;
+            color: var(--primary-lighter);
+        }
+
+        @keyframes pulse-blur {
+            0% {
+                filter: blur(5px);
+                opacity: 0.5;
+                transform: scale(1);
+            }
+
+            50% {
+                filter: blur(2px);
+                opacity: 1;
+                transform: scale(1.05);
+            }
+
+            100% {
+                filter: blur(5px);
+                opacity: 0.5;
+                transform: scale(1);
+            }
+        }
+
+        .loader-wrapper.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* --- Responsive Design --- */
+        @media (max-width: 992px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .hamburger-menu {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 6rem 3% 3rem;
+            }
+
+            .page-header h1 {
+                font-size: 2.5rem;
+            }
+
+            .filter-container {
+                flex-direction: column;
+                padding: 1rem;
+            }
+
+            .filter-group {
+                min-width: 100%;
+            }
+
+            .table-container {
+                padding: 1rem;
+            }
+
+            .glass-table {
+                font-size: 0.9rem;
+            }
+
+            .glass-table th,
+            .glass-table td {
+                padding: 0.75rem;
+            }
+        }
+    </style>
+</head>
+
+<body data-role="patient">
+    <div class="loader-wrapper">
+        <div class="loader-logo"><i class="fa-solid fa-heart-pulse"></i>Arogya</div>
+    </div>
+
+    <div id="video-background-container">
+        <video autoplay muted loop playsinline id="bg-video"
+            poster="https://via.placeholder.com/1920x1080/003366/FFFFFF?text=Loading+Video...">
+            <source src="medical-bg.mp4" type="video/mp4">
+            <source src="medical-bg.webm" type="video/webm">
+        </video>
+        <div id="gradient-overlay"></div>
+        <canvas id="particle-overlay"></canvas>
+    </div>
+
+    <nav class="navbar">
+        <a href="index.html" class="navbar-logo"><i class="fa-solid fa-heart-pulse"></i>Arogya</a>
+
+        <ul class="navbar-nav">
+            <li class="nav-item"><a href="index.html" class="nav-link" data-lang-key="navHome"><i class="fas fa-home"></i>Home</a></li>
+            <li class="nav-item"><a href="about.html" class="nav-link" data-lang-key="navAbout"><i class="fas fa-info-circle"></i>About Us</a></li>
+            <li class="nav-item"><a href="health-dashboard.html" class="nav-link" data-lang-key="navDashboard"><i class="fas fa-th-large"></i>Dashboard</a></li>
+            <li class="nav-item"><a href="symptom.html" class="nav-link" data-lang-key="navSymptom"><i class="fas fa-brain"></i>AI Checker</a></li>
+            <li class="nav-item"><a href="records.html" class="nav-link" data-lang-key="navRecords"><i class="fas fa-file-medical"></i>Records</a></li>
+            <li class="nav-item"><a href="donors.html" class="nav-link active" data-lang-key="navDonors"><i class="fas fa-hand-holding-heart"></i>Donors</a></li>
+            <li class="nav-item"><a href="emergency.html" class="nav-link" data-lang-key="navEmergency"><i class="fas fa-ambulance"></i>Emergency</a></li>
+            <li class="nav-item"><a href="contact.html" class="nav-link" data-lang-key="navContact"><i class="fas fa-envelope"></i>Contact</a></li>
+        </ul>
+
+        <div class="settings-nav">
+            <div class="glass-select-wrapper">
+                <select id="language-selector" class="glass-select">
+                    <option value="en">English</option>
+                    <option value="hi">हिंदी (Hindi)</option>
+                    <option value="te">తెలుగు (Telugu)</option>
+                </select>
+            </div>
+            <div id="auth-container" style="margin-left: 1rem;">
+                <a href="login.html" class="btn btn-primary" data-lang-key="navLogin">Login</a>
+            </div>
+            <div class="hamburger-menu">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <div class="mobile-nav">
+    </div>
+
+    <main class="main-container">
+        <header class="page-header">
+            <h1 data-lang-key="donorsTitle">Find Blood Donors</h1>
+            <p data-lang-key="donorsSubtitle">Connect with voluntary donors in your city.</p>
+        </header>
+
+        <div class="glass-panel no-hover filter-container">
+            <div class="filter-group">
+                <label for="blood-group" class="filter-label" data-lang-key="filterGroup">Blood Group</label>
+                <div class="glass-select-wrapper" style="margin-left: 0; width: 100%;">
+                    <select id="blood-group" class="glass-select" style="width: 100%;">
+                        <option value="all">All Groups</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-group">
+                <label for="search-input" class="filter-label" data-lang-key="filterSearch">Search</label>
+                <input type="text" id="search-input" class="glass-input" placeholder="Search by Name or City...">
+            </div>
+            <div class="filter-group" style="justify-content: flex-end;">
+                <button class="btn btn-primary" data-lang-key="btnSearch">Search</button>
+            </div>
+        </div>
+
+        <div class="glass-panel no-hover table-container">
+            <div class="table-wrapper">
+                <table class="glass-table">
+                    <thead>
+                        <tr>
+                            <th data-lang-key="tableName">Name</th>
+                            <th data-lang-key="tableGroup">Blood Group</th>
+                            <th data-lang-key="tableCity">City</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="donors-table-body">
+                        <tr>
+                            <td>Arjun Sharma</td>
+                            <td class="blood-group">O+</td>
+                            <td>Medicity</td>
+                            <td><button class="btn btn-primary btn-sm request-donor-btn"
+                                    data-lang-key="btnRequest">Request</button></td>
+                        </tr>
+                        <tr>
+                            <td>Priya Patel</td>
+                            <td class="blood-group">A+</td>
+                            <td>Medicity</td>
+                            <td><button class="btn btn-primary btn-sm request-donor-btn"
+                                    data-lang-key="btnRequest">Request</button></td>
+                        </tr>
+                        <tr>
+                            <td>Rahul Singh</td>
+                            <td class="blood-group">B-</td>
+                            <td>Techville</td>
+                            <td><button class="btn btn-primary btn-sm request-donor-btn"
+                                    data-lang-key="btnRequest">Request</button></td>
+                        </tr>
+                        <tr>
+                            <td>Sunita Rao</td>
+                            <td class="blood-group">AB+</td>
+                            <td>Medicity</td>
+                            <td><button class="btn btn-primary btn-sm request-donor-btn"
+                                    data-lang-key="btnRequest">Request</button></td>
+                        </tr>
+                        <tr>
+                            <td>Vikram Reddy</td>
+                            <td class="blood-group">O-</td>
+                            <td>Medicity</td>
+                            <td><button class="btn btn-primary btn-sm request-donor-btn"
+                                    data-lang-key="btnRequest">Request</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-column">
+                <h4 data-lang-key="footerAbout">About Arogya</h4>
+                <p data-lang-key="footerAboutText">Arogya is an intelligent telemedicine and healthcare ecosystem
+                    designed to provide smart, compassionate, and accessible healthcare for everyone.</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h4 data-lang-key="footerQuickLinks">Quick Links</h4>
+                <a href="index.html" data-lang-key="navHome">Home</a>
+                <a href="about.html" data-lang-key="navAbout">About Us</a>
+                <a href="symptom.html" data-lang-key="navSymptom">Symptom Checker</a>
+                <a href="pharmacy.html" data-lang-key="navPharmacy">Pharmacy</a>
+            </div>
+            <div class="footer-column">
+                <h4 data-lang-key="footerContact">Contact Info</h4>
+                <p><i class="fas fa-map-marker-alt"></i> 123 Health St, Medicity</p>
+                <p><i class="fas fa-phone-alt"></i> +1 (555) 123-4567</p>
+                <p><i class="fas fa-envelope"></i> support@arogya.ai</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2025 Arogya. All rights reserved.
+        </div>
+    </footer>
+
+    <div id="toast-container"></div>
+
+    <script type="module">
+        import { auth, db } from "./firebase-config.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { doc, getDoc, collection, getDocs, addDoc, query, where, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Page Loader ---
+            const loaderWrapper = document.querySelector('.loader-wrapper');
+
+            // --- Auth State ---
+            let currentUser = null;
+
+            onAuthStateChanged(auth, async (user) => {
+                currentUser = user;
+                if (user) {
+                    // Check if user is already a donor to update UI if needed (optional enhancement)
+                    checkIfDonor(user.uid);
+                }
+
+                // Fetch donors regardless of auth (public service potentially, or restricted?)
+                // Assuming public or patient access.
+                fetchDonors();
+
+                updateRoleBasedUI(); // If using role system
+                loaderWrapper.classList.add('hidden');
+            });
+
+            // --- Helper: Check if current user is donor ---
+            async function checkIfDonor(uid) {
+                // Check 'donors' collection
+                try {
+                    const docSnap = await getDoc(doc(db, "donors", uid));
+                    if (docSnap.exists()) {
+                        const registerBtn = document.getElementById('register-donor-btn');
+                        if (registerBtn) {
+                            registerBtn.textContent = 'Registered as Donor';
+                            registerBtn.disabled = true;
+                        }
+                    }
+                } catch (e) { }
+            }
+
+            // Mock Data for Seeding/Fallback
+            const mockDonors = [
+                { name: "Varshini Reddy", bloodGroup: "O+", age: 24, city: "Hyderabad", phone: "+91 98765 11223" },
+                { name: "Sreaya Gupta", bloodGroup: "B+", age: 23, city: "Bangalore", phone: "+91 91234 99887" },
+                { name: "Aarav Patel", bloodGroup: "O+", age: 29, city: "Mumbai", phone: "+91 98765 43210" },
+                { name: "Diya Sharma", bloodGroup: "A+", age: 34, "city": "Delhi", phone: "+91 91234 56789" },
+                { name: "Vihaan Singh", bloodGroup: "B-", age: 25, "city": "Bangalore", phone: "+91 99887 76655" },
+                { name: "Ananya Gupta", bloodGroup: "AB+", age: 41, "city": "Hyderabad", phone: "+91 98765 12345" },
+                { name: "Rohan Kumar", bloodGroup: "O-", age: 30, "city": "Chennai", phone: "+91 91122 33445" },
+                { name: "Ishita Verma", bloodGroup: "A-", age: 22, "city": "Pune", phone: "+91 95544 33221" },
+                { name: "Aditya Reddy", bloodGroup: "B+", age: 38, "city": "Kolkata", phone: "+91 99988 77766" },
+                { name: "Meera Iyer", bloodGroup: "AB-", age: 27, "city": "Ahmedabad", phone: "+91 98877 66554" },
+                { name: "Kabir Joshi", bloodGroup: "O+", age: 33, "city": "Jaipur", phone: "+91 97766 55443" },
+                { name: "Sanya Malhotra", bloodGroup: "B+", age: 26, "city": "Lucknow", phone: "+91 96655 44332" }
+            ];
+
+            // --- Fetch Donors ---
+            async function fetchDonors(filterGroup = 'all', searchTerm = '') {
+                const tbody = document.getElementById('donors-table-body');
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading donors...</td></tr>';
+
+                try {
+                    // Start with all donors
+                    let q = collection(db, "donors");
+
+                    // Simple client-side filtering might be easier if dataset is small, 
+                    // otherwise Firestore queries need composite indexes.
+                    // Let's fetch all and filter client-side for this demo to avoid index setup blockers.
+                    const querySnapshot = await getDocs(q);
+
+                    tbody.innerHTML = '';
+
+                    let allDonors = [];
+                    querySnapshot.forEach(doc => allDonors.push(doc.data()));
+
+                    // Ensure mock donors are visible (Demo Mode: Merge mock data if missing)
+                    mockDonors.forEach(mock => {
+                        if (!allDonors.some(d => d.name === mock.name)) {
+                            allDonors.unshift(mock);
+                        }
+                    });
+
+                    let hasMatches = false;
+
+                    allDonors.forEach((d) => {
+                        // Filtering
+                        if (filterGroup !== 'all' && d.bloodGroup !== filterGroup) return;
+                        
+                        if (searchTerm) {
+                            const term = searchTerm.toLowerCase();
+                            const name = d.name || '';
+                            const city = d.city || '';
+                            const nameMatch = name.toLowerCase().includes(term);
+                            const cityMatch = city.toLowerCase().includes(term);
+                            if (!nameMatch && !cityMatch) return;
+                        }
+
+                        hasMatches = true;
+
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${d.name}</td>
+                            <td class="blood-group">${d.bloodGroup}</td>
+                            <td>${d.city}</td>
+                            <td><button class="btn btn-primary btn-sm request-donor-btn" data-phone="${d.phone}" data-name="${d.name}" data-lang-key="btnRequest">Contact</button></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+
+                    if (!hasMatches) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No donors match your search.</td></tr>';
+                    } else {
+                        attachRequestListeners();
+                    }
+
+                } catch (e) {
+                    console.error("Error fetching donors:", e);
+                    // Fallback to mock data display if DB fails
+                    renderMockData(tbody, filterGroup, searchTerm);
+                }
+            }
+
+            async function seedDonors() {
+                try {
+                    const batch = writeBatch(db);
+                    mockDonors.forEach(d => {
+                        const ref = doc(collection(db, "donors"));
+                        batch.set(ref, d);
+                    });
+                    await batch.commit();
+                    fetchDonors(); // Reload
+                } catch (e) {
+                    console.error("Seeding failed:", e);
+                    // If seeding fails (e.g. permission), just render mock data
+                    const tbody = document.getElementById('donors-table-body');
+                    renderMockData(tbody, 'all', '');
+                }
+            }
+
+            function renderMockData(tbody, filterGroup, searchTerm) {
+                tbody.innerHTML = '';
+                let hasMatches = false;
+                mockDonors.forEach(d => {
+                    if (filterGroup !== 'all' && d.bloodGroup !== filterGroup) return;
+                    if (searchTerm) {
+                        const term = searchTerm.toLowerCase();
+                        if (!d.name.toLowerCase().includes(term) && !d.city.toLowerCase().includes(term)) return;
+                    }
+                    hasMatches = true;
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${d.name}</td>
+                        <td class="blood-group">${d.bloodGroup}</td>
+                        <td>${d.city}</td>
+                        <td><button class="btn btn-primary btn-sm request-donor-btn" data-phone="${d.phone}" data-name="${d.name}" data-lang-key="btnRequest">Contact</button></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                if (!hasMatches) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No donors match your search.</td></tr>';
+                attachRequestListeners();
+            }
+
+            function attachRequestListeners() {
+                document.querySelectorAll('.request-donor-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const phone = btn.dataset.phone;
+                        const name = btn.dataset.name;
+                        alert(`Contact details for ${name}:\nPhone: ${phone}\n\n(In a real app, this might initiate a secure chat or SMS)`);
+                    });
+                });
+            }
+
+            // --- Search / Filter Handlers ---
+            const groupSelect = document.getElementById('blood-group');
+            const searchInput = document.getElementById('search-input');
+            const searchBtn = document.querySelector('.filter-group button'); // The "Search" button matching structure
+
+            if (searchBtn) {
+                searchBtn.addEventListener('click', () => {
+                    const g = groupSelect.value;
+                    const s = searchInput.value.trim();
+                    fetchDonors(g, s);
+                });
+            }
+
+            // --- Register as Donor (Add Button Dynamically) ---
+            // Verify if button exists, if not, create it in filter container for now or header
+            const filterContainer = document.querySelector('.filter-container');
+            if (filterContainer && !document.getElementById('register-donor-btn')) {
+                const regBtn = document.createElement('button');
+                regBtn.id = 'register-donor-btn';
+                regBtn.className = 'btn btn-secondary'; // Distinct style
+                regBtn.style.alignSelf = 'flex-end';
+                regBtn.style.marginBottom = '1rem';
+                regBtn.innerText = "+ Register as Donor";
+                // Insert before the filter container or inside? Inside seems tight. Let's put it above filter container.
+                filterContainer.parentNode.insertBefore(regBtn, filterContainer);
+
+                // Logic
+                regBtn.addEventListener('click', async () => {
+                    if (!currentUser) {
+                        alert("Please login first to register as a donor.");
+                        window.location.href = "login.html";
+                        return;
+                    }
+
+                    // Simple Prompt-based registration for MVP
+                    // ideally a modal
+                    const group = prompt("Enter your Blood Group (e.g., O+, A-):");
+                    if (!group) return;
+                    const city = prompt("Enter your City:");
+                    if (!city) return;
+                    const phone = prompt("Enter your Contact Phone:");
+                    if (!phone) return;
+
+                    try {
+                        // Use setDoc to use uid as document ID, preventing duplicates
+                        await setDoc(doc(db, "donors", currentUser.uid), {
+                            name: currentUser.displayName || currentUser.email,
+                            bloodGroup: group.toUpperCase(),
+                            city: city,
+                            phone: phone,
+                            userId: currentUser.uid
+                        });
+                        alert("Registered successfully!");
+                        regBtn.textContent = 'Registered as Donor';
+                        regBtn.disabled = true;
+                        fetchDonors();
+                    } catch (e) {
+                        alert("Error registering: " + e.message);
+                    }
+                });
+            }
+
+
+            // --- Navbar Scroll Effect ---
+            const navbar = document.querySelector('.navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) navbar.classList.add('scrolled');
+                else navbar.classList.remove('scrolled');
+            });
+
+            // --- Particle Animation ---
+            try {
+                const canvas = document.getElementById('particle-overlay');
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    let particles = [];
+                    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+                    function initParticles() {
+                        particles = [];
+                        let count = Math.floor(canvas.width * canvas.height / 25000);
+                        for (let i = 0; i < count; i++) particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 2 + 1, speedX: (Math.random() * .5 - .25), speedY: (Math.random() * .5 - .25), opacity: Math.random() * .3 + .1 });
+                    }
+                    function draw() {
+                        if (!ctx) return;
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        particles.forEach(p => {
+                            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                            ctx.fillStyle = `rgba(144, 224, 239, ${p.opacity})`; ctx.fill();
+                            p.x += p.speedX; p.y += p.speedY;
+                            if (p.x < -p.size) p.x = canvas.width + p.size; if (p.x > canvas.width + p.size) p.x = -p.size;
+                            if (p.y < -p.size) p.y = canvas.height + p.size; if (p.y > canvas.height + p.size) p.y = -p.size;
+                        });
+                        requestAnimationFrame(draw);
+                    }
+                    resizeCanvas(); initParticles(); draw();
+                    window.addEventListener('resize', () => { resizeCanvas(); initParticles(); });
+                }
+            } catch (e) { }
+
+            // --- Mobile Nav Toggle ---
+            const hamburger = document.querySelector('.hamburger-menu');
+            const mobileNav = document.querySelector('.mobile-nav');
+            const mainNavList = document.querySelector('.navbar-nav');
+            if (hamburger && mobileNav && mainNavList) {
+                mobileNav.innerHTML = mainNavList.innerHTML;
+                hamburger.addEventListener('click', () => {
+                    mobileNav.classList.toggle('open');
+                    hamburger.innerHTML = mobileNav.classList.contains('open') ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+                });
+                mobileNav.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('nav-link')) {
+                        mobileNav.classList.remove('open');
+                        hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+                    }
+                });
+            }
+
+
+            // --- Role / Lang Logic ---
+            function updateRoleBasedUI() {
+                const role = localStorage.getItem('arogya-role') || 'patient';
+                document.body.setAttribute('data-role', role);
+                const navItems = document.querySelectorAll('.nav-item');
+                navItems.forEach(item => {
+                    if (item.classList.contains('role-patient') || item.classList.contains('role-doctor') || item.classList.contains('role-admin')) {
+                        item.style.display = 'none';
+                    }
+                });
+                navItems.forEach(item => {
+                    if (item.classList.contains(`role-${role}`)) {
+                        item.style.display = 'block';
+                    }
+                });
+            }
+
+            const translations = {
+                en: { navHome: "Home", navAbout: "About Us" }
+            };
+            function updateLanguage() { }
+
+            updateRoleBasedUI();
+
+        });
+    </script>
+</body>
+
+</html>

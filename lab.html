@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Results - Arogya</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #007aff;
+            --primary-light: #00b4d8;
+            --primary-lighter: #90e0ef;
+            --white: rgba(255, 255, 255, 0.9);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --gradient: linear-gradient(135deg, var(--primary-light), var(--primary));
+            
+            --status-pending: #f59e0b; /* Warning */
+            --status-completed: #10b981; /* Success */
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #003b5c, #001a29);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* --- Video Background & Overlays (Matching index.html) --- */
+        #video-background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -3;
+            overflow: hidden;
+        }
+
+        #bg-video {
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+        }
+
+        #gradient-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 180, 216, 0.3), rgba(0, 122, 255, 0.5));
+            z-index: -2;
+        }
+
+        #particle-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* --- Glassmorphism Helper (Matching index.html) --- */
+        .glass-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .glass-panel:hover {
+            box-shadow: 0 8px 40px 0 rgba(0, 122, 255, 0.4);
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Disable hover transform for static panels */
+        .glass-panel.no-hover-effect:hover {
+            transform: none;
+            box-shadow: var(--shadow);
+            border-color: var(--glass-border);
+        }
+
+        /* Shimmer Effect (from your index.html) */
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 75%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: skewX(-25deg);
+            transition: left 0.7s ease-in-out;
+        }
+        .glass-panel.no-hover-effect::before {
+            display: none;
+        }
+        .glass-panel:hover:not(.no-hover-effect)::before {
+            left: 150%;
+        }
+
+
+        /* --- Button Styles (Matching index.html) --- */
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: var(--text-primary);
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 122, 255, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .btn-secondary {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        /* --- Header / Navbar (Matching index.html) --- */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.25rem 5%; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            padding: 1rem 5%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+        
+        .navbar-logo i {
+            margin-right: 0.5rem;
+            color: var(--primary-lighter);
+        }
+
+        .navbar-nav {
+            list-style: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-item {
+            margin-left: 1.5rem;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding: 0.5rem 0;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link i {
+            margin-right: 8px;
+            font-size: 1rem;
+            color: var(--primary-lighter);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary-lighter);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--text-primary);
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        /* Language & Role Selectors (Matching index.html) */
+        .settings-nav {
+            display: flex;
+            align-items: center;
+            margin-left: 1.5rem;
+        }
+
+        .glass-select-wrapper {
+            position: relative;
+            margin-left: 1rem;
+        }
+
+        .glass-select {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.5rem 2.5rem 0.5rem 1rem;
+            border-radius: 10px;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        .glass-select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary-lighter);
+        }
+
+        .glass-select-wrapper::after {
+            content: '\f078';
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        /* Mobile Nav (Matching index.html) */
+        .hamburger-menu {
+            display: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .mobile-nav {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: left 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            z-index: 1000;
+        }
+
+        .mobile-nav.open {
+            left: 0;
+        }
+
+        .mobile-nav .nav-item {
+            margin: 1.5rem 0;
+        }
+
+        .mobile-nav .nav-link {
+            font-size: 1.5rem;
+        }
+
+        /* --- Main Content --- */
+        .main-container {
+            padding: 8rem 5% 4rem;
+            width: 100%;
+            min-height: 100vh;
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* --- Lab Results Content --- */
+        .lab-results-container {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; /* Align with border */
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: var(--primary-lighter);
+            transition: width 0.3s ease;
+        }
+        
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+        
+        .tab-btn.active {
+            color: var(--text-primary);
+        }
+        
+        .tab-btn.active::after {
+            width: 100%;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Glass Table */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        
+        .glass-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        
+        .glass-table th, .glass-table td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+        
+        .glass-table thead {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .glass-table th {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        
+        .glass-table tbody tr {
+            border-bottom: 1px solid var(--glass-border);
+            transition: background-color 0.3s ease;
+        }
+        
+        .glass-table tbody tr:last-child {
+            border-bottom: none;
+        }
+        
+        .glass-table tbody tr:not(.expandable-row):hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .glass-table .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.3rem 0.75rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .status-badge.pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--status-pending);
+        }
+        
+        .status-badge.completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--status-completed);
+        }
+        
+        .status-badge i {
+            margin-right: 0.5rem;
+        }
+
+        /* Expandable Row */
+        .expandable-row {
+            display: none;
+        }
+        
+        .expandable-row .expand-content {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1.5rem;
+        }
+        
+        .pdf-preview-mock {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 2rem;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .pdf-preview-mock h4 {
+            font-size: 1.25rem;
+            color: var(--primary-lighter);
+            margin-bottom: 1rem;
+        }
+        
+        .pdf-preview-mock p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        /* --- Footer (Matching index.html) --- */
+        .footer {
+            margin-top: 0;
+            padding: 4rem 5% 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .footer-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-column h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .footer-column h4::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background: var(--primary-light);
+        }
+
+        .footer-column p,
+        .footer-column a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 0.75rem;
+            display: block;
+            transition: color 0.3s ease;
+        }
+
+        .footer-column a:hover {
+            color: var(--primary-lighter);
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-icons a {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        .social-icons a:hover {
+            color: var(--primary-lighter);
+            transform: scale(1.1);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        /* --- Page Loader (Matching index.html) --- */
+        .loader-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #001a29; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        .loader-logo {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            filter: blur(5px);
+            opacity: 0.5;
+            animation: pulse-blur 2s infinite ease-in-out;
+        }
+        
+        .loader-logo i {
+            margin-right: 0.5rem;
+            color: var(--primary-lighter);
+        }
+
+        @keyframes pulse-blur {
+            0% {
+                filter: blur(5px);
+                opacity: 0.5;
+                transform: scale(1);
+            }
+            50% {
+                filter: blur(2px);
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            100% {
+                filter: blur(5px);
+                opacity: 0.5;
+                transform: scale(1);
+            }
+        }
+        
+        .loader-wrapper.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* --- Responsive Design --- */
+        @media (max-width: 992px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .hamburger-menu {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 6rem 3% 3rem;
+            }
+            
+            .page-header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .lab-results-container {
+                padding: 1rem;
+            }
+            
+            .tab-btn {
+                padding: 0.75rem 0.5rem;
+                font-size: 1rem;
+            }
+            
+            .glass-table {
+                font-size: 0.9rem;
+            }
+            
+            .glass-table th, .glass-table td {
+                padding: 0.75rem;
+            }
+            
+            .btn-sm {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+            
+            .pdf-preview-mock {
+                padding: 1rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .tab-nav {
+                gap: 0.5rem;
+            }
+            .tab-btn {
+                flex: 1;
+                text-align: center;
+                font-size: 0.9rem;
+                padding: 0.75rem 0.25rem;
+            }
+        }
+
+    </style>
+</head>
+<body data-role="patient"> <div class="loader-wrapper">
+        <div class="loader-logo"><i class="fa-solid fa-heart-pulse"></i>Arogya</div>
+    </div>
+
+    <div id="video-background-container">
+        <video autoplay muted loop playsinline id="bg-video" poster="https://via.placeholder.com/1920x1080/003366/FFFFFF?text=Loading+Video...">
+            <source src="medical-bg.mp4" type="video/mp4">
+            <source src="medical-bg.webm" type="video/webm">
+        </video>
+        <div id="gradient-overlay"></div>
+        <canvas id="particle-overlay"></canvas>
+    </div>
+
+    <nav class="navbar">
+        <a href="index.html" class="navbar-logo"><i class="fa-solid fa-heart-pulse"></i>Arogya</a>
+
+        <ul class="navbar-nav">
+            <li class="nav-item"><a href="index.html" class="nav-link" data-lang-key="navHome"><i class="fas fa-home"></i>Home</a></li>
+            <li class="nav-item"><a href="about.html" class="nav-link" data-lang-key="navAbout"><i class="fas fa-info-circle"></i>About Us</a></li>
+            <li class="nav-item"><a href="health-dashboard.html" class="nav-link" data-lang-key="navDashboard"><i class="fas fa-th-large"></i>Dashboard</a></li>
+            <li class="nav-item"><a href="symptom.html" class="nav-link" data-lang-key="navSymptom"><i class="fas fa-brain"></i>AI Checker</a></li>
+            <li class="nav-item"><a href="records.html" class="nav-link" data-lang-key="navRecords"><i class="fas fa-file-medical"></i>Records</a></li>
+            <li class="nav-item"><a href="donors.html" class="nav-link" data-lang-key="navDonors"><i class="fas fa-hand-holding-heart"></i>Donors</a></li>
+            <li class="nav-item"><a href="emergency.html" class="nav-link" data-lang-key="navEmergency"><i class="fas fa-ambulance"></i>Emergency</a></li>
+            <li class="nav-item"><a href="contact.html" class="nav-link" data-lang-key="navContact"><i class="fas fa-envelope"></i>Contact</a></li>
+        </ul>
+
+        <div class="settings-nav">
+            <div class="glass-select-wrapper">
+                <select id="language-selector" class="glass-select">
+                    <option value="en">English</option>
+                    <option value="hi">हिंदी (Hindi)</option>
+                    <option value="te">తెలుగు (Telugu)</option>
+                </select>
+            </div>
+            <div id="auth-container" style="margin-left: 1rem;">
+                <a href="login.html" class="btn btn-primary" data-lang-key="navLogin">Login</a>
+            </div>
+            <div class="hamburger-menu">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="mobile-nav">
+        </div>
+
+    <main class="main-container">
+        <header class="page-header">
+            <h1 data-lang-key="labTitle">Your Lab Results</h1>
+            <p data-lang-key="labSubtitle">View pending and completed lab test results securely.</p>
+        </header>
+
+        <div class="glass-panel no-hover-effect lab-results-container">
+            
+            <div class="tab-nav">
+                <button class="tab-btn active" data-tab="pending" data-lang-key="tabPending">Pending</button>
+                <button class="tab-btn" data-tab="completed" data-lang-key="tabCompleted">Completed</button>
+            </div>
+            
+            <div id="pending-tab" class="tab-content active">
+                <div class="table-wrapper">
+                    <table class="glass-table">
+                        <thead>
+                            <tr>
+                                <th data-lang-key="tableTestName">Test Name</th>
+                                <th data-lang-key="tableDate">Date</th>
+                                <th data-lang-key="tableStatus">Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Complete Blood Count (CBC)</td>
+                                <td>2025-10-27</td>
+                                <td>
+                                    <span class="status-badge pending">
+                                        <i class="fas fa-clock"></i> <span data-lang-key="statusPending">Pending</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-secondary btn-sm toggle-details" data-lang-key="btnDetails">Details</button>
+                                </td>
+                            </tr>
+                            <tr class="expandable-row">
+                                <td colspan="4">
+                                    <div class="expand-content">
+                                        <p data-lang-key="pendingMsg">Your results are not yet available. Please check back later.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Lipid Profile</td>
+                                <td>2025-10-26</td>
+                                <td>
+                                    <span class="status-badge pending">
+                                        <i class="fas fa-clock"></i> <span data-lang-key="statusPending">Pending</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-secondary btn-sm toggle-details" data-lang-key="btnDetails">Details</button>
+                                </td>
+                            </tr>
+                            <tr class="expandable-row">
+                                <td colspan="4">
+                                    <div class="expand-content">
+                                        <p data-lang-key="pendingMsg">Your results are not yet available. Please check back later.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div id="completed-tab" class="tab-content">
+                <div class="table-wrapper">
+                    <table class="glass-table">
+                        <thead>
+                            <tr>
+                                <th data-lang-key="tableTestName">Test Name</th>
+                                <th data-lang-key="tableDate">Date</th>
+                                <th data-lang-key="tableStatus">Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Thyroid Panel (T3, T4, TSH)</td>
+                                <td>2025-10-25</td>
+                                <td>
+                                    <span class="status-badge completed">
+                                        <i class="fas fa-check-circle"></i> <span data-lang-key="statusCompleted">Completed</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-secondary btn-sm toggle-details" data-lang-key="btnViewPDF">View PDF</button>
+                                </td>
+                            </tr>
+                            <tr class="expandable-row">
+                                <td colspan="4">
+                                    <div class="expand-content">
+                                        <div class="pdf-preview-mock">
+                                            <h4 data-lang-key="pdfMockTitle">PDF Report Preview</h4>
+                                            <p data-lang-key="pdfMockText">Mockup of the lab result PDF for 'Thyroid Panel'.</p>
+                                            <button class="btn btn-primary"><i class="fas fa-download"></i> <span data-lang-key="btnDownload">Download</span></button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Glucose (Fasting)</td>
+                                <td>2025-10-22</td>
+                                <td>
+                                    <span class="status-badge completed">
+                                        <i class="fas fa-check-circle"></i> <span data-lang-key="statusCompleted">Completed</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-secondary btn-sm toggle-details" data-lang-key="btnViewPDF">View PDF</button>
+                                </td>
+                            </tr>
+                            <tr class="expandable-row">
+                                <td colspan="4">
+                                    <div class="expand-content">
+                                        <div class="pdf-preview-mock">
+                                            <h4 data-lang-key="pdfMockTitle">PDF Report Preview</h4>
+                                            <p data-lang-key="pdfMockText">Mockup of the lab result PDF for 'Glucose (Fasting)'.</p>
+                                            <button class="btn btn-primary"><i class="fas fa-download"></i> <span data-lang-key="btnDownload">Download</span></button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-column">
+                <h4 data-lang-key="footerAbout">About Arogya</h4>
+                <p data-lang-key="footerAboutText">Arogya is an intelligent telemedicine and healthcare ecosystem designed to provide smart, compassionate, and accessible healthcare for everyone.</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h4 data-lang-key="footerQuickLinks">Quick Links</h4>
+                <a href="index.html" data-lang-key="navHome">Home</a>
+                <a href="about.html" data-lang-key="navAbout">About Us</a>
+                <a href="symptom.html" data-lang-key="navSymptom">Symptom Checker</a>
+                <a href="pharmacy.html" data-lang-key="navPharmacy">Pharmacy</a>
+            </div>
+            <div class="footer-column">
+                <h4 data-lang-key="footerContact">Contact Info</h4>
+                <p><i class="fas fa-map-marker-alt"></i> 123 Health St, Medicity</p>
+                <p><i class="fas fa-phone-alt"></i> +1 (555) 123-4567</p>
+                <p><i class="fas fa-envelope"></i> support@arogya.ai</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2025 Arogya. All rights reserved.
+        </div>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Page Loader ---
+            const loaderWrapper = document.querySelector('.loader-wrapper');
+            window.addEventListener('load', () => {
+                loaderWrapper.classList.add('hidden');
+            });
+
+            // --- Navbar Scroll Effect ---
+            const navbar = document.querySelector('.navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+
+            // --- Particle Animation (Matching index.html) ---
+            const canvas = document.getElementById('particle-overlay');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+
+            function initParticles() {
+                particles = [];
+                let particleCount = Math.floor(canvas.width * canvas.height / 25000);
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        size: Math.random() * 2 + 1,
+                        speedX: (Math.random() * 0.5 - 0.25),
+                        speedY: (Math.random() * 0.5 - 0.25),
+                        opacity: Math.random() * 0.3 + 0.1
+                    });
+                }
+            }
+
+            function drawParticles() {
+                if (ctx) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    particles.forEach(p => {
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(144, 224, 239, ${p.opacity})`; // #90e0ef
+                        ctx.fill();
+
+                        p.x += p.speedX;
+                        p.y += p.speedY;
+
+                        if (p.x < -p.size) p.x = canvas.width + p.size;
+                        if (p.x > canvas.width + p.size) p.x = -p.size;
+                        if (p.y < -p.size) p.y = canvas.height + p.size;
+                        if (p.y > canvas.height + p.size) p.y = -p.size;
+                    });
+                }
+                requestAnimationFrame(drawParticles);
+            }
+            
+            const bgVideo = document.getElementById('bg-video');
+            bgVideo.addEventListener('error', () => {
+                console.warn('Video failed to load. Displaying static gradient.');
+                bgVideo.style.display = 'none';
+            });
+            
+            if (canvas.getContext) {
+                resizeCanvas();
+                initParticles();
+                drawParticles();
+                window.addEventListener('resize', () => {
+                    resizeCanvas();
+                    initParticles();
+                });
+            }
+
+
+            // --- Multi-Language Support ---
+            const translations = {
+                en: {
+                    navHome: "Home",
+                    navAbout: "About Us",
+                    navSymptom: "AI Checker",
+                    navTelemedicine: "Telemedicine",
+                    navPharmacy: "Pharmacy",
+                    navLabResults: "Lab Results",
+                    navDonors: "Blood Donors",
+                    navDashboard: "Dashboard",
+                    navPatients: "Patients",
+                    navAppointments: "Appointments",
+                    navPrescription: "Create Prescription",
+                    navAdminDashboard: "Dashboard",
+                    navUserMgmt: "User Mgmt",
+                    navAnalytics: "Analytics",
+                    navSettings: "Settings",
+                    navContact: "Contact",
+                    navLogin: "Login / Sign Up",
+                    labTitle: "Your Lab Results",
+                    labSubtitle: "View pending and completed lab test results securely.",
+                    tabPending: "Pending",
+                    tabCompleted: "Completed",
+                    tableTestName: "Test Name",
+                    tableDate: "Date",
+                    tableStatus: "Status",
+                    statusPending: "Pending",
+                    statusCompleted: "Completed",
+                    btnDetails: "Details",
+                    btnViewPDF: "View PDF",
+                    btnDownload: "Download",
+                    pendingMsg: "Your results are not yet available. Please check back later.",
+                    pdfMockTitle: "PDF Report Preview",
+                    pdfMockText: "Mockup of the lab result PDF.",
+                    footerAbout: "About Arogya",
+                    footerAboutText: "Arogya is an intelligent telemedicine and healthcare ecosystem designed to provide smart, compassionate, and accessible healthcare for everyone.",
+                    footerQuickLinks: "Quick Links",
+                    footerContact: "Contact Info"
+                },
+                hi: {
+                    navHome: "होम",
+                    navAbout: "हमारे बारे में",
+                    navSymptom: "लक्षण परीक्षक",
+                    navTelemedicine: "टेलीमेडिसिन",
+                    navPharmacy: "फार्मेसी",
+                    navLabResults: "लैब परिणाम",
+                    navDonors: "रक्त दाता",
+                    navDashboard: "डैशबोर्ड",
+                    navPatients: "मरीजों",
+                    navAppointments: "मुलाकातें",
+                    navPrescription: "प्रिस्क्रिप्शन बनाएं",
+                    navAdminDashboard: "डैशबोर्ड",
+                    navUserMgmt: "उपयोगकर्ता प्रबंधन",
+                    navAnalytics: "विश्लेषिकी",
+                    navSettings: "सेटिंग्स",
+                    navContact: "संपर्क",
+                    navLogin: "लॉगिन / साइन अप",
+                    labTitle: "आपके लैब परिणाम",
+                    labSubtitle: "लंबित और पूर्ण लैब परीक्षण के परिणाम सुरक्षित रूप से देखें।",
+                    tabPending: "लंबित",
+                    tabCompleted: "पूर्ण",
+                    tableTestName: "परीक्षण का नाम",
+                    tableDate: "तारीख",
+                    tableStatus: "स्थिति",
+                    statusPending: "लंबित",
+                    statusCompleted: "पूर्ण",
+                    btnDetails: "विवरण",
+                    btnViewPDF: "पीडीएफ देखें",
+                    btnDownload: "डाउनलोड करें",
+                    pendingMsg: "आपके परिणाम अभी उपलब्ध नहीं हैं। कृपया बाद में जाँच करें।",
+                    pdfMockTitle: "पीडीएफ रिपोर्ट पूर्वावलोकन",
+                    pdfMockText: "लैब परिणाम पीडीएफ का मॉकअप।",
+                    footerAbout: "आरोग्य के बारे में",
+                    footerAboutText: "आरोग्य एक बुद्धिमान टेलीमेडिसिन और हेल्थकेयर इकोसिस्टम है जिसे सभी के लिए स्मार्ट, दयालु और सुलभ स्वास्थ्य सेवा प्रदान करने के लिए डिज़ाइन किया गया है।",
+                    footerQuickLinks: "त्वरित लिंक्स",
+                    footerContact: "संपर्क जानकारी"
+                },
+                te: {
+                    navHome: "హోమ్",
+                    navAbout: "మా గురించి",
+                    navSymptom: "లక్షణ తనిఖీ",
+                    navTelemedicine: "టెలిమెడిసిన్",
+                    navPharmacy: "ఫార్మసీ",
+                    navLabResults: "ల్యాబ్ ఫలితాలు",
+                    navDonors: "రక్త దాతలు",
+                    navDashboard: "డాష్బోర్డ్",
+                    navPatients: "రోగులు",
+                    navAppointments: "అపాయింట్‌మెంట్లు",
+                    navPrescription: "ప్రిస్క్రిప్షన్ సృష్టించండి",
+                    navAdminDashboard: "డాష్బోర్డ్",
+                    navUserMgmt: "వినియోగదారు నిర్వహణ",
+                    navAnalytics: "విశ్లేషణలు",
+                    navSettings: "సెట్టింగ్‌లు",
+                    navContact: "సంప్రదించండి",
+                    navLogin: "లాగిన్ / సైన్ అప్",
+                    labTitle: "మీ ల్యాబ్ ఫలితాలు",
+                    labSubtitle: "పెండింగ్‌లో ఉన్న మరియు పూర్తయిన ల్యాబ్ పరీక్ష ఫలితాలను సురక్షితంగా వీక్షించండి.",
+                    tabPending: "పెండింగ్‌లో ఉంది",
+                    tabCompleted: "పూర్తయింది",
+                    tableTestName: "పరీక్ష పేరు",
+                    tableDate: "తేదీ",
+                    tableStatus: "స్థితి",
+                    statusPending: "పెండింగ్‌లో ఉంది",
+                    statusCompleted: "పూర్తయింది",
+                    btnDetails: "వివరాలు",
+                    btnViewPDF: "PDFని వీక్షించండి",
+                    btnDownload: "డౌన్లోడ్",
+                    pendingMsg: "మీ ఫలితాలు ఇంకా అందుబాటులో లేవు. దయచేసి తర్వాత తనిఖీ చేయండి.",
+                    pdfMockTitle: "PDF నివేదిక ప్రివ్యూ",
+                    pdfMockText: "ల్యాబ్ ఫలితం PDF యొక్క నమూనా.",
+                    footerAbout: "ఆరోగ్య గురించి",
+                    footerAboutText: "ఆరోగ్య అనేది ప్రతిఒక్కరికీ స్మార్ట్, కారుణ్య మరియు ప్రాప్యత ఆరోగ్య సంరక్షణను అందించడానికి రూపొందించబడిన ఒక తెలివైన టెలిమెడిసిన్ మరియు ఆరోగ్య సంరక్షణ పర్యావరణ వ్యవస్థ.",
+                    footerQuickLinks: "త్వరిత లింకులు",
+                    footerContact: "సంప్రదింపు సమాచారం"
+                }
+            };
+
+            const langSelector = document.getElementById('language-selector');
+            let currentLang = localStorage.getItem('arogyaLang') || 'en';
+
+            function updateLanguage() {
+                const lang = langSelector.value;
+                localStorage.setItem('arogyaLang', lang);
+                currentLang = lang;
+                
+                document.documentElement.lang = lang;
+                
+                const elements = document.querySelectorAll('[data-lang-key]');
+                elements.forEach(el => {
+                    const key = el.getAttribute('data-lang-key');
+                    if (translations[lang] && translations[lang][key]) {
+                        el.innerText = translations[lang][key]; 
+                    }
+                });
+            }
+
+            langSelector.value = currentLang;
+            langSelector.addEventListener('change', updateLanguage);
+            
+
+            // --- Role System ---
+            let currentUserRole = localStorage.getItem('arogyaRole') || 'patient';
+            document.body.setAttribute('data-role', currentUserRole);
+
+            function updateRoleBasedUI() {
+                const role = currentUserRole;
+                document.body.setAttribute('data-role', role);
+
+                // Filter Nav Links
+                const allNavLinks = document.querySelectorAll('.navbar-nav .nav-item, .mobile-nav .nav-item');
+                allNavLinks.forEach(link => {
+                    link.style.display = 'block';
+                    if (link.classList.contains('role-patient') && role !== 'patient') {
+                        link.style.display = 'none';
+                    }
+                    if (link.classList.contains('role-doctor') && role !== 'doctor') {
+                        link.style.display = 'none';
+                    }
+                    if (link.classList.contains('role-admin') && role !== 'admin') {
+                        link.style.display = 'none';
+                    }
+                });
+            }
+            
+            // --- Mobile Nav Toggle ---
+            const hamburger = document.querySelector('.hamburger-menu');
+            const mobileNav = document.querySelector('.mobile-nav');
+            const mainNavList = document.querySelector('.navbar-nav');
+            
+            mobileNav.innerHTML = mainNavList.innerHTML;
+
+            hamburger.addEventListener('click', () => {
+                mobileNav.classList.toggle('open');
+                hamburger.innerHTML = mobileNav.classList.contains('open') ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+            });
+            
+            mobileNav.addEventListener('click', (e) => {
+                if(e.target.classList.contains('nav-link')) {
+                     mobileNav.classList.remove('open');
+                     hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+                }
+            });
+
+
+            // --- MATCHING: Back to Top Button (JS-Created) ---
+            const backToTopBtn = document.createElement('button');
+            backToTopBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+            backToTopBtn.className = 'btn btn-primary';
+            backToTopBtn.title = 'Back to Top';
+            backToTopBtn.style.cssText = 'position: fixed; bottom: 2rem; left: 2rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 999; opacity: 0; visibility: hidden; transition: all 0.3s ease;';
+            document.body.appendChild(backToTopBtn);
+
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 300) {
+                    backToTopBtn.style.opacity = '1';
+                    backToTopBtn.style.visibility = 'visible';
+                } else {
+                    backToTopBtn.style.opacity = '0';
+                    backToTopBtn.style.visibility = 'hidden';
+                }
+            });
+
+            backToTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            
+            
+            // --- Lab Results Tab Logic ---
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabName = button.getAttribute('data-tab');
+                    
+                    // Update buttons
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    // Update content
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === `${tabName}-tab`) {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+            
+            // --- Expandable Row Logic ---
+            const toggleButtons = document.querySelectorAll('.toggle-details');
+            
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const row = button.closest('tr');
+                    const expandableRow = row.nextElementSibling;
+                    
+                    if (expandableRow && expandableRow.classList.contains('expandable-row')) {
+                        if (expandableRow.style.display === 'table-row') {
+                            expandableRow.style.display = 'none';
+                        } else {
+                            expandableRow.style.display = 'table-row';
+                        }
+                    }
+                });
+            });
+
+            
+            // --- Final Initialization ---
+            updateRoleBasedUI();
+            updateLanguage();
+
+        });
+    </script>
+</body>
+</html>

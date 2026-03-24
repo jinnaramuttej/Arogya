@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<body style="background:black; color:white; font-family:sans-serif; text-align:center; padding-top:100px;">
+    <h2>⚠️ System Admin</h2>
+    <button onclick="clean()"
+        style="background:red; color:white; padding:20px; font-size:24px; border:none; cursor:pointer;">
+        🗑️ WIPE DATABASE HISTORY
+    </button>
+    <p id="msg"></p>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBO7cEKXu2MkeTj27Yofy6pio-3f-5W7dk",
+            authDomain: "asish-3758c.firebaseapp.com",
+            projectId: "asish-3758c",
+            databaseURL: "https://asish-3758c-default-rtdb.firebaseio.com",
+            storageBucket: "asish-3758c.firebasestorage.app",
+            messagingSenderId: "217297296216",
+            appId: "1:217297296216:web:7fcc098f4ac4b42429232d",
+            measurementId: "G-795H300PGM"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window.clean = () => {
+            if (confirm("DELETE ALL DATA?")) {
+                remove(ref(db, 'ambulances/'))
+                    .then(() => document.getElementById("msg").innerText = "Database Cleaned.")
+                    .catch(e => alert(e));
+            }
+        }
+    </script>
+</body>
+
+</html>

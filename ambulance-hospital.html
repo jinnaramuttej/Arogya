@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Hospital HQ</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: black;
+            overflow: hidden;
+        }
+
+        #map {
+            height: 100vh;
+            width: 100%;
+            position: absolute;
+        }
+
+        .panel {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 360px;
+            bottom: 15px;
+            background: rgba(20, 20, 20, 0.95);
+            z-index: 999;
+            border-radius: 12px;
+            border: 1px solid #444;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+            color: white;
+        }
+
+        .head {
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            background: #151515;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .head h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #4dabf7;
+        }
+
+        .list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .card {
+            background: #2a2a2a;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            transition: 0.3s;
+        }
+
+        .card.crit {
+            background: #3a1010;
+            border-left-color: #ff1744;
+            animation: flash 1.5s infinite alternate;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .tag {
+            font-size: 10px;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            background: #007bff;
+        }
+
+        .tag.crit {
+            background: #d50000;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .val {
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .btn-track {
+            width: 100%;
+            margin-top: 10px;
+            padding: 8px;
+            background: #444;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .btn-track:hover {
+            background: #555;
+        }
+
+        @keyframes flash {
+            from {
+                border-left-color: #ff1744;
+            }
+
+            to {
+                border-left-color: #ff8a80;
+                box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+            }
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #00e676;
+            color: black;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            z-index: 2000;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="panel">
+        <div class="head">
+            <h2>🚑 Control Center</h2>
+            <button onclick="enableSiren()" style="margin-top:5px; padding:5px; font-size:11px; cursor:pointer;">🔈
+                Enable Siren</button>
+        </div>
+        <div class="list" id="list">
+            <p style="text-align:center; color:#555; margin-top:50px;">Waiting for signal...</p>
+        </div>
+    </div>
+    <div id="map"></div>
+    <audio id="siren" loop src="https://assets.mixkit.co/active_storage/sfx/2996/2996-preview.mp3"></audio>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDDV-p_a_-GyLGjAsaaLFkVLk79x3JqFyA",
+            authDomain: "asish-f7dd3.firebaseapp.com",
+            projectId: "asish-f7dd3",
+            databaseURL: "https://asish-f7dd3-default-rtdb.firebaseio.com",
+            storageBucket: "asish-f7dd3.firebasestorage.app",
+            messagingSenderId: "120249700723",
+            appId: "1:120249700723:web:22f1c37d6666f0c97f7506",
+            measurementId: "G-KKX5X8VD6M"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Map
+        const map = L.map('map', { zoomControl: false }).setView([20.5937, 78.9629], 5);
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(map);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png').addTo(map);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        const markers = {};
+        const lines = {};
+        const ambulanceStates = {}; // Track previous states
+        let hq = null;
+        let sirenOn = false;
+
+        navigator.geolocation.getCurrentPosition(p => {
+            hq = [p.coords.longitude, p.coords.latitude];
+            L.marker([hq[1], hq[0]]).addTo(map).bindPopup("<b>Hospital HQ</b>").openPopup();
+            map.setView([hq[1], hq[0]], 12);
+        });
+
+        window.enableSiren = () => {
+            const s = document.getElementById("siren");
+            s.volume = 0.5; s.play().then(() => { s.pause(); sirenOn = true; });
+        };
+
+        // GLOBAL TRACK FUNCTION FOR BUTTON
+        window.flyToDriver = (lat, lng) => {
+            map.flyTo([lat, lng], 17, { duration: 1.5 });
+        };
+
+        onValue(ref(db, 'ambulances/'), snap => {
+            const data = snap.val();
+            const list = document.getElementById("list");
+            const now = Date.now();
+
+            if (!data) {
+                list.innerHTML = '<p style="text-align:center; color:#555; margin-top:50px;">No active ambulances.</p>';
+                return;
+            }
+
+            list.innerHTML = "";
+            let anyCritical = false;
+
+            Object.entries(data)
+                .sort((a, b) => (b[1].status === 'online') - (a[1].status === 'online')) // Online first
+                .forEach(([id, info]) => {
+                    const isOnline = info.status === 'online' && (now - info.timestamp < 300000); // 5 mins timeout
+                    
+                    // Detect Offline -> Online transition
+                    if (isOnline && (!ambulanceStates[id] || ambulanceStates[id].status !== 'online')) {
+                        showToast(`🚑 ${id} is now ONLINE`);
+                    }
+                    ambulanceStates[id] = info;
+
+                    if (isOnline && info.isCritical) anyCritical = true;
+
+                    // Markers
+                    if (isOnline) {
+                        if (markers[id]) {
+                            markers[id].setLatLng([info.lat, info.lng]);
+                            markers[id].setOpacity(1);
+                        } else {
+                            markers[id] = L.marker([info.lat, info.lng]).addTo(map).bindPopup(`<b>${id}</b><br>Speed: ${Math.round(info.speed * 3.6)} km/h`);
+                        }
+                    } else {
+                        if (markers[id]) {
+                            markers[id].setOpacity(0.5); // Dim offline markers
+                        }
+                    }
+
+                    // Routing Line
+                    if (hq && isOnline) {
+                        fetch(`https://router.project-osrm.org/route/v1/driving/${info.lng},${info.lat};${hq[0]},${hq[1]}?geometries=geojson&overview=full`)
+                            .then(r => r.json()).then(res => {
+                                if (!res.routes[0]) return;
+                                const rData = res.routes[0];
+
+                                if (lines[id]) map.removeLayer(lines[id]);
+                                lines[id] = L.geoJSON(rData.geometry, {
+                                    style: { color: info.isCritical ? '#ff1744' : '#2979ff', weight: 4 }
+                                }).addTo(map);
+
+                                document.getElementById(`eta-${id}`).innerText = Math.round(rData.duration / 60) + "m";
+                                document.getElementById(`dist-${id}`).innerText = (rData.distance / 1000).toFixed(1) + "km";
+                            });
+                    }
+
+                    // Card HTML
+                    const isCrit = info.isCritical;
+                    const statusColor = isOnline ? (isCrit ? '#ff1744' : '#00e676') : '#757575';
+                    const statusText = isOnline ? (isCrit ? 'CRITICAL' : 'ONLINE') : 'OFFLINE';
+
+                    list.innerHTML += `
+                        <div class="card ${isCrit && isOnline ? 'crit' : ''}" style="border-left-color: ${statusColor}; opacity: ${isOnline ? 1 : 0.6}">
+                            <div class="row">
+                                <strong>${id}</strong>
+                                <span class="tag" style="background: ${statusColor}">${statusText}</span>
+                            </div>
+                            <div class="stats">
+                                <div>ETA <span class="val" id="eta-${id}">--</span></div>
+                                <div>DIST <span class="val" id="dist-${id}">--</span></div>
+                            </div>
+                            ${isOnline ? `<button class="btn-track" onclick="flyToDriver(${info.lat}, ${info.lng})">📍 TRACK LOCATION</button>` : ''}
+                        </div>
+                    `;
+                });
+
+            // Siren Logic
+            const s = document.getElementById("siren");
+            if (sirenOn) {
+                if (anyCritical && s.paused) s.play();
+                else if (!anyCritical && !s.paused) s.pause();
+            }
+        });
+
+        function showToast(msg) {
+            const div = document.createElement('div');
+            div.className = 'toast';
+            div.innerText = msg;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 4000);
+        }
+    </script>
+</body>
+
+</html>

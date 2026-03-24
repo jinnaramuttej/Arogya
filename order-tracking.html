@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Your Order - Arogya</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #007aff;
+            --primary-light: #00b4d8;
+            --primary-lighter: #90e0ef;
+            --white: rgba(255, 255, 255, 0.9);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --gradient: linear-gradient(135deg, var(--primary-light), var(--primary));
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #003b5c, #001a29);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #video-background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -3;
+            overflow: hidden;
+        }
+
+        #bg-video {
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+        }
+
+        #gradient-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 180, 216, 0.3), rgba(0, 122, 255, 0.5));
+            z-index: -2;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .main-container {
+            padding: 8rem 5% 4rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .order-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .order-id {
+            color: var(--primary-lighter);
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Tracking Timeline */
+        .tracking-status-container {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin: 4rem 0;
+            padding: 0 10%;
+        }
+
+        .tracking-line {
+            position: absolute;
+            top: 25px;
+            left: 15%;
+            right: 15%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 1;
+        }
+
+        .tracking-line-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 100%;
+            background: var(--gradient);
+            transition: width 1s ease;
+        }
+
+        .status-step {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 80px;
+        }
+
+        .status-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            transition: all 0.5s ease;
+        }
+
+        .status-step.active .status-icon {
+            background: var(--gradient);
+            border-color: var(--primary-lighter);
+            box-shadow: 0 0 20px rgba(0, 180, 216, 0.6);
+            transform: scale(1.2);
+        }
+
+        .status-step.completed .status-icon {
+            background: var(--primary);
+            border-color: var(--primary-light);
+        }
+
+        .status-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .status-step.active .status-label,
+        .status-step.completed .status-label {
+            color: var(--white);
+        }
+
+        /* Map Section */
+        .tracking-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .map-container {
+            min-height: 400px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 15px;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            background: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .simulated-map-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* Order Details */
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .detail-item {
+            margin-bottom: 1rem;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.2rem;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        /* Estimated Time */
+        .eta-card {
+            text-align: center;
+            padding: 1.5rem;
+            background: rgba(0, 122, 255, 0.1);
+            border: 1px solid var(--primary-light);
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .eta-time {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-lighter);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.25rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+        }
+
+        .navbar-logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .navbar-logo i {
+            margin-right: 0.5rem;
+            color: var(--primary-lighter);
+        }
+
+        @media (max-width: 992px) {
+            .tracking-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tracking-status-container {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="video-background-container">
+        <video autoplay muted loop playsinline id="bg-video">
+            <source src="medical-bg.mp4" type="video/mp4">
+        </video>
+        <div id="gradient-overlay"></div>
+    </div>
+
+    <nav class="navbar">
+        <a href="index.html" class="navbar-logo"><i class="fa-solid fa-heart-pulse"></i>Arogya</a>
+        <a href="pharmacy.html" style="color: white; text-decoration: none;"><i class="fas fa-arrow-left"></i> Back to
+            Pharmacy</a>
+    </nav>
+
+    <main class="main-container">
+        <div class="order-header">
+            <h1>Order Tracking</h1>
+            <div class="order-id" id="display-order-id">ORD-XXXXX</div>
+        </div>
+
+        <div class="glass-panel">
+            <div class="tracking-status-container">
+                <div class="tracking-line">
+                    <div class="tracking-line-progress" id="line-progress"></div>
+                </div>
+                <div class="status-step" id="step-confirmed">
+                    <div class="status-icon"><i class="fas fa-check"></i></div>
+                    <div class="status-label">Confirmed</div>
+                </div>
+                <div class="status-step" id="step-packed">
+                    <div class="status-icon"><i class="fas fa-box"></i></div>
+                    <div class="status-label">Packed</div>
+                </div>
+                <div class="status-step" id="step-shipped">
+                    <div class="status-icon"><i class="fas fa-truck"></i></div>
+                    <div class="status-label">Shipped</div>
+                </div>
+                <div class="status-step" id="step-delivery">
+                    <div class="status-icon"><i class="fas fa-motorcycle"></i></div>
+                    <div class="status-label">Out for Delivery</div>
+                </div>
+                <div class="status-step" id="step-delivered">
+                    <div class="status-icon"><i class="fas fa-house-user"></i></div>
+                    <div class="status-label">Delivered</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tracking-grid">
+            <div class="glass-panel">
+                <div class="eta-card">
+                    <div class="detail-label">ESTIMATED DELIVERY TIME</div>
+                    <div class="eta-time" id="eta-time">--:--</div>
+                    <div id="eta-status">Calculated Arrival</div>
+                </div>
+
+                <h3>Delivery Details</h3>
+                <div class="details-grid" style="margin-top: 1.5rem;">
+                    <div class="detail-item">
+                        <div class="detail-label">Status</div>
+                        <div class="detail-value" id="order-status-text">Processing</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Payment</div>
+                        <div class="detail-value" id="payment-method-text">--</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Delivery Guy</div>
+                        <div class="detail-value">Robert Fox</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Phone</div>
+                        <div class="detail-value">+1 234 567 890</div>
+                    </div>
+                    <div class="detail-item full-width" style="grid-column: 1/-1;">
+                        <div class="detail-label">Delivery Address</div>
+                        <div class="detail-value" id="delivery-address">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel map-container">
+                <div id="map">
+                    <i class="fas fa-map-marked-alt" style="font-size: 4rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                    <p>Live GPS Tracking Active</p>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary);">Simulating Delivery Route...</p>
+
+                    <!-- Simulated Map Movement -->
+                    <div
+                        style="position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px; font-size: 0.7rem;">
+                        40.7128° N, 74.0060° W
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { auth, db } from "./firebase-config.js";
+        import { collection, query, where, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('orderId');
+
+        document.getElementById('display-order-id').textContent = orderId || 'N/A';
+
+        if (orderId) {
+            initTracking(orderId);
+        } else {
+            alert("No Order ID provided.");
+        }
+
+        async function initTracking(id) {
+            const q = query(collection(db, "orders"), where("orderId", "==", id));
+
+            // Listen for changes
+            onSnapshot(q, (snapshot) => {
+                if (!snapshot.empty) {
+                    const orderData = snapshot.docs[0].data();
+                    updateUI(orderData);
+                } else {
+                    console.error("Order not found");
+                }
+            });
+        }
+
+        function updateUI(order) {
+            document.getElementById('delivery-address').textContent = order.address;
+            document.getElementById('payment-method-text').textContent = order.paymentMethod.toUpperCase();
+            document.getElementById('order-status-text').textContent = order.status;
+
+            const steps = ['Confirmed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered'];
+            const currentIndex = steps.indexOf(order.status);
+
+            const progress = (currentIndex / (steps.length - 1)) * 100;
+            document.getElementById('line-progress').style.width = progress + '%';
+
+            steps.forEach((step, idx) => {
+                const stepEl = document.getElementById('step-' + step.toLowerCase().replace(/ /g, ''));
+                if (idx < currentIndex) {
+                    stepEl.classList.add('completed');
+                    stepEl.classList.remove('active');
+                } else if (idx === currentIndex) {
+                    stepEl.classList.add('active');
+                    stepEl.classList.remove('completed');
+                } else {
+                    stepEl.classList.remove('active', 'completed');
+                }
+            });
+
+            // Set ETA based on status
+            let eta = "30-40 mins";
+            if (order.status === 'Packed') eta = "25-30 mins";
+            if (order.status === 'Shipped') eta = "15-20 mins";
+            if (order.status === 'Out for Delivery') eta = "5-10 mins";
+            if (order.status === 'Delivered') eta = "ARRIVED";
+
+            document.getElementById('eta-time').textContent = eta;
+        }
+
+        // --- Simulated GPS/Map Pulsing ---
+        setInterval(() => {
+            const mapIcon = document.querySelector('.fa-map-marked-alt');
+            if (mapIcon) {
+                mapIcon.style.transform = 'scale(1.1)';
+                setTimeout(() => mapIcon.style.transform = 'scale(1)', 500);
+            }
+        }, 2000);
+    </script>
+</body>
+
+</html>

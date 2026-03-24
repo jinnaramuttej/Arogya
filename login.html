@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Arogya</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #007aff;
+            --primary-light: #00b4d8;
+            --primary-lighter: #90e0ef;
+            --white: rgba(255, 255, 255, 0.9);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #007aff, #00b4d8, #90e0ef);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Video Background */
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            overflow: hidden;
+        }
+
+        .video-background video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translate(-50%, -50%);
+            z-index: -2;
+            object-fit: cover;
+        }
+
+        .video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 122, 255, 0.7), rgba(0, 180, 216, 0.7), rgba(144, 224, 239, 0.7));
+            z-index: -1;
+        }
+
+        /* Particle Canvas */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Login Container */
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Glass Card */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
+            padding: 3rem;
+            transition: var(--transition);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .glass-card:hover::before {
+            left: 100%;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+        }
+
+        /* Logo */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--white), var(--primary-lighter));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .logo-subtitle {
+            margin-top: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Form */
+        .form-container {
+            position: relative;
+        }
+
+        .form-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.8rem 1.2rem;
+            border-radius: 50px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-lighter);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .input-icon {
+            position: relative;
+        }
+
+        .input-icon i {
+            position: absolute;
+            right: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .input-icon i:hover {
+            color: var(--primary-lighter);
+        }
+
+        /* Role Selector */
+        .role-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .role-option {
+            padding: 0.8rem;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .role-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .role-option.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-color: var(--primary);
+        }
+
+        /* Checkbox */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary);
+        }
+
+        .checkbox-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .checkbox-label a {
+            color: var(--primary-lighter);
+            text-decoration: none;
+        }
+
+        .checkbox-label a:hover {
+            text-decoration: underline;
+        }
+
+        /* Button */
+        .btn {
+            width: 100%;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 122, 255, 0.6);
+        }
+
+        /* Form Switch */
+        .form-switch {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .form-switch a {
+            color: var(--primary-lighter);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .form-switch a:hover {
+            text-decoration: underline;
+        }
+
+        /* Social Login */
+        .social-login {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .social-divider {
+            position: relative;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .social-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--glass-border);
+        }
+
+        .social-divider span {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 0 1rem;
+            position: relative;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .social-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 0.8rem;
+            border-radius: 50px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .social-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Language Selector */
+        .language-selector {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            padding: 0.5rem 1rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        /* Back to Home */
+        .back-home {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            padding: 0.5rem 1rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 100;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-home:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 1rem;
+            }
+
+            .glass-card {
+                padding: 2rem;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            .role-selector {
+                grid-template-columns: 1fr;
+            }
+
+            .social-buttons {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+
+            .language-selector,
+            .back-home {
+                position: static;
+                margin-bottom: 1rem;
+                display: inline-block;
+            }
+
+            body {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Video Background -->
+    <div class="video-background">
+        <video autoplay muted loop id="bg-video">
+            <source
+                src="https://assets.mixkit.co/videos/preview/mixkit-medical-technology-digital-animation-39879-large.mp4"
+                type="video/mp4">
+        </video>
+    </div>
+    <div class="video-overlay"></div>
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Back to Home -->
+    <a href="index.html" class="back-home">
+        <i class="fas fa-arrow-left"></i>
+        <span data-translate="back_home">Back to Home</span>
+    </a>
+
+    <!-- Language Selector -->
+    <select class="language-selector" id="language-selector">
+        <option value="en">English</option>
+        <option value="hi">हिंदी</option>
+        <option value="te">తెలుగు</option>
+    </select>
+
+    <!-- Login Container -->
+    <div class="login-container">
+        <div class="glass-card">
+            <!-- Logo -->
+            <div class="logo-container">
+                <div class="logo">
+                    <i class="fas fa-heartbeat"></i>
+                    <span data-translate="logo">Arogya</span>
+                </div>
+                <div class="logo-subtitle" data-translate="logo_subtitle">Your Intelligent Health Companion</div>
+            </div>
+
+            <!-- Form -->
+            <div class="form-container">
+                <h2 class="form-title" id="form-title" data-translate="login_title">Welcome Back</h2>
+
+                <form id="auth-form">
+                    <!-- Role Selector -->
+                    <div class="role-selector">
+                        <div class="role-option active" data-role="patient" data-translate="role_patient">Patient</div>
+                        <div class="role-option" data-role="doctor" data-translate="role_doctor">Doctor</div>
+                        <div class="role-option" data-role="admin" data-translate="role_admin">Admin</div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group">
+                        <label class="form-label" for="email" data-translate="email_label">Email Address</label>
+                        <div class="input-icon">
+                            <input type="email" id="email" class="form-input" placeholder="Enter your email" required
+                                data-translate-placeholder="email_placeholder">
+                        </div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="form-group">
+                        <label class="form-label" for="password" data-translate="password_label">Password</label>
+                        <div class="input-icon">
+                            <input type="password" id="password" class="form-input" placeholder="Enter your password"
+                                required data-translate-placeholder="password_placeholder">
+                            <i class="fas fa-eye" id="toggle-password"></i>
+                        </div>
+                    </div>
+
+                    <!-- Remember Me -->
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="remember" class="checkbox">
+                        <label for="remember" class="checkbox-label">
+                            <span data-translate="remember_me">Remember me</span>
+                        </label>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary" id="submit-btn">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span data-translate="login_btn">Sign In</span>
+                    </button>
+                </form>
+
+                <!-- Form Switch -->
+                <div class="form-switch">
+                    <span data-translate="no_account">Don't have an account?</span>
+                    <a href="#" id="switch-form" data-translate="signup_link">Sign Up</a>
+                </div>
+
+                <!-- Social Login -->
+                <div class="social-login">
+                    <div class="social-divider">
+                        <span data-translate="or_continue">Or continue with</span>
+                    </div>
+                    <div class="social-buttons">
+                        <button class="social-btn" id="google-login-btn">
+                            <i class="fab fa-google"></i>
+                            <span>Google</span>
+                        </button>
+                        <button class="social-btn">
+                            <i class="fab fa-facebook-f"></i>
+                            <span>Facebook</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db, googleProvider } from "./firebase-config.js";
+        import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Translation Dictionary
+        const translations = {
+            en: {
+                logo: "Arogya",
+                logo_subtitle: "Your Intelligent Health Companion",
+                back_home: "Back to Home",
+                login_title: "Welcome Back",
+                role_patient: "Patient",
+                role_doctor: "Doctor",
+                role_admin: "Admin",
+                email_label: "Email Address",
+                email_placeholder: "Enter your email",
+                password_label: "Password",
+                password_placeholder: "Enter your password",
+                name_label: "Full Name",
+                name_placeholder: "Enter your full name",
+                confirm_password_label: "Confirm Password",
+                confirm_password_placeholder: "Confirm your password",
+                remember_me: "Remember me",
+                login_btn: "Sign In",
+                signup_btn: "Sign Up",
+                no_account: "Don't have an account?",
+                have_account: "Already have an account?",
+                signup_link: "Sign Up",
+                login_link: "Sign In",
+                or_continue: "Or continue with"
+            },
+            hi: {
+                logo: "आरोग्य",
+                logo_subtitle: "आपका बुद्धिमान स्वास्थ्य साथी",
+                back_home: "होम पर वापस",
+                login_title: "वापसी पर स्वागत है",
+                role_patient: "रोगी",
+                role_doctor: "डॉक्टर",
+                role_admin: "एडमिन",
+                email_label: "ईमेल पता",
+                email_placeholder: "अपना ईमेल दर्ज करें",
+                password_label: "पासवर्ड",
+                password_placeholder: "अपना पासवर्ड दर्ज करें",
+                name_label: "पूरा नाम",
+                name_placeholder: "अपना पूरा नाम दर्ज करें",
+                confirm_password_label: "पासवर्ड की पुष्टि करें",
+                confirm_password_placeholder: "अपना पासवर्ड की पुष्टि करें",
+                remember_me: "मुझे याद रखें",
+                login_btn: "साइन इन",
+                signup_btn: "साइन अप",
+                no_account: "क्या आपके पास खाता नहीं है?",
+                have_account: "क्या आपके पास पहले से खाता है?",
+                signup_link: "साइन अप",
+                login_link: "साइन इन",
+                or_continue: "या जारी रखें"
+            },
+            te: {
+                logo: "ఆరోగ్య",
+                logo_subtitle: "మీ తెలివైన ఆరోగ్య సహచరుడు",
+                back_home: "హోమ్‌కి తిరిగండి",
+                login_title: "స్వాగతం",
+                role_patient: "రోగి",
+                role_doctor: "డాక్టర్",
+                role_admin: "అడ్మిన్",
+                email_label: "ఇమెయిల్ చిరునామా",
+                email_placeholder: "మీ ఇమెయిల్‌ని నమోదు చేయండి",
+                password_label: "పాస్‌వర్డ్",
+                password_placeholder: "మీ పాస్‌వర్డ్‌ని నమోదు చేయండి",
+                name_label: "పూర్తి పేరు",
+                name_placeholder: "మీ పూర్తి పేరును నమోదు చేయండి",
+                confirm_password_label: "పాస్‌వర్డ్‌ను నిర్ధారించండి",
+                confirm_password_placeholder: "మీ పాస్‌వర్డ్‌ను నిర్ధారించండి",
+                remember_me: "నన్ను గుర్తుంచుకోండి",
+                login_btn: "సైన్ ఇన్",
+                signup_btn: "సైన్ అప్",
+                no_account: "మీకు ఖాతా లేదా?",
+                have_account: "మీకు ఇప్పటికే ఖాతా ఉందా?",
+                signup_link: "సైన్ అప్",
+                login_link: "సైన్ ఇన్",
+                or_continue: "లేదా కొనసాగించండి"
+            }
+        };
+
+        // Initialize language
+        let currentLanguage = localStorage.getItem('arogya-language') || 'en';
+        document.getElementById('language-selector').value = currentLanguage;
+
+        // Initialize user role
+        let currentUserRole = localStorage.getItem('arogya-role') || 'patient';
+
+        // State
+        let isLogin = true;
+        let selectedRole = 'patient';
+
+        // DOM Elements
+        const languageSelector = document.getElementById('language-selector');
+        const formTitle = document.getElementById('form-title');
+        const authForm = document.getElementById('auth-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const switchForm = document.getElementById('switch-form');
+        const formSwitch = document.querySelector('.form-switch');
+        const togglePassword = document.getElementById('toggle-password');
+        const passwordInput = document.getElementById('password');
+        const roleOptions = document.querySelectorAll('.role-option');
+
+        // Event Listeners
+        languageSelector.addEventListener('change', changeLanguage);
+        authForm.addEventListener('submit', handleSubmit);
+        switchForm.addEventListener('click', toggleFormMode);
+        togglePassword.addEventListener('click', togglePasswordVisibility);
+        document.getElementById('google-login-btn').addEventListener('click', handleGoogleLogin);
+
+        roleOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                roleOptions.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                selectedRole = option.getAttribute('data-role');
+            });
+        });
+
+        // Functions
+        function changeLanguage() {
+            currentLanguage = languageSelector.value;
+            localStorage.setItem('arogya-language', currentLanguage);
+            updateLanguage();
+        }
+
+        function updateLanguage() {
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (translations[currentLanguage][key]) {
+                    element.textContent = translations[currentLanguage][key];
+                }
+            });
+
+            document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
+                const key = element.getAttribute('data-translate-placeholder');
+                if (translations[currentLanguage][key]) {
+                    element.placeholder = translations[currentLanguage][key];
+                }
+            });
+
+            // Update form title
+            formTitle.textContent = isLogin ?
+                translations[currentLanguage].login_title :
+                translations[currentLanguage].signup_title;
+
+            // Update submit button
+            submitBtn.innerHTML = isLogin ?
+                '<i class="fas fa-sign-in-alt"></i><span>' + translations[currentLanguage].login_btn + '</span>' :
+                '<i class="fas fa-user-plus"></i><span>' + translations[currentLanguage].signup_btn + '</span>';
+
+            // Update form switch
+            formSwitch.innerHTML = isLogin ?
+                '<span>' + translations[currentLanguage].no_account + '</span><a href="#" id="switch-form">' + translations[currentLanguage].signup_link + '</a>' :
+                '<span>' + translations[currentLanguage].have_account + '</span><a href="#" id="switch-form">' + translations[currentLanguage].login_link + '</a>';
+
+            // Re-attach event listener to new switch form link
+            document.getElementById('switch-form').addEventListener('click', toggleFormMode);
+        }
+
+        function toggleFormMode(e) {
+            e.preventDefault();
+            isLogin = !isLogin;
+
+            if (isLogin) {
+                // Switch to login mode
+                removeSignupFields();
+                formTitle.textContent = translations[currentLanguage].login_title;
+                submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i><span>' + translations[currentLanguage].login_btn + '</span>';
+                formSwitch.innerHTML = '<span>' + translations[currentLanguage].no_account + '</span><a href="#" id="switch-form">' + translations[currentLanguage].signup_link + '</a>';
+            } else {
+                // Switch to signup mode
+                addSignupFields();
+                formTitle.textContent = translations[currentLanguage].signup_title;
+                submitBtn.innerHTML = '<i class="fas fa-user-plus"></i><span>' + translations[currentLanguage].signup_btn + '</span>';
+                formSwitch.innerHTML = '<span>' + translations[currentLanguage].have_account + '</span><a href="#" id="switch-form">' + translations[currentLanguage].login_link + '</a>';
+            }
+
+            // Re-attach event listener
+            document.getElementById('switch-form').addEventListener('click', toggleFormMode);
+        }
+
+        function addSignupFields() {
+            // Add name field
+            const nameGroup = document.createElement('div');
+            nameGroup.className = 'form-group';
+            nameGroup.innerHTML = `
+                <label class="form-label" for="name" data-translate="name_label">Full Name</label>
+                <div class="input-icon">
+                    <input type="text" id="name" class="form-input" placeholder="Enter your full name" required data-translate-placeholder="name_placeholder">
+                </div>
+            `;
+
+            // Add confirm password field
+            const confirmGroup = document.createElement('div');
+            confirmGroup.className = 'form-group';
+            confirmGroup.innerHTML = `
+                <label class="form-label" for="confirm-password" data-translate="confirm_password_label">Confirm Password</label>
+                <div class="input-icon">
+                    <input type="password" id="confirm-password" class="form-input" placeholder="Confirm your password" required data-translate-placeholder="confirm_password_placeholder">
+                    <i class="fas fa-eye" id="toggle-confirm-password"></i>
+                </div>
+            `;
+
+            // Insert before remember me
+            const rememberGroup = document.querySelector('.checkbox-group');
+            authForm.insertBefore(confirmGroup, rememberGroup);
+            authForm.insertBefore(nameGroup, confirmGroup);
+
+            // Add event listener for confirm password toggle
+            document.getElementById('toggle-confirm-password').addEventListener('click', function () {
+                const confirmInput = document.getElementById('confirm-password');
+                if (confirmInput.type === 'password') {
+                    confirmInput.type = 'text';
+                    this.classList.remove('fa-eye');
+                    this.classList.add('fa-eye-slash');
+                } else {
+                    confirmInput.type = 'password';
+                    this.classList.remove('fa-eye-slash');
+                    this.classList.add('fa-eye');
+                }
+            });
+        }
+
+        function removeSignupFields() {
+            const nameField = document.getElementById('name');
+            const confirmField = document.getElementById('confirm-password');
+
+            if (nameField) nameField.closest('.form-group').remove();
+            if (confirmField) confirmField.closest('.form-group').remove();
+        }
+
+        function togglePasswordVisibility() {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                togglePassword.classList.remove('fa-eye');
+                togglePassword.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                togglePassword.classList.remove('fa-eye-slash');
+                togglePassword.classList.add('fa-eye');
+            }
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+
+            // Get form data
+            const email = document.getElementById('email').value;
+            const password = passwordInput.value;
+
+            // UI Loading State
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            submitBtn.disabled = true;
+
+            try {
+                if (!isLogin) {
+                    // --- Sign Up ---
+                    const name = document.getElementById('name').value;
+                    const confirmPassword = document.getElementById('confirm-password').value;
+
+                    if (password !== confirmPassword) {
+                        throw new Error('Passwords do not match!');
+                    }
+
+                    // Create User
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+
+                    // Update Profile Name
+                    await updateProfile(user, { displayName: name });
+
+                    // Store User Data in Firestore
+                    await setDoc(doc(db, "users", user.uid), {
+                        name: name,
+                        email: email,
+                        role: selectedRole,
+                        createdAt: new Date().toISOString(),
+                        uid: user.uid
+                    });
+
+                    // Success
+                    handleRedirect(selectedRole);
+
+                } else {
+                    // --- Login ---
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+
+                    // Fetch User Data from Firestore
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        handleRedirect(userData.role || 'patient');
+                    } else {
+                        // If no doc exists (fallback), assume patient or use selectedRole
+                        // You might want to create the doc here if it's missing
+                        handleRedirect(selectedRole || 'patient');
+                    }
+                }
+            } catch (error) {
+                console.error("Auth Error:", error);
+
+                // Show friendly error message
+                let msg = error.message;
+                if (error.code === 'auth/email-already-in-use') msg = "Email already in use.";
+                if (error.code === 'auth/wrong-password') msg = "Incorrect password.";
+                if (error.code === 'auth/user-not-found') msg = "No account found with this email.";
+
+                alert(msg);
+
+                // Reset Button
+                submitBtn.innerHTML = isLogin ?
+                    '<i class="fas fa-sign-in-alt"></i><span>' + translations[currentLanguage].login_btn + '</span>' :
+                    '<i class="fas fa-user-plus"></i><span>' + translations[currentLanguage].signup_btn + '</span>';
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function handleGoogleLogin(e) {
+            e.preventDefault();
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                const user = result.user;
+
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+
+                if (!userDoc.exists()) {
+                    // New Google User -> Create Doc
+                    await setDoc(userDocRef, {
+                        name: user.displayName,
+                        email: user.email,
+                        role: selectedRole, // User the role currently selected in UI
+                        createdAt: new Date().toISOString(),
+                        uid: user.uid,
+                        photoURL: user.photoURL
+                    });
+                    handleRedirect(selectedRole);
+                } else {
+                    // Existing User -> Use stored role
+                    const userData = userDoc.data();
+                    handleRedirect(userData.role);
+                }
+
+            } catch (error) {
+                console.error("Google Auth Error:", error);
+                alert(error.message);
+            }
+        }
+
+        function handleRedirect(role) {
+            // Save to local storage for quick UI access on other pages (optional but helpful)
+            localStorage.setItem('arogya-role', role);
+            localStorage.setItem('arogyaRole', role);
+            localStorage.setItem('arogyarole', role);
+
+            const dashboards = {
+                'patient': 'health-dashboard.html',
+                'doctor': 'patients.html',
+                'admin': 'admin-dashboard.html'
+            };
+
+            window.location.href = dashboards[role] || 'index.html';
+        }
+
+
+        // Particle Animation
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function createParticle() {
+            return {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 3 + 1,
+                speedX: Math.random() * 1 - 0.5,
+                speedY: Math.random() * 1 - 0.5,
+                opacity: Math.random() * 0.5 + 0.2
+            };
+        }
+
+        function initParticles() {
+            particles = [];
+            const particleCount = Math.min(100, window.innerWidth / 10);
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(createParticle());
+            }
+        }
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(particle => {
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${particle.opacity})`;
+                ctx.fill();
+
+                // Update position
+                particle.x += particle.speedX;
+                particle.y += particle.speedY;
+
+                // Reset if out of bounds
+                if (particle.x < 0 || particle.x > canvas.width) particle.speedX *= -1;
+                if (particle.y < 0 || particle.y > canvas.height) particle.speedY *= -1;
+            });
+
+            requestAnimationFrame(drawParticles);
+        }
+
+        // Initialize
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            initParticles();
+        });
+
+        // Fallback for video background
+        const bgVideo = document.getElementById('bg-video');
+        bgVideo.addEventListener('error', () => {
+            bgVideo.style.display = 'none';
+        });
+
+        // Initialize everything
+        resizeCanvas();
+        initParticles();
+        drawParticles();
+        updateLanguage();
+
+        // Set initial role
+        roleOptions.forEach(option => {
+            if (option.getAttribute('data-role') === currentUserRole) {
+                option.classList.add('active');
+            }
+        });
+    </script>
+</body>
+
+</html>

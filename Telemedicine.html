@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telemedicine - Arogya</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #007aff;
+            --primary-light: #00b4d8;
+            --primary-lighter: #90e0ef;
+            --white: rgba(255, 255, 255, 0.9);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #007aff, #00b4d8, #90e0ef);
+            min-height: 100vh;
+        }
+
+        /* Video Background */
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            overflow: hidden;
+        }
+
+        .video-background video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translate(-50%, -50%);
+            z-index: -2;
+            object-fit: cover;
+        }
+
+        .video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 122, 255, 0.7), rgba(0, 180, 216, 0.7), rgba(144, 224, 239, 0.7));
+            z-index: -1;
+        }
+
+        /* Particle Canvas */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1rem 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 1000;
+            transition: var(--transition);
+        }
+
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--white), var(--primary-lighter));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .nav-link i {
+            margin-right: 8px;
+            font-size: 1rem;
+            color: var(--primary-lighter);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary-lighter);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .language-selector {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            padding: 0.5rem 1rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border-radius: 50px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 122, 255, 0.6);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-outline:hover {
+            background: var(--glass-bg);
+            transform: translateY(-2px);
+        }
+
+        /* Page Header */
+        .page-header {
+            padding: 8rem 2rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .page-subtitle {
+            font-size: 1.2rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        /* Glass Card */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            transition: var(--transition);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .glass-card:hover::before {
+            left: 100%;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+        }
+
+        /* Telemedicine Container */
+        .telemedicine-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* Video Call Section */
+        .video-call-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .main-video {
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .main-video video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(0, 122, 255, 0.3), rgba(0, 180, 216, 0.3));
+        }
+
+        .video-placeholder-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: var(--primary-lighter);
+        }
+
+        .video-placeholder-text {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        .video-controls {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 1rem;
+            border-radius: 50px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .control-btn:hover {
+            background: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .control-btn.end-call {
+            background: #ef4444;
+            width: 60px;
+            height: 60px;
+        }
+
+        .control-btn.end-call:hover {
+            background: #dc2626;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .participant-video {
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .participant-info {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .participant-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .participant-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Session Info */
+        .session-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card {
+            padding: 1.5rem;
+            border-radius: 15px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .info-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-lighter);
+        }
+
+        .info-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.3rem;
+        }
+
+        .info-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        /* Waiting Room */
+        .waiting-room {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .waiting-room.active {
+            display: block;
+        }
+
+        .waiting-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-lighter);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .waiting-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .waiting-text {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .queue-position {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--white), var(--primary-lighter));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Chat Section */
+        .chat-section {
+            margin-top: 2rem;
+        }
+
+        .chat-container {
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 1rem;
+        }
+
+        .chat-message {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .chat-message.doctor {
+            flex-direction: row;
+        }
+
+        .chat-message.patient {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 0.8rem 1.2rem;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .chat-message.patient .message-content {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 0.3rem;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 0.8rem 1.2rem;
+            border-radius: 50px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            font-family: inherit;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary-lighter);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .video-call-section {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .mobile-menu {
+                position: fixed;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background: var(--glass-bg);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border-bottom: 1px solid var(--glass-border);
+                padding: 1rem 2rem;
+                transform: translateY(-100%);
+                opacity: 0;
+                visibility: hidden;
+                transition: var(--transition);
+                z-index: 999;
+            }
+
+            .mobile-menu.active {
+                transform: translateY(0);
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .mobile-menu-links {
+                list-style: none;
+            }
+
+            .mobile-menu-link {
+                padding: 1rem 0;
+                border-bottom: 1px solid var(--glass-border);
+            }
+
+            .mobile-menu-link:last-child {
+                border-bottom: none;
+            }
+
+            .mobile-menu-link a {
+                color: var(--text-primary);
+                text-decoration: none;
+                font-weight: 500;
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .session-info {
+                grid-template-columns: 1fr;
+            }
+
+            .video-controls {
+                bottom: 1rem;
+                padding: 0.8rem;
+            }
+
+            .control-btn {
+                width: 40px;
+                height: 40px;
+            }
+
+            .control-btn.end-call {
+                width: 50px;
+                height: 50px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-title {
+                font-size: 1.8rem;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Video Background -->
+    <div class="video-background">
+        <video autoplay muted loop id="bg-video">
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-medical-technology-digital-animation-39879-large.mp4" type="video/mp4">
+        </video>
+    </div>
+    <div class="video-overlay"></div>
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="index.html" class="navbar-logo"><i class="fa-solid fa-heart-pulse"></i>Arogya</a>
+
+        <ul class="navbar-nav">
+            <li class="nav-item"><a href="index.html" class="nav-link" data-lang-key="navHome"><i class="fas fa-home"></i>Home</a></li>
+            <li class="nav-item"><a href="about.html" class="nav-link" data-lang-key="navAbout"><i class="fas fa-info-circle"></i>About Us</a></li>
+            <li class="nav-item"><a href="health-dashboard.html" class="nav-link" data-lang-key="navDashboard"><i class="fas fa-th-large"></i>Dashboard</a></li>
+            <li class="nav-item"><a href="symptom.html" class="nav-link" data-lang-key="navSymptom"><i class="fas fa-brain"></i>AI Checker</a></li>
+            <li class="nav-item"><a href="records.html" class="nav-link" data-lang-key="navRecords"><i class="fas fa-file-medical"></i>Records</a></li>
+            <li class="nav-item"><a href="donors.html" class="nav-link" data-lang-key="navDonors"><i class="fas fa-hand-holding-heart"></i>Donors</a></li>
+            <li class="nav-item"><a href="emergency.html" class="nav-link" data-lang-key="navEmergency"><i class="fas fa-ambulance"></i>Emergency</a></li>
+            <li class="nav-item"><a href="contact.html" class="nav-link" data-lang-key="navContact"><i class="fas fa-envelope"></i>Contact</a></li>
+        </ul>
+
+        <div class="settings-nav">
+            <div class="glass-select-wrapper">
+                <select id="language-selector" class="glass-select">
+                    <option value="en">English</option>
+                    <option value="hi">हिंदी</option>
+                    <option value="te">తెలుగు</option>
+                </select>
+            </div>
+            <div id="auth-container" style="margin-left: 1rem;">
+                <a href="login.html" class="btn btn-primary" data-lang-key="navLogin">Login</a>
+            </div>
+            <div class="hamburger-menu">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="mobile-nav">
+    </div>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <h1 class="page-title" data-translate="telemedicine_title">Telemedicine Consultation</h1>
+        <p class="page-subtitle" data-translate="telemedicine_subtitle">Connect with healthcare professionals from the comfort of your home</p>
+    </header>
+
+    <!-- Telemedicine Container -->
+    <div class="telemedicine-container">
+        <!-- Waiting Room -->
+        <div class="glass-card waiting-room" id="waiting-room">
+            <div class="waiting-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h2 class="waiting-title" data-translate="waiting_title">Waiting for Doctor</h2>
+            <p class="waiting-text" data-translate="waiting_text">You're in the queue. The doctor will join shortly.</p>
+            <div class="queue-position">2</div>
+            <p data-translate="queue_position">Position in queue</p>
+            <button class="btn btn-primary" id="join-consultation-btn" data-translate="join_consultation">Join Consultation</button>
+        </div>
+
+        <!-- Video Call Section -->
+        <div class="video-call-section" id="video-call-section" style="display: none;">
+            <div class="glass-card main-video">
+                <div class="video-placeholder">
+                    <div class="video-placeholder-icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <div class="video-placeholder-text" data-translate="video_placeholder">Doctor's video will appear here</div>
+                </div>
+                <div class="video-controls">
+                    <button class="control-btn" id="mute-btn">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button class="control-btn" id="video-btn">
+                        <i class="fas fa-video"></i>
+                    </button>
+                    <button class="control-btn" id="screen-share-btn">
+                        <i class="fas fa-desktop"></i>
+                    </button>
+                    <button class="control-btn end-call" id="end-call-btn">
+                        <i class="fas fa-phone-slash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="glass-card participant-video">
+                    <div class="video-placeholder">
+                        <div class="video-placeholder-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                    <div class="participant-info">
+                        <div class="participant-avatar">Y</div>
+                        <div class="participant-name">You</div>
+                    </div>
+                </div>
+
+                <div class="glass-card info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <div class="info-label" data-translate="doctor_name">Doctor</div>
+                    <div class="info-value">Dr. Sarah Johnson</div>
+                </div>
+
+                <div class="glass-card info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="info-label" data-translate="session_time">Session Time</div>
+                    <div class="info-value" id="session-timer">00:00</div>
+                </div>
+
+                <div class="glass-card info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-signal"></i>
+                    </div>
+                    <div class="info-label" data-translate="connection">Connection</div>
+                    <div class="info-value" style="color: #4ade80;">Excellent</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session Info -->
+        <div class="session-info" id="session-info" style="display: none;">
+            <div class="glass-card info-card">
+                <div class="info-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="info-label" data-translate="appointment_id">Appointment ID</div>
+                <div class="info-value">#APT2024001</div>
+            </div>
+
+            <div class="glass-card info-card">
+                <div class="info-icon">
+                    <i class="fas fa-stethoscope"></i>
+                </div>
+                <div class="info-label" data-translate="specialization">Specialization</div>
+                <div class="info-value">General Medicine</div>
+            </div>
+
+            <div class="glass-card info-card">
+                <div class="info-icon">
+                    <i class="fas fa-notes-medical"></i>
+                </div>
+                <div class="info-label" data-translate="consultation_type">Consultation Type</div>
+                <div class="info-value">Video Call</div>
+            </div>
+
+            <div class="glass-card info-card">
+                <div class="info-icon">
+                    <i class="fas fa-rupee-sign"></i>
+                </div>
+                <div class="info-label" data-translate="consultation_fee">Consultation Fee</div>
+                <div class="info-value">₹500</div>
+            </div>
+        </div>
+
+        <!-- Chat Section -->
+        <div class="chat-section" id="chat-section" style="display: none;">
+            <div class="glass-card chat-container">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-message doctor">
+                        <div class="message-avatar">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <div>
+                            <div class="message-content">
+                                Hello! I'm Dr. Sarah Johnson. How can I help you today?
+                            </div>
+                            <div class="message-time">10:00 AM</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" class="chat-input" id="telemedicine-chat-input" placeholder="Type your message..." data-translate-placeholder="chat_placeholder">
+                    <button class="btn btn-primary" id="send-message-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Assistant Button -->
+    <button id="ai-chat-btn" title="AI Health Assistant"
+        style="position: fixed; bottom: 8rem; right: 2rem; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4); z-index: 9999; border: none; cursor: pointer; transition: all 0.3s ease;">
+        <i class="fas fa-robot"></i>
+    </button>
+
+    <!-- AI Chat Interface -->
+    <div id="ai-chat-interface"
+        style="position: fixed; bottom: 10rem; right: 2rem; width: 350px; height: 500px; background: rgba(30, 30, 30, 0.98); backdrop-filter: blur(20px); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 9998; display: none; flex-direction: column; overflow: hidden;">
+        <!-- Chat Header -->
+        <div
+            style="padding: 1rem; background: linear-gradient(135deg, #667eea, #764ba2); color: white; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin: 0; font-size: 1.1rem;">🤖 AI Health Assistant</h3>
+                <small style="opacity: 0.9;">Powered by Groq</small>
+            </div>
+            <button id="close-chat"
+                style="background: transparent; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 0; width: 30px; height: 30px;">×</button>
+        </div>
+
+        <!-- Chat Messages -->
+        <div id="ai-chat-messages"
+            style="flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+            <div
+                style="background: rgba(102, 126, 234, 0.2); padding: 0.75rem; border-radius: 10px; border-left: 3px solid #667eea;">
+                <strong style="color: #667eea;">AI Assistant</strong>
+                <p style="margin: 0.5rem 0 0 0; color: #ccc; font-size: 0.9rem;">Hello! I'm your AI health assistant.
+                    How can I help you today?</p>
+            </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div style="padding: 1rem; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(20,20,20,0.8);">
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="text" id="ai-chat-input" placeholder="Ask me anything about health..."
+                    style="flex: 1; padding: 0.75rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 0.9rem;">
+                <button id="ai-send-chat"
+                    style="padding: 0.75rem 1.25rem; background: linear-gradient(135deg, #667eea, #764ba2); border: none; border-radius: 10px; color: white; cursor: pointer; font-weight: 600;">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Translation Dictionary
+        const translations = {
+            en: {
+                logo: "Arogya",
+                navHome: "Home",
+                navAbout: "About Us",
+                navSymptom: "AI Checker",
+                navTelemedicine: "Telemedicine",
+                navPharmacy: "Pharmacy",
+                navDonors: "Blood Donors",
+                navEmergency: "Emergency",
+                navDashboard: "Dashboard",
+                navPatients: "Patients",
+                navAppointments: "Appointments",
+                navPrescription: "Create Prescription",
+                navAdminDashboard: "Dashboard",
+                navUserMgmt: "User Mgmt",
+                navAnalytics: "Analytics",
+                navSettings: "Settings",
+                navContact: "Contact",
+                navLogin: "Login / Sign Up",
+                telemedicine_title: "Telemedicine Consultation",
+                telemedicine_subtitle: "Connect with healthcare professionals from the comfort of your home",
+                waiting_title: "Waiting for Doctor",
+                waiting_text: "You're in the queue. The doctor will join shortly.",
+                queue_position: "Position in queue",
+                join_consultation: "Join Consultation",
+                video_placeholder: "Doctor's video will appear here",
+                doctor_name: "Doctor",
+                session_time: "Session Time",
+                connection: "Connection",
+                appointment_id: "Appointment ID",
+                specialization: "Specialization",
+                consultation_type: "Consultation Type",
+                consultation_fee: "Consultation Fee",
+                chat_placeholder: "Type your message..."
+            },
+            hi: {
+                logo: "आरोग्य",
+                navHome: "होम",
+                navAbout: "हमारे बारे में",
+                navSymptom: "लक्षण परीक्षक",
+                navTelemedicine: "टेलीमेडिसिन",
+                navPharmacy: "फार्मेसी",
+                navDonors: "रक्त दाता",
+                navDashboard: "डैशबोर्ड",
+                navPatients: "मरीजों",
+                navAppointments: "मुलाकातें",
+                navPrescription: "प्रिस्क्रिप्शन बनाएं",
+                navAdminDashboard: "डैशबोर्ड",
+                navUserMgmt: "उपयोगकर्ता प्रबंधन",
+                navAnalytics: "विश्लेषिकी",
+                navSettings: "सेटिंग्स",
+                navContact: "संपर्क",
+                navLogin: "लॉगिन / साइन अप",
+                telemedicine_title: "टेलीमेडिसिन परामर्श",
+                telemedicine_subtitle: "अपने घर के आराम से स्वास्थ्य देखभाल पेशेवरों से जुड़ें",
+                waiting_title: "डॉक्टर का इंतजार",
+                waiting_text: "आप कतार में हैं। डॉक्टर जल्द ही जुड़ जाएंगे।",
+                queue_position: "कतार में स्थान",
+                join_consultation: "परामर्श में शामिल हों",
+                video_placeholder: "डॉक्टर का वीडियो यहां दिखाई देगा",
+                doctor_name: "डॉक्टर",
+                session_time: "सत्र समय",
+                connection: "कनेक्शन",
+                appointment_id: "अपॉइंटमेंट आईडी",
+                specialization: "विशेषज्ञता",
+                consultation_type: "परामर्श प्रकार",
+                consultation_fee: "परामर्श शुल्क",
+                chat_placeholder: "अपना संदेश टाइप करें..."
+            },
+            te: {
+                logo: "ఆరోగ్య",
+                navHome: "హోమ్",
+                navAbout: "మా గురించి",
+                navSymptom: "AI లక్షణ తనిఖీ",
+                navTelemedicine: "టెలిమెడిసిన్",
+                navPharmacy: "ఫార్మసీ",
+                navDonors: "రక్త దాతలు",
+                navDashboard: "డాష్బోర్డ్",
+                navPatients: "రోగులు",
+                navAppointments: "అపాయింట్‌మెంట్లు",
+                navPrescription: "ప్రిస్క్రిప్షన్ సృష్టించండి",
+                navAdminDashboard: "డాష్బోర్డ్",
+                navUserMgmt: "వినియోగదారు నిర్వహణ",
+                navAnalytics: "విశ్లేషణలు",
+                navSettings: "సెట్టింగ్‌లు",
+                navContact: "సంప్రదించండి",
+                navLogin: "లాగిన్ / సైన్ అప్",
+                telemedicine_title: "టెలీమెడిసిన్ సంప్రదింపు",
+                telemedicine_subtitle: "మీ ఇంటి ఆరామం నుండి ఆరోగ్య సంరక్షణ నిపుణులతో కనెక్ట్ అవ్వండి",
+                waiting_title: "డాక్టర్ కోసం వేచి ఉంది",
+                waiting_text: "మీరు వరుసలో ఉన్నారు. డాక్టర్ త్వరలో చేరుతారు.",
+                queue_position: "వరుసలో స్థానం",
+                join_consultation: "సంప్రదింపులో చేరండి",
+                video_placeholder: "డాక్టర్ వీడియో ఇక్కడ కనిపిస్తుంది",
+                doctor_name: "డాక్టర్",
+                session_time: "సెషన్ సమయం",
+                connection: "కనెక్షన్",
+                appointment_id: "అపాయింట్‌మెంట్ ఐడి",
+                specialization: "ప్రత్యేకత",
+                consultation_type: "సంప్రదింపు రకం",
+                consultation_fee: "సంప్రదింపు ఫీజు",
+                chat_placeholder: "మీ సందేశాన్ని టైప్ చేయండి..."
+            }
+        };
+
+        // Initialize language
+        let currentLanguage = localStorage.getItem('arogya-language') || 'en';
+        document.getElementById('language-selector').value = currentLanguage;
+
+        // Initialize user role
+        let currentUserRole = localStorage.getItem('arogya-role') || null;
+
+        // DOM Elements
+        const languageSelector = document.getElementById('language-selector');
+        const hamburger = document.querySelector('.hamburger-menu');
+        const mobileNav = document.querySelector('.mobile-nav');
+        const mainNavList = document.querySelector('.navbar-nav');
+        const bgVideo = document.getElementById('bg-video');
+        const waitingRoom = document.getElementById('waiting-room');
+        const videoCallSection = document.getElementById('video-call-section');
+        const sessionInfo = document.getElementById('session-info');
+        const chatSection = document.getElementById('chat-section');
+        const joinConsultationBtn = document.getElementById('join-consultation-btn');
+        const sessionTimer = document.getElementById('session-timer');
+        const muteBtn = document.getElementById('mute-btn');
+        const videoBtn = document.getElementById('video-btn');
+        const screenShareBtn = document.getElementById('screen-share-btn');
+        const endCallBtn = document.getElementById('end-call-btn');
+        const chatInput = document.getElementById('telemedicine-chat-input');
+        const sendMessageBtn = document.getElementById('send-message-btn');
+        const chatMessages = document.getElementById('chat-messages');
+
+        // Timer variables
+        let timerInterval;
+        let seconds = 0;
+
+        // Event Listeners
+        languageSelector.addEventListener('change', changeLanguage);
+        joinConsultationBtn.addEventListener('click', joinConsultation);
+        muteBtn.addEventListener('click', toggleMute);
+        videoBtn.addEventListener('click', toggleVideo);
+        screenShareBtn.addEventListener('click', toggleScreenShare);
+        endCallBtn.addEventListener('click', endCall);
+        sendMessageBtn.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendChatMessage();
+        });
+
+        // Functions
+        function changeLanguage() {
+            currentLanguage = languageSelector.value;
+            localStorage.setItem('arogya-language', currentLanguage);
+            updateLanguage();
+        }
+
+        function updateLanguage() {
+            document.querySelectorAll('[data-translate], [data-lang-key]').forEach(element => {
+                const key = element.getAttribute('data-translate') || element.getAttribute('data-lang-key');
+                if (translations[currentLanguage][key]) {
+                    element.textContent = translations[currentLanguage][key];
+                }
+            });
+
+            document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
+                const key = element.getAttribute('data-translate-placeholder');
+                if (translations[currentLanguage][key]) {
+                    element.placeholder = translations[currentLanguage][key];
+                }
+            });
+        }
+
+        // Mobile Nav Logic
+        if (hamburger && mobileNav && mainNavList) {
+            mobileNav.innerHTML = mainNavList.innerHTML;
+            hamburger.addEventListener('click', () => {
+                mobileNav.classList.toggle('open');
+                hamburger.innerHTML = mobileNav.classList.contains('open') ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+            });
+            mobileNav.addEventListener('click', (e) => {
+                if (e.target.classList.contains('nav-link')) {
+                    mobileNav.classList.remove('open');
+                    hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+                }
+            });
+        }
+
+        function joinConsultation() {
+            waitingRoom.classList.remove('active');
+            videoCallSection.style.display = 'grid';
+            sessionInfo.style.display = 'grid';
+            chatSection.style.display = 'block';
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                seconds++;
+                const minutes = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                sessionTimer.textContent = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        function toggleMute() {
+            const icon = muteBtn.querySelector('i');
+            if (icon.classList.contains('fa-microphone')) {
+                icon.classList.remove('fa-microphone');
+                icon.classList.add('fa-microphone-slash');
+                muteBtn.style.background = '#ef4444';
+            } else {
+                icon.classList.remove('fa-microphone-slash');
+                icon.classList.add('fa-microphone');
+                muteBtn.style.background = '';
+            }
+        }
+
+        function toggleVideo() {
+            const icon = videoBtn.querySelector('i');
+            if (icon.classList.contains('fa-video')) {
+                icon.classList.remove('fa-video');
+                icon.classList.add('fa-video-slash');
+                videoBtn.style.background = '#ef4444';
+            } else {
+                icon.classList.remove('fa-video-slash');
+                icon.classList.add('fa-video');
+                videoBtn.style.background = '';
+            }
+        }
+
+        function toggleScreenShare() {
+            const icon = screenShareBtn.querySelector('i');
+            if (icon.classList.contains('fa-desktop')) {
+                icon.classList.remove('fa-desktop');
+                icon.classList.add('fa-stop-circle');
+                screenShareBtn.style.background = '#fbbf24';
+            } else {
+                icon.classList.remove('fa-stop-circle');
+                icon.classList.add('fa-desktop');
+                screenShareBtn.style.background = '';
+            }
+        }
+
+        function endCall() {
+            stopTimer();
+            if (confirm('Are you sure you want to end the consultation?')) {
+                window.location.href = 'appointments.html';
+            }
+        }
+
+        function sendChatMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Add patient message
+            addChatMessage(message, 'patient');
+            chatInput.value = '';
+
+            // Simulate doctor response
+            setTimeout(() => {
+                const responses = [
+                    "I understand. Can you tell me more about your symptoms?",
+                    "How long have you been experiencing this?",
+                    "Have you taken any medication for this?",
+                    "Is there anything that makes it better or worse?"
+                ];
+                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                addChatMessage(randomResponse, 'doctor');
+            }, 2000);
+        }
+
+        function addChatMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${sender}`;
+            
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'message-avatar';
+            avatarDiv.innerHTML = sender === 'doctor' ? '<i class="fas fa-user-md"></i>' : '<i class="fas fa-user"></i>';
+            
+            const contentDiv = document.createElement('div');
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = text;
+            
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'message-time';
+            timeDiv.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            contentDiv.appendChild(messageContent);
+            contentDiv.appendChild(timeDiv);
+            
+            messageDiv.appendChild(avatarDiv);
+            messageDiv.appendChild(contentDiv);
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Particle Animation
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function createParticle() {
+            return {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 3 + 1,
+                speedX: Math.random() * 1 - 0.5,
+                speedY: Math.random() * 1 - 0.5,
+                opacity: Math.random() * 0.5 + 0.2
+            };
+        }
+
+        function initParticles() {
+            particles = [];
+            const particleCount = Math.min(100, window.innerWidth / 10);
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(createParticle());
+            }
+        }
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach(particle => {
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${particle.opacity})`;
+                ctx.fill();
+                
+                // Update position
+                particle.x += particle.speedX;
+                particle.y += particle.speedY;
+                
+                // Reset if out of bounds
+                if (particle.x < 0 || particle.x > canvas.width) particle.speedX *= -1;
+                if (particle.y < 0 || particle.y > canvas.height) particle.speedY *= -1;
+            });
+            
+            requestAnimationFrame(drawParticles);
+        }
+
+        // Initialize
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            initParticles();
+        });
+
+        // Fallback for video background
+        bgVideo.addEventListener('error', () => {
+            bgVideo.style.display = 'none';
+        });
+
+        // Initialize everything
+        resizeCanvas();
+        initParticles();
+        drawParticles();
+        
+        // Role Based UI
+        let role = localStorage.getItem('arogyaRole') || 'patient';
+        document.body.setAttribute('data-role', role);
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            if (item.classList.contains('role-patient') || item.classList.contains('role-doctor') || item.classList.contains('role-admin')) {
+                item.style.display = 'none';
+            }
+        });
+        navItems.forEach(item => {
+            if (item.classList.contains(`role-${role}`)) {
+                item.style.display = 'block';
+            }
+        });
+        
+        updateLanguage();
+
+        // Show waiting room by default
+        waitingRoom.classList.add('active');
+
+        // Simulate doctor joining after 5 seconds
+        setTimeout(() => {
+            if (waitingRoom.classList.contains('active')) {
+                const queuePosition = document.querySelector('.queue-position');
+                queuePosition.textContent = '1';
+                setTimeout(() => {
+                    joinConsultation();
+                }, 2000);
+            }
+        }, 5000);
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Back to top button
+        const backToTopBtn = document.createElement('button');
+        backToTopBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+        backToTopBtn.className = 'btn btn-primary';
+        backToTopBtn.style.cssText = 'position: fixed; bottom: 2rem; left: 2rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 999; opacity: 0; visibility: hidden; transition: all 0.3s ease;';
+        document.body.appendChild(backToTopBtn);
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTopBtn.style.opacity = '1';
+                backToTopBtn.style.visibility = 'visible';
+            } else {
+                backToTopBtn.style.opacity = '0';
+                backToTopBtn.style.visibility = 'hidden';
+            }
+        });
+
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // --- AI Chat Functionality ---
+        const GROQ_API_KEY = '';
+        const aiChatBtn = document.getElementById('ai-chat-btn');
+        const aiChatInterface = document.getElementById('ai-chat-interface');
+        const aiCloseChat = document.getElementById('close-chat');
+        const aiChatMessages = document.getElementById('ai-chat-messages');
+        const aiChatInput = document.getElementById('ai-chat-input');
+        const aiSendBtn = document.getElementById('ai-send-chat');
+
+        aiChatBtn.addEventListener('click', () => {
+            aiChatInterface.style.display = aiChatInterface.style.display === 'flex' ? 'none' : 'flex';
+            if (aiChatInterface.style.display === 'flex') aiChatInput.focus();
+        });
+
+        aiCloseChat.addEventListener('click', () => {
+            aiChatInterface.style.display = 'none';
+        });
+
+        async function sendAIMessage() {
+            const message = aiChatInput.value.trim();
+            if (!message) return;
+
+            addAIMessage(message, 'user');
+            aiChatInput.value = '';
+            const typingId = addAIMessage('Thinking...', 'ai', true);
+
+            try {
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${GROQ_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'llama-3.3-70b-versatile',
+                        messages: [
+                            { role: 'system', content: 'You are a helpful AI health assistant for Arogya. Provide accurate, compassionate health advice.' },
+                            { role: 'user', content: message }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 500
+                    })
+                });
+                const data = await response.json();
+                document.getElementById(typingId).remove();
+                if (data.choices && data.choices[0]) {
+                    addAIMessage(data.choices[0].message.content, 'ai');
+                } else {
+                    addAIMessage('Error. Please try again.', 'ai');
+                }
+            } catch (error) {
+                document.getElementById(typingId).remove();
+                addAIMessage('Connection error.', 'ai');
+            }
+        }
+
+        function addAIMessage(text, sender, isTyping = false) {
+            const messageId = 'msg-' + Date.now();
+            const isUser = sender === 'user';
+            const div = document.createElement('div');
+            div.id = messageId;
+            div.style.cssText = `background: ${isUser ? 'rgba(102, 126, 234, 0.3)' : 'rgba(102, 126, 234, 0.2)'}; padding: 0.75rem; border-radius: 10px; border-left: 3px solid ${isUser ? '#764ba2' : '#667eea'}; align-self: ${isUser ? 'flex-end' : 'flex-start'}; max-width: 85%; margin-bottom: 0.5rem;`;
+            div.innerHTML = `<strong style="color: ${isUser ? '#764ba2' : '#667eea'};">${isUser ? 'You' : 'AI Assistant'}</strong><p style="margin: 0.5rem 0 0 0; color: #ccc; font-size: 0.9rem; white-space: pre-wrap;">${text}</p>`;
+            aiChatMessages.appendChild(div);
+            aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+            return messageId;
+        }
+
+        aiSendBtn.addEventListener('click', sendAIMessage);
+        aiChatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendAIMessage(); });
+    </script>
+</body>
+</html>

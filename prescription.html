@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Prescription - Arogya</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #007aff;
+            --primary-light: #00b4d8;
+            --primary-lighter: #90e0ef;
+            --white: rgba(255, 255, 255, 0.9);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --gradient: linear-gradient(135deg, var(--primary-light), var(--primary));
+
+            /* Role-specific hues (from your files, used for context) */
+            --admin-hue: 210deg;
+            /* Blue */
+            --doctor-hue: 160deg;
+            /* Teal */
+            --patient-hue: 240deg;
+            /* Indigo */
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            /* MATCHING: Using your theme's static gradient background */
+            background: linear-gradient(135deg, #003b5c, #001a29);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* --- Video Background & Overlays (Matching index.html) --- */
+        #video-background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -3;
+            overflow: hidden;
+        }
+
+        #bg-video {
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+        }
+
+        #gradient-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* MATCHING: Using your theme's specific gradient overlay */
+            background: linear-gradient(135deg, rgba(0, 180, 216, 0.3), rgba(0, 122, 255, 0.5));
+            z-index: -2;
+        }
+
+        #particle-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* --- Glassmorphism Helper (Matching index.html) --- */
+        .glass-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            /* MATCHING: Using your theme's blur(15px) */
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Shimmer Effect (from your index.html) */
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 75%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: skewX(-25deg);
+            transition: left 0.7s ease-in-out;
+        }
+
+        .glass-panel:hover::before {
+            left: 150%;
+        }
+
+        .glass-panel:hover {
+            box-shadow: 0 8px 40px 0 rgba(0, 122, 255, 0.4);
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* --- Button Styles (Matching index.html) --- */
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: var(--text-primary);
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 122, 255, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .btn-secondary {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* --- Header / Navbar (Matching index.html) --- */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            /* MATCHING: Using your theme's padding */
+            padding: 1.25rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            padding: 1rem 5%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .navbar-logo i {
+            margin-right: 0.5rem;
+            color: var(--primary-lighter);
+        }
+
+        .navbar-nav {
+            list-style: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-item {
+            margin-left: 1.5rem;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding: 0.5rem 0;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary-lighter);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--text-primary);
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        /* Language & Role Selectors (Matching index.html) */
+        .settings-nav {
+            display: flex;
+            align-items: center;
+            margin-left: 1.5rem;
+        }
+
+        .glass-select-wrapper {
+            position: relative;
+            margin-left: 1rem;
+        }
+
+        .glass-select {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.5rem 2.5rem 0.5rem 1rem;
+            /* Added padding for icon */
+            border-radius: 10px;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        .glass-select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary-lighter);
+        }
+
+        .glass-select-wrapper::after {
+            content: '\f078';
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        /* Mobile Nav (Matching index.html) */
+        .hamburger-menu {
+            display: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .mobile-nav {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: left 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            z-index: 1000;
+        }
+
+        .mobile-nav.open {
+            left: 0;
+        }
+
+        .mobile-nav .nav-item {
+            margin: 1.5rem 0;
+        }
+
+        .mobile-nav .nav-link {
+            font-size: 1.5rem;
+        }
+
+        /* --- Main Content --- */
+        .main-container {
+            padding: 8rem 5% 4rem;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* --- Prescription Form --- */
+        .prescription-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .prescription-form-card {
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            height: fit-content;
+        }
+
+        .prescription-form-card h2 {
+            font-size: 1.75rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: var(--text-primary);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            /* MATCHING: Using your theme's input style */
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-lighter);
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+        .medication-list {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .medication-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn-remove-med {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-remove-med:hover {
+            background: rgba(239, 68, 68, 0.4);
+            color: #ef4444;
+        }
+
+        .btn-add-med {
+            grid-column: 1 / -1;
+            background: rgba(0, 122, 255, 0.2);
+            color: var(--primary-lighter);
+            border: 1px solid rgba(0, 122, 255, 0.5);
+            font-weight: 600;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-add-med:hover {
+            background: rgba(0, 122, 255, 0.4);
+        }
+
+        .form-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        /* --- Prescription Preview --- */
+        .prescription-preview-card {
+            padding: 2.5rem;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .prescription-preview-card.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .preview-placeholder {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .preview-placeholder i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: var(--primary-lighter);
+            opacity: 0.5;
+        }
+
+        .pdf-preview {
+            display: none;
+            /* Shown by JS */
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .pdf-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .pdf-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .pdf-header .doctor-info {
+            text-align: right;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .pdf-patient-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px dashed var(--glass-border);
+        }
+
+        .pdf-patient-info div {
+            font-size: 1rem;
+        }
+
+        .pdf-patient-info strong {
+            color: var(--text-secondary);
+            font-weight: 600;
+            display: block;
+        }
+
+        .pdf-patient-info span {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .pdf-medications h3 {
+            font-size: 1.25rem;
+            color: var(--primary-lighter);
+            margin-bottom: 1rem;
+        }
+
+        .pdf-med-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+        }
+
+        .pdf-med-table th,
+        .pdf-med-table td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .pdf-med-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .pdf-med-table td {
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .pdf-notes {
+            margin-bottom: 2rem;
+        }
+
+        .pdf-notes strong {
+            color: var(--text-secondary);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .pdf-notes p {
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        .pdf-footer {
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--glass-border);
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .pdf-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        /* --- Footer (Matching index.html) --- */
+        .footer {
+            /* MATCHING: Using your theme's margin-top: 0 */
+            margin-top: 0;
+            padding: 4rem 5% 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .footer-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-column h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .footer-column h4::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background: var(--primary-light);
+        }
+
+        .footer-column p,
+        .footer-column a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 0.75rem;
+            display: block;
+            transition: color 0.3s ease;
+        }
+
+        .footer-column a:hover {
+            color: var(--primary-lighter);
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-icons a {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        .social-icons a:hover {
+            color: var(--primary-lighter);
+            transform: scale(1.1);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* --- Page Loader (Matching index.html) --- */
+        .loader-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* MATCHING: Using your theme's loader background */
+            background: #001a29;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loader-logo {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            filter: blur(5px);
+            opacity: 0.5;
+            animation: pulse-blur 2s infinite ease-in-out;
+        }
+
+        .loader-logo i {
+            margin-right: 0.5rem;
+            color: var(--primary-lighter);
+        }
+
+        @keyframes pulse-blur {
+            0% {
+                filter: blur(5px);
+                opacity: 0.5;
+                transform: scale(1);
+            }
+
+            50% {
+                filter: blur(2px);
+                opacity: 1;
+                transform: scale(1.05);
+            }
+
+            100% {
+                filter: blur(5px);
+                opacity: 0.5;
+                transform: scale(1);
+            }
+        }
+
+        .loader-wrapper.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* --- Responsive Design --- */
+        @media (max-width: 1200px) {
+            .prescription-container {
+                grid-template-columns: 1fr;
+            }
+
+            .prescription-preview-card {
+                margin-top: 2rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .hamburger-menu {
+                display: block;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group:not(.full-width) {
+                grid-column: 1 / -1;
+            }
+
+            .medication-item {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto;
+            }
+
+            .medication-item .form-group:nth-child(3) {
+                grid-column: 1 / 2;
+            }
+
+            .medication-item .btn-remove-med {
+                grid-column: 2 / 3;
+                grid-row: 2 / 3;
+                justify-self: end;
+                align-self: end;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 6rem 3% 3rem;
+            }
+
+            .page-header h1 {
+                font-size: 2.5rem;
+            }
+
+            .prescription-form-card,
+            .prescription-preview-card {
+                padding: 1.5rem;
+            }
+
+            .pdf-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .pdf-header .doctor-info {
+                text-align: left;
+            }
+
+            .pdf-patient-info {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .medication-item {
+                grid-template-columns: 1fr;
+            }
+
+            .medication-item .btn-remove-med {
+                grid-column: 1 / -1;
+                grid-row: auto;
+                justify-self: stretch;
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .form-actions .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body data-role="doctor">
+    <div class="loader-wrapper">
+        <div class="loader-logo"><i class="fa-solid fa-heart-pulse"></i>Arogya</div>
+    </div>
+
+    <div id="video-background-container">
+        <video autoplay muted loop playsinline id="bg-video"
+            poster="https://via.placeholder.com/1920x1080/003366/FFFFFF?text=Loading+Video...">
+            <source src="medical-bg.mp4" type="video/mp4">
+            <source src="medical-bg.webm" type="video/webm">
+        </video>
+        <div id="gradient-overlay"></div>
+        <canvas id="particle-overlay"></canvas>
+    </div>
+
+    <nav class="navbar">
+        <a href="index.html" class="navbar-logo"><i class="fa-solid fa-heart-pulse"></i>Arogya</a>
+
+        <ul class="navbar-nav">
+            <li class="nav-item"><a href="index.html" class="nav-link" data-lang-key="navHome"><i class="fas fa-home"></i>Home</a></li>
+            <li class="nav-item"><a href="about.html" class="nav-link" data-lang-key="navAbout"><i class="fas fa-info-circle"></i>About Us</a></li>
+            <li class="nav-item"><a href="health-dashboard.html" class="nav-link" data-lang-key="navDashboard"><i class="fas fa-th-large"></i>Dashboard</a></li>
+            <li class="nav-item"><a href="symptom.html" class="nav-link" data-lang-key="navSymptom"><i class="fas fa-brain"></i>AI Checker</a></li>
+            <li class="nav-item"><a href="records.html" class="nav-link" data-lang-key="navRecords"><i class="fas fa-file-medical"></i>Records</a></li>
+            <li class="nav-item"><a href="donors.html" class="nav-link" data-lang-key="navDonors"><i class="fas fa-hand-holding-heart"></i>Donors</a></li>
+            <li class="nav-item"><a href="emergency.html" class="nav-link" data-lang-key="navEmergency"><i class="fas fa-ambulance"></i>Emergency</a></li>
+            <li class="nav-item"><a href="contact.html" class="nav-link" data-lang-key="navContact"><i class="fas fa-envelope"></i>Contact</a></li>
+        </ul>
+
+        <div class="settings-nav">
+            <div class="glass-select-wrapper">
+                <select id="language-selector" class="glass-select">
+                    <option value="en">English</option>
+                    <option value="hi">हिंदी (Hindi)</option>
+                    <option value="te">తెలుగు (Telugu)</option>
+                </select>
+            </div>
+            <a href="login.html" class="btn btn-primary" style="margin-left: 1rem;" data-lang-key="navLogin">Login</a>
+            <div class="hamburger-menu">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <div class="mobile-nav">
+    </div>
+
+    <main class="main-container">
+        <header class="page-header">
+            <h1 data-lang-key="prescriptionTitle">Create Digital Prescription</h1>
+            <p data-lang-key="prescriptionSubtitle">Easily generate and manage secure e-prescriptions for your patients.
+            </p>
+        </header>
+
+        <div class="prescription-container">
+
+            <form id="prescription-form" class="glass-panel prescription-form-card">
+                <h2 data-lang-key="prescriptionFormTitle">Patient & Medication Details</h2>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="patient-name" class="form-label" data-lang-key="formPatientName">Patient
+                            Name</label>
+                        <input type="text" id="patient-name" class="form-input" placeholder="e.g., John Doe" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="patient-id" class="form-label" data-lang-key="formPatientID">Patient ID</label>
+                        <input type="text" id="patient-id" class="form-input" placeholder="e.g., ARGY-12345" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="patient-age" class="form-label" data-lang-key="formPatientAge">Age</label>
+                        <input type="number" id="patient-age" class="form-input" placeholder="e.g., 35" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="patient-gender" class="form-label">Gender</label>
+                        <select id="patient-gender" class="form-input" required>
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prescription-date" class="form-label" data-lang-key="formDate">Date</label>
+                        <input type="date" id="prescription-date" class="form-input" required>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="diagnosis" class="form-label" data-lang-key="formDiagnosis">Diagnosis</label>
+                        <input type="text" id="diagnosis" class="form-input" placeholder="e.g., Viral Fever" required>
+                    </div>
+
+                    <div class="medication-list" id="medication-list">
+                        <label class="form-label full-width" data-lang-key="formMedications">Medications</label>
+                    </div>
+
+                    <button type="button" class="btn-add-med" id="add-med-btn">
+                        <i class="fas fa-plus"></i> <span data-lang-key="formAddMed">Add Medication</span>
+                    </button>
+
+                    <div class="form-group full-width">
+                        <label for="notes" class="form-label" data-lang-key="formNotes">Additional Notes</label>
+                        <textarea id="notes" class="form-textarea"
+                            placeholder="e.g., Take after meals, avoid sunlight..."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="reset" class="btn btn-secondary" data-lang-key="formReset">Clear Form</button>
+                        <button type="submit" class="btn btn-primary" data-lang-key="formGenerate">Generate
+                            Preview</button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="glass-panel prescription-preview-card" id="preview-card">
+
+                <div class="preview-placeholder" id="preview-placeholder">
+                    <i class="fas fa-file-invoice"></i>
+                    <h3 data-lang-key="previewPlaceholderTitle">Prescription Preview</h3>
+                    <p data-lang-key="previewPlaceholderText">Your generated prescription will appear here.</p>
+                </div>
+
+                <div class="pdf-preview" id="pdf-preview">
+                    <div class="pdf-header">
+                        <div>
+                            <h2><i class="fa-solid fa-heart-pulse"></i> Arogya</h2>
+                            <span data-lang-key="previewSubtitle" style="color: var(--text-secondary);">Digital
+                                Prescription</span>
+                        </div>
+                        <div class="doctor-info">
+                            <strong>Dr. Evelyn Reed</strong><br>
+                            <span data-lang-key="previewSpecialty">General Physician</span><br>
+                            Reg. No: 12345-XYZ
+                        </div>
+                    </div>
+
+                    <div class="pdf-patient-info">
+                        <div>
+                            <strong data-lang-key="formPatientName">Patient Name</strong>
+                            <span id="preview-patient-name"></span>
+                        </div>
+                        <div>
+                            <strong data-lang-key="formPatientID">Patient ID</strong>
+                            <span id="preview-patient-id"></span>
+                        </div>
+                        <div>
+                            <strong data-lang-key="formPatientAge">Age</strong>
+                            <span id="preview-patient-age"></span>
+                        </div>
+                        <div>
+                            <strong data-lang-key="formDate">Date</strong>
+                            <span id="preview-date"></span>
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <strong data-lang-key="formDiagnosis">Diagnosis</strong>
+                            <span id="preview-diagnosis"></span>
+                        </div>
+                    </div>
+
+                    <div class="pdf-medications">
+                        <h3><i class="fas fa-pills"></i> <span data-lang-key="formMedications">Medications</span></h3>
+                        <table class="pdf-med-table">
+                            <thead>
+                                <tr>
+                                    <th data-lang-key="previewMedName">Medicine</th>
+                                    <th data-lang-key="previewDosage">Dosage</th>
+                                    <th data-lang-key="previewDuration">Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody id="preview-med-list">
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pdf-notes">
+                        <strong data-lang-key="formNotes">Notes</strong>
+                        <p id="preview-notes"></p>
+                    </div>
+
+                    <div class="pdf-actions">
+                        <button class="btn btn-secondary"><i class="fas fa-download"></i> <span
+                                data-lang-key="previewDownload">Download</span></button>
+                        <button class="btn btn-primary"><i class="fas fa-paper-plane"></i> <span
+                                data-lang-key="previewSend">Send to Patient</span></button>
+                    </div>
+
+                    <div class="pdf-footer">
+                        This is a digitally generated prescription and does not require a physical signature.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-column">
+                <h4 data-lang-key="footerAbout">About Arogya</h4>
+                <p data-lang-key="footerAboutText">Arogya is an intelligent telemedicine and healthcare ecosystem
+                    designed to provide smart, compassionate, and accessible healthcare for everyone.</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h4 data-lang-key="footerQuickLinks">Quick Links</h4>
+                <a href="index.html" data-lang-key="navHome">Home</a>
+                <a href="about.html" data-lang-key="navAbout">About Us</a>
+                <a href="symptom.html" data-lang-key="navSymptom">Symptom Checker</a>
+                <a href="pharmacy.html" data-lang-key="navPharmacy">Pharmacy</a>
+            </div>
+            <div class="footer-column">
+                <h4 data-lang-key="footerContact">Contact Info</h4>
+                <p><i class="fas fa-map-marker-alt"></i> 123 Health St, Medicity</p>
+                <p><i class="fas fa-phone-alt"></i> +1 (555) 123-4567</p>
+                <p><i class="fas fa-envelope"></i> support@arogya.ai</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2025 Arogya. All rights reserved.
+        </div>
+    </footer>
+
+    <script type="module">
+        import { auth, db } from "./firebase-config.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { collection, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Page Loader ---
+            const loaderWrapper = document.querySelector('.loader-wrapper');
+            // Hide after auth check
+
+            // --- Form & UI Elements ---
+            const form = document.querySelector('.prescription-form-card form');
+            const addMedBtn = document.querySelector('.btn-add-med');
+            const medListContainer = document.querySelector('.medication-list');
+            const previewCard = document.querySelector('.prescription-preview-card');
+            const previewPlaceholder = document.querySelector('.preview-placeholder');
+            const pdfPreview = document.querySelector('.pdf-preview'); // Using class selection as ID might be missing or different
+            const sendBtn = document.querySelector('.pdf-actions .btn-primary'); // "Send to Patient" button
+
+            // --- Auth & Data Loading ---
+            let currentUser = null;
+            let doctorProfile = null;
+
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) {
+                    window.location.href = "login.html";
+                    return;
+                }
+                currentUser = user;
+
+                // Fetch Doctor Profile to pre-fill or enforce role
+                try {
+                    const docSnap = await getDoc(doc(db, "users", user.uid));
+                    if (docSnap.exists()) {
+                        doctorProfile = docSnap.data();
+                        if (doctorProfile.role !== 'doctor' && doctorProfile.role !== 'admin') {
+                            alert("Access Restricted: Doctors Only");
+                            window.location.href = "index.html";
+                            return;
+                        }
+                        // Update UI with doctor name if element exists
+                        const docNameEl = document.querySelector('.doctor-info strong');
+                        if (docNameEl) docNameEl.innerText = doctorProfile.name || user.displayName || "Dr. Unknown";
+                    }
+                } catch (e) { console.error("Profile load error", e); }
+
+                loaderWrapper.classList.add('hidden');
+                updateRoleBasedUI();
+            });
+
+            // --- Medication List Logic ---
+            let medCount = 0;
+            function addMedicationItem() {
+                medCount++;
+                const item = document.createElement('div');
+                item.className = 'medication-item';
+                item.innerHTML = `
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 0.8rem;">Medicine Name</label>
+                        <input type="text" class="form-input med-name" placeholder="e.g., Paracetamol 500mg" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 0.8rem;">Dosage</label>
+                        <input type="text" class="form-input med-dosage" placeholder="e.g., 1-1-1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 0.8rem;">Duration</label>
+                        <input type="text" class="form-input med-duration" placeholder="e.g., 3 Days" required>
+                    </div>
+                    <button type="button" class="btn-remove-med" title="Remove"><i class="fas fa-trash"></i></button>
+                `;
+                medListContainer.appendChild(item);
+
+                item.querySelector('.btn-remove-med').addEventListener('click', () => {
+                    item.remove();
+                });
+            }
+
+            addMedBtn.addEventListener('click', addMedicationItem);
+            addMedicationItem(); // Default item
+
+            // --- Preview Logic ---
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                // Show preview
+                if (previewPlaceholder) previewPlaceholder.style.display = 'none';
+                if (pdfPreview) pdfPreview.style.display = 'flex';
+                previewCard.classList.add('visible');
+
+                // Populate preview text
+                document.getElementById('preview-patient-name').textContent = document.getElementById('patient-name').value;
+                document.getElementById('preview-patient-id').textContent = document.getElementById('patient-id').value;
+                document.getElementById('preview-patient-age').textContent = document.getElementById('patient-age').value;
+                document.getElementById('preview-date').textContent = new Date(document.getElementById('prescription-date').value).toLocaleDateString();
+                document.getElementById('preview-diagnosis').textContent = document.getElementById('diagnosis').value;
+                document.getElementById('preview-notes').textContent = document.getElementById('notes').value || 'N/A';
+
+                // Populate medication table
+                const medTableBody = document.getElementById('preview-med-list');
+                medTableBody.innerHTML = '';
+
+                const medItems = medListContainer.querySelectorAll('.medication-item');
+                medItems.forEach(item => {
+                    const name = item.querySelector('.med-name').value;
+                    const dosage = item.querySelector('.med-dosage').value;
+                    const duration = item.querySelector('.med-duration').value;
+
+                    if (name && dosage && duration) {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `<td>${name}</td><td>${dosage}</td><td>${duration}</td>`;
+                        medTableBody.appendChild(row);
+                    }
+                });
+
+                // Mobile Scroll
+                if (window.innerWidth <= 1200) {
+                    previewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+
+            // --- Save to Firestore ---
+            if (sendBtn) {
+                sendBtn.addEventListener('click', async () => {
+                    if (!currentUser) return;
+
+                    const originalText = sendBtn.innerHTML;
+                    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+                    sendBtn.disabled = true;
+
+                    try {
+                        // Gather Data
+                        const medications = [];
+                        medListContainer.querySelectorAll('.medication-item').forEach(item => {
+                            medications.push({
+                                name: item.querySelector('.med-name').value,
+                                dosage: item.querySelector('.med-dosage').value,
+                                duration: item.querySelector('.med-duration').value
+                            });
+                        });
+
+                        const prescriptionData = {
+                            doctorId: currentUser.uid,
+                            doctorName: doctorProfile ? doctorProfile.name : (currentUser.displayName || 'Unknown'),
+                            patientName: document.getElementById('patient-name').value,
+                            patientId: document.getElementById('patient-id').value || 'N/A', // Could link to real user ID if known
+                            age: document.getElementById('patient-age').value,
+                            gender: document.getElementById('patient-gender').value,
+                            date: document.getElementById('prescription-date').value,
+                            diagnosis: document.getElementById('diagnosis').value,
+                            notes: document.getElementById('notes').value,
+                            medications: medications,
+                            createdAt: new Date().toISOString()
+                        };
+
+                        // Write to DB
+                        await addDoc(collection(db, "prescriptions"), prescriptionData);
+
+                        alert("Prescription Sent Successfully!");
+
+                        // Reset Form
+                        form.reset();
+                        previewCard.classList.remove('visible');
+                        if (previewPlaceholder) previewPlaceholder.style.display = 'flex';
+                        if (pdfPreview) pdfPreview.style.display = 'none';
+
+                    } catch (error) {
+                        console.error("Error saving prescription:", error);
+                        alert("Failed to send: " + error.message);
+                    } finally {
+                        sendBtn.innerHTML = originalText;
+                        sendBtn.disabled = false;
+                    }
+                });
+            }
+
+            // --- Form Reset ---
+            form.addEventListener('reset', () => {
+                if (previewPlaceholder) previewPlaceholder.style.display = 'flex';
+                if (pdfPreview) pdfPreview.style.display = 'none';
+                previewCard.classList.remove('visible');
+                medListContainer.innerHTML = '<label class="form-label full-width" data-lang-key="formMedications">Medications</label>';
+                addMedicationItem();
+            });
+
+            // Set today's date
+            const dateInput = document.getElementById('prescription-date');
+            if (dateInput) dateInput.valueAsDate = new Date();
+
+            // --- NavBar & Visuals (Particles) ---
+            const navbar = document.querySelector('.navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) navbar.classList.add('scrolled');
+                else navbar.classList.remove('scrolled');
+            });
+
+            // Mobile Nav (Standard)
+            const hamburger = document.querySelector('.hamburger-menu');
+            const mobileNav = document.querySelector('.mobile-nav');
+            const mainNavList = document.querySelector('.navbar-nav');
+            if (hamburger && mobileNav && mainNavList) {
+                mobileNav.innerHTML = mainNavList.innerHTML;
+                hamburger.addEventListener('click', () => {
+                    mobileNav.classList.toggle('open');
+                    hamburger.innerHTML = mobileNav.classList.contains('open') ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+                });
+                mobileNav.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('nav-link')) {
+                        mobileNav.classList.remove('open');
+                        hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+                    }
+                });
+            }
+
+            // --- Particle Animation ---
+            try {
+                const canvas = document.getElementById('particle-overlay');
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    let particles = [];
+                    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+                    function initParticles() {
+                        particles = [];
+                        let count = Math.floor(canvas.width * canvas.height / 25000);
+                        for (let i = 0; i < count; i++) particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 2 + 1, speedX: (Math.random() * .5 - .25), speedY: (Math.random() * .5 - .25), opacity: Math.random() * .3 + .1 });
+                    }
+                    function draw() {
+                        if (!ctx) return;
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        particles.forEach(p => {
+                            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                            ctx.fillStyle = `rgba(144, 224, 239, ${p.opacity})`; ctx.fill();
+                            p.x += p.speedX; p.y += p.speedY;
+                            if (p.x < -p.size) p.x = canvas.width + p.size; if (p.x > canvas.width + p.size) p.x = -p.size;
+                            if (p.y < -p.size) p.y = canvas.height + p.size; if (p.y > canvas.height + p.size) p.y = -p.size;
+                        });
+                        requestAnimationFrame(draw);
+                    }
+                    resizeCanvas(); initParticles(); draw();
+                    window.addEventListener('resize', () => { resizeCanvas(); initParticles(); });
+                }
+            } catch (e) { }
+
+            // --- Role / Lang Logic --- 
+            function updateRoleBasedUI() {
+                // (Same standard logic)
+                const role = localStorage.getItem('arogya-role') || 'doctor';
+                document.body.setAttribute('data-role', role);
+                const navItems = document.querySelectorAll('.nav-item');
+                navItems.forEach(item => {
+                    if (item.classList.contains('role-patient') || item.classList.contains('role-doctor') || item.classList.contains('role-admin')) {
+                        item.style.display = 'none';
+                    }
+                });
+                navItems.forEach(item => {
+                    if (item.classList.contains(`role-${role}`)) {
+                        item.style.display = 'block';
+                    }
+                });
+            }
+
+            // --- Multi-Language Support (Simplified for brevity) ---
+            const translations = {
+                en: { navHome: "Home", navAbout: "About Us" /* ... etc ... */ }
+            };
+            // ... (keeping standard lang placeholder hooks if needed or relying on English default)
+
+        });
+    </script>
+</body>
+
+</html>

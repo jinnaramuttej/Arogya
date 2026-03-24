@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - Arogya</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #007aff;
+            --primary-light: #00b4d8;
+            --primary-lighter: #90e0ef;
+            --success: #10b981;
+            --success-light: #4ade80;
+            --danger: #ef4444;
+            --danger-light: #f87171;
+            --white: rgba(255, 255, 255, 0.9);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --gradient: linear-gradient(135deg, var(--primary-light), var(--primary));
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #003b5c, #001a29);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* --- Video Background & Overlays (Matching index.html) --- */
+        #video-background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -3;
+            overflow: hidden;
+        }
+
+        #bg-video {
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+        }
+
+        #gradient-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 180, 216, 0.3), rgba(0, 122, 255, 0.5));
+            z-index: -2;
+        }
+
+        #particle-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* --- Glassmorphism Helper (Matching index.html) --- */
+        .glass-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Disable hover for static panels */
+        .glass-panel.no-hover:hover {
+            transform: none;
+            box-shadow: var(--shadow);
+            border-color: var(--glass-border);
+        }
+
+        .glass-panel.no-hover::before {
+            display: none;
+        }
+
+        .glass-panel:hover:not(.no-hover)::before {
+            left: 150%;
+        }
+
+        /* Shimmer Effect (from your index.html) */
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 75%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: skewX(-25deg);
+            transition: left 0.7s ease-in-out;
+        }
+
+
+        /* --- Button Styles (Matching index.html) --- */
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: var(--text-primary);
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 122, 255, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .btn-secondary {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid var(--danger);
+            color: var(--danger-light);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.4);
+        }
+
+        /* --- Header / Navbar (Matching index.html) --- */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.25rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            padding: 1rem 5%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .navbar-logo i {
+            margin-right: 0.5rem;
+            color: var(--primary-lighter);
+        }
+
+        .navbar-nav {
+            list-style: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-item {
+            margin-left: 1.5rem;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding: 0.5rem 0;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary-lighter);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--text-primary);
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        /* Language & Role Selectors (Matching index.html) */
+        .settings-nav {
+            display: flex;
+            align-items: center;
+            margin-left: 1.5rem;
+        }
+
+        .glass-select-wrapper {
+            position: relative;
+            margin-left: 1rem;
+        }
+
+        .glass-select {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.5rem 2.5rem 0.5rem 1rem;
+            border-radius: 10px;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        .glass-select option {
+            background: #001a29;
+            color: var(--text-primary);
+        }
+
+        .glass-select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary-lighter);
+        }
+
+        .glass-select-wrapper::after {
+            content: '\f078';
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        /* Mobile Nav (Matching index.html) */
+        .hamburger-menu {
+            display: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .mobile-nav {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: left 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            z-index: 1000;
+        }
+
+        .mobile-nav.open {
+            left: 0;
+        }
+
+        .mobile-nav .nav-item {
+            margin: 1.5rem 0;
+        }
+
+        .mobile-nav .nav-link {
+            font-size: 1.5rem;
+        }
+
+        /* --- Main Content --- */
+        .main-container {
+            padding: 8rem 5% 4rem;
+            width: 100%;
+            min-height: 100vh;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* --- User Table --- */
+        .table-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 2rem;
+        }
+
+        .table-container {
+            padding: 2rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .glass-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .glass-table th,
+        .glass-table td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .glass-table thead {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .glass-table th {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .glass-table tbody tr {
+            transition: background-color 0.3s ease;
+        }
+
+        .glass-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .glass-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 0.3rem 0.75rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .role-admin {
+            background: rgba(0, 122, 255, 0.2);
+            color: var(--primary-light);
+        }
+
+        .role-doctor {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-light);
+        }
+
+        .role-patient {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning-light);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* --- Neon Toggle Switch --- */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 34px;
+            transition: all 0.4s ease;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: all 0.4s ease;
+        }
+
+        input:checked+.toggle-slider {
+            background-color: var(--success);
+            border-color: var(--success-light);
+            box-shadow: 0 0 10px var(--success-light), 0 0 20px var(--success-light);
+        }
+
+        input:checked+.toggle-slider:before {
+            transform: translateX(22px);
+        }
+
+        /* --- Modal --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-glass {
+            width: 90%;
+            max-width: 600px;
+            padding: 2rem;
+            transform: scale(0.9);
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.open .modal-glass {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            font-size: 1.75rem;
+        }
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close-btn:hover {
+            transform: scale(1.1) rotate(90deg);
+            color: var(--primary-light);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-lighter);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+        .form-select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23ffffff' opacity='0.7'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd' /%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.25em 1.25em;
+            padding-right: 2.5rem;
+        }
+
+        .form-select option {
+            background: #001a29;
+            color: var(--text-primary);
+        }
+
+        .modal-body .btn {
+            width: 100%;
+            margin-top: 1.5rem;
+        }
+
+
+        /* --- Footer (Matching index.html) --- */
+        .footer {
+            margin-top: 4rem;
+            padding: 4rem 5% 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .footer-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-column h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .footer-column h4::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background: var(--primary-light);
+        }
+
+        .footer-column p,
+        .footer-column a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 0.75rem;
+            display: block;
+            transition: color 0.3s ease;
+        }
+
+        .footer-column a:hover {
+            color: var(--primary-lighter);
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-icons a {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        .social-icons a:hover {
+            color: var(--primary-lighter);
+            transform: scale(1.1);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* --- Page Loader (Matching index.html) --- */
+        .loader-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #001a29;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loader-logo {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            filter: blur(5px);
+            opacity: 0.5;
+            animation: pulse-blur 2s infinite ease-in-out;
+        }
+
+        .loader-logo i {
+            margin-right: 0.5rem;
+            color: var(--primary-lighter);
+        }
+
+        @keyframes pulse-blur {
+            0% {
+                filter: blur(5px);
+                opacity: 0.5;
+                transform: scale(1);
+            }
+
+            50% {
+                filter: blur(2px);
+                opacity: 1;
+                transform: scale(1.05);
+            }
+
+            100% {
+                filter: blur(5px);
+                opacity: 0.5;
+                transform: scale(1);
+            }
+        }
+
+        .loader-wrapper.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* --- Responsive Design --- */
+        @media (max-width: 992px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .hamburger-menu {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 6rem 3% 3rem;
+            }
+
+            .page-header h1 {
+                font-size: 2.5rem;
+            }
+
+            .table-container {
+                padding: 1rem;
+            }
+
+            .glass-table {
+                font-size: 0.9rem;
+            }
+
+            .glass-table th,
+            .glass-table td {
+                padding: 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group:not(.full-width) {
+                grid-column: 1 / -1;
+            }
+        }
+    </style>
+</head>
+
+<body data-role="admin">
+    <div class="loader-wrapper">
+        <div class="loader-logo"><i class="fa-solid fa-heart-pulse"></i>Arogya</div>
+    </div>
+
+    <div id="video-background-container">
+        <video autoplay muted loop playsinline id="bg-video"
+            poster="https://via.placeholder.com/1920x1080/003366/FFFFFF?text=Loading+Video...">
+            <source src="medical-bg.mp4" type="video/mp4">
+            <source src="medical-bg.webm" type="video/webm">
+        </video>
+        <div id="gradient-overlay"></div>
+        <canvas id="particle-overlay"></canvas>
+    </div>
+
+    <nav class="navbar">
+        <a href="index.html" class="navbar-logo"><i class="fa-solid fa-heart-pulse"></i>Arogya</a>
+
+        <ul class="navbar-nav">
+            <li class="nav-item"><a href="index.html" class="nav-link" data-lang-key="navHome"><i class="fas fa-home"></i>Home</a></li>
+            <li class="nav-item"><a href="about.html" class="nav-link" data-lang-key="navAbout"><i class="fas fa-info-circle"></i>About Us</a></li>
+            <li class="nav-item"><a href="health-dashboard.html" class="nav-link" data-lang-key="navDashboard"><i class="fas fa-th-large"></i>Dashboard</a></li>
+            <li class="nav-item"><a href="symptom.html" class="nav-link" data-lang-key="navSymptom"><i class="fas fa-brain"></i>AI Checker</a></li>
+            <li class="nav-item"><a href="records.html" class="nav-link" data-lang-key="navRecords"><i class="fas fa-file-medical"></i>Records</a></li>
+            <li class="nav-item"><a href="donors.html" class="nav-link" data-lang-key="navDonors"><i class="fas fa-hand-holding-heart"></i>Donors</a></li>
+            <li class="nav-item"><a href="emergency.html" class="nav-link" data-lang-key="navEmergency"><i class="fas fa-ambulance"></i>Emergency</a></li>
+            <li class="nav-item"><a href="contact.html" class="nav-link" data-lang-key="navContact"><i class="fas fa-envelope"></i>Contact</a></li>
+        </ul>
+
+        <div class="settings-nav">
+            <div class="glass-select-wrapper">
+                <select id="language-selector" class="glass-select">
+                    <option value="en">English</option>
+                    <option value="hi">हिंदी (Hindi)</option>
+                    <option value="te">తెలుగు (Telugu)</option>
+                </select>
+            </div>
+            <a href="login.html" class="btn btn-primary" style="margin-left: 1rem;" data-lang-key="navLogin">Login</a>
+            <div class="hamburger-menu">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <div class="mobile-nav">
+    </div>
+
+    <main class="main-container">
+        <header class="page-header">
+            <h1 data-lang-key="userMgmtTitle">User Management</h1>
+            <p data-lang-key="userMgmtSubtitle">Add, edit, and manage all users on the platform.</p>
+        </header>
+
+        <div class="table-toolbar">
+            <button class="btn btn-primary" id="add-user-btn">
+                <i class="fas fa-plus"></i> <span data-lang-key="btnAddUser">Add New User</span>
+            </button>
+        </div>
+
+        <div class="glass-panel no-hover table-container">
+            <div class="table-wrapper">
+                <table class="glass-table">
+                    <thead>
+                        <tr>
+                            <th data-lang-key="tableID">User ID</th>
+                            <th data-lang-key="tableName">Name</th>
+                            <th data-lang-key="tableRole">Role</th>
+                            <th data-lang-key="tableStatus">Status</th>
+                            <th data-lang-key="tableActions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>ARGY-1001</td>
+                            <td>Dr. Evelyn Reed</td>
+                            <td><span class="role-badge role-doctor">Doctor</span></td>
+                            <td>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </td>
+                            <td class="action-buttons">
+                                <button class="btn btn-secondary btn-sm edit-user-btn"
+                                    data-lang-key="btnEdit">Edit</button>
+                                <button class="btn btn-danger btn-sm" data-lang-key="btnDelete">Delete</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>ARGY-1002</td>
+                            <td>Jane Smith</td>
+                            <td><span class="role-badge role-patient">Patient</span></td>
+                            <td>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </td>
+                            <td class="action-buttons">
+                                <button class="btn btn-secondary btn-sm edit-user-btn"
+                                    data-lang-key="btnEdit">Edit</button>
+                                <button class="btn btn-danger btn-sm" data-lang-key="btnDelete">Delete</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>ARGY-0001</td>
+                            <td>Admin User</td>
+                            <td><span class="role-badge role-admin">Admin</span></td>
+                            <td>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </td>
+                            <td class="action-buttons">
+                                <button class="btn btn-secondary btn-sm edit-user-btn"
+                                    data-lang-key="btnEdit">Edit</button>
+                                <button class="btn btn-danger btn-sm" data-lang-key="btnDelete">Delete</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>ARGY-1003</td>
+                            <td>Michael Lee</td>
+                            <td><span class="role-badge role-patient">Patient</span></td>
+                            <td>
+                                <label class="toggle-switch">
+                                    <input type="checkbox">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </td>
+                            <td class="action-buttons">
+                                <button class="btn btn-secondary btn-sm edit-user-btn"
+                                    data-lang-key="btnEdit">Edit</button>
+                                <button class="btn btn-danger btn-sm" data-lang-key="btnDelete">Delete</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-column">
+                <h4 data-lang-key="footerAbout">About Arogya</h4>
+                <p data-lang-key="footerAboutText">Arogya is an intelligent telemedicine and healthcare ecosystem
+                    designed to provide smart, compassionate, and accessible healthcare for everyone.</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h4 data-lang-key="footerQuickLinks">Quick Links</h4>
+                <a href="index.html" data-lang-key="navHome">Home</a>
+                <a href="about.html" data-lang-key="navAbout">About Us</a>
+                <a href="symptom.html" data-lang-key="navSymptom">Symptom Checker</a>
+                <a href="pharmacy.html" data-lang-key="navPharmacy">Pharmacy</a>
+            </div>
+            <div class="footer-column">
+                <h4 data-lang-key="footerContact">Contact Info</h4>
+                <p><i class="fas fa-map-marker-alt"></i> 123 Health St, Medicity</p>
+                <p><i class="fas fa-phone-alt"></i> +1 (555) 123-4567</p>
+                <p><i class="fas fa-envelope"></i> support@arogya.ai</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2025 Arogya. All rights reserved.
+        </div>
+    </footer>
+            <script type="module">
+                import {auth, db} from "./firebase-config.js";
+                import {onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+                import {doc, getDoc, collection, getDocs, updateDoc, deleteDoc} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Page Loader ---
+            const loaderWrapper = document.querySelector('.loader-wrapper');
+
+            // --- Auth & Role Check ---
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) {
+                    window.location.href = "login.html";
+                return;
+                }
+
+                try {
+                    const docSnap = await getDoc(doc(db, "users", user.uid));
+                if (docSnap.exists()) {
+                        const userData = docSnap.data();
+                const userRole = userData.role || 'patient';
+                localStorage.setItem('arogya-role', userRole);
+
+                if (userRole !== 'admin') {
+                    alert("Access Denied. Admins Only.");
+                window.location.href = "index.html"; 
+                        }
+                    } else {
+                    window.location.href = "login.html";
+                    }
+                } catch(e) {
+                    console.error("Auth check error", e);
+                }
+
+                updateRoleBasedUI();
+                fetchUsers();
+                loaderWrapper.classList.add('hidden');
+            });
+
+                // --- Fetch Users ---
+                async function fetchUsers() {
+                const tbody = document.querySelector('tbody');
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading users...</td></tr>';
+
+                try {
+                    const querySnapshot = await getDocs(collection(db, "users"));
+                tbody.innerHTML = ''; // Clear loading
+
+                if (querySnapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No users found.</td></tr>';
+                return;
+                    }
+
+                    querySnapshot.forEach((docSnap) => {
+                        const u = docSnap.data();
+                        const uid = docSnap.id;
+                        const role = u.role || 'patient';
+                        const name = u.name || u.email || 'Unknown';
+                        const status = u.status !== 'Inactive'; // Assume active unless specified
+
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${uid.substring(0, 10)}...</td>
+                            <td>${name}</td>
+                            <td><span class="role-badge role-${role}">${role.charAt(0).toUpperCase() + role.slice(1)}</span></td>
+                            <td>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" ${status ? 'checked' : ''} data-id="${uid}">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </td>
+                            <td class="action-buttons">
+                                <button class="btn btn-secondary btn-sm edit-user-btn" data-id="${uid}" data-role="${role}" data-name="${name}">Edit</button>
+                                <button class="btn btn-danger btn-sm delete-user-btn" data-id="${uid}">Delete</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+
+                    attachActionListeners();
+
+                } catch(e) {
+                    console.error("Error fetching users:", e);
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:red;">Error loading users: ${e.message}</td></tr>`;
+                }
+            }
+
+                function attachActionListeners() {
+                    // Edit Buttons
+                    document.querySelectorAll('.edit-user-btn').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const uid = btn.dataset.id;
+                            const currentRole = btn.dataset.role;
+                            const name = btn.dataset.name;
+
+                            // Populate Modal
+                            document.getElementById('modal-title').innerText = "Edit User Role";
+                            // Store Target UID in a hidden way or specialized variable
+                            document.getElementById('user-form').dataset.targetUid = uid;
+
+                            // Simple Form Population (assuming standard form)
+                            const nameInput = document.getElementById('user-name');
+                            const roleSelect = document.getElementById('user-role');
+
+                            if (nameInput) nameInput.value = name;
+                            if (roleSelect) roleSelect.value = currentRole;
+
+                            const modal = document.getElementById('user-modal');
+                            modal.classList.add('open');
+                        });
+                    });
+
+                // Delete Buttons
+                document.querySelectorAll('.delete-user-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        if (confirm("Are you sure you want to delete this user? This cannot be undone.")) {
+                            const uid = btn.dataset.id;
+                            try {
+                                await deleteDoc(doc(db, "users", uid));
+                                alert("User deleted.");
+                                fetchUsers(); // Refresh
+                            } catch (e) {
+                                alert("Error deleting user: " + e.message);
+                            }
+                        }
+                    });
+                });
+            }
+
+            // --- Form Submit (Update Role) ---
+            document.getElementById('user-form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                const uid = e.target.dataset.targetUid;
+                if(!uid) return; // Add Mode not fully supported yet for 'Creating Auth Users' via client SDK without Cloud Functions
+
+                const newRole = document.getElementById('user-role').value;
+
+                try {
+                    await updateDoc(doc(db, "users", uid), {
+                        role: newRole
+                    });
+                alert("User updated successfully!");
+                document.getElementById('user-modal').classList.remove('open');
+                fetchUsers();
+                } catch(err) {
+                    console.error("Error updating user", err);
+                alert("Failed to update user.");
+                }
+            });
+
+
+                // --- Navbar Scroll Effect ---
+                const navbar = document.querySelector('.navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) navbar.classList.add('scrolled');
+                else navbar.classList.remove('scrolled');
+            });
+
+                // --- Particle Animation ---
+                try {
+                const canvas = document.getElementById('particle-overlay');
+                if(canvas) {
+                    const ctx = canvas.getContext('2d');
+                let particles = [];
+                function resizeCanvas() {canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+                function initParticles() {
+                    particles = [];
+                let count = Math.floor(canvas.width * canvas.height / 25000);
+                for(let i=0; i<count; i++) particles.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*2+1, speedX: (Math.random()*.5-.25), speedY: (Math.random()*.5-.25), opacity: Math.random()*.3+.1});
+                    }
+                function draw() {
+                        if(!ctx) return;
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                        particles.forEach(p=>{
+                    ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+                ctx.fillStyle = `rgba(144, 224, 239, ${p.opacity})`; ctx.fill();
+                p.x+=p.speedX; p.y+=p.speedY;
+                if(p.x<-p.size) p.x=canvas.width+p.size; if(p.x>canvas.width+p.size) p.x=-p.size;
+                if(p.y<-p.size) p.y=canvas.height+p.size; if(p.y>canvas.height+p.size) p.y=-p.size;
+                        });
+                requestAnimationFrame(draw);
+                    }
+                resizeCanvas(); initParticles(); draw();
+                    window.addEventListener('resize', ()=>{resizeCanvas(); initParticles();});
+                }
+            } catch(e){ }
+
+            // --- Mobile Nav Toggle ---
+                const hamburger = document.querySelector('.hamburger-menu');
+                const mobileNav = document.querySelector('.mobile-nav');
+                const mainNavList = document.querySelector('.navbar-nav');
+                if(hamburger && mobileNav && mainNavList){
+                    mobileNav.innerHTML = mainNavList.innerHTML;
+                hamburger.addEventListener('click', () => {
+                    mobileNav.classList.toggle('open');
+                hamburger.innerHTML = mobileNav.classList.contains('open') ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+               });
+               mobileNav.addEventListener('click', (e) => {
+                   if(e.target.classList.contains('nav-link')) {
+                    mobileNav.classList.remove('open');
+                hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+                   }
+               });
+            }
+
+                // --- Modal Close Logic ---
+                const modal = document.getElementById('user-modal');
+                const modalCloseBtn = document.getElementById('modal-close-btn');
+            const closeModal = () => modal.classList.remove('open');
+                if(modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal);
+            window.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
+
+
+                // --- Role / Lang Logic ---
+                function updateRoleBasedUI() {
+                const role = localStorage.getItem('arogya-role') || 'patient';
+                document.body.setAttribute('data-role', role);
+                const navItems = document.querySelectorAll('.nav-item');
+                navItems.forEach(item => {
+                    if (item.classList.contains('role-patient') || item.classList.contains('role-doctor') || item.classList.contains('role-admin')) {
+                    item.style.display = 'none';
+                    }
+                });
+                navItems.forEach(item => {
+                    if (item.classList.contains(`role-${role}`)) {
+                        item.style.display = 'block';
+                    }
+                });
+            }
+            
+            const translations = {
+                en: { navHome: "Home", navAbout: "About Us" }
+            };
+            function updateLanguage() { } 
+
+            updateRoleBasedUI();
+
+        });
+    </script>
+</body>
+
+</html>

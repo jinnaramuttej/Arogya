@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Services - Arogya</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --primary: #007aff;
+            --primary-light: #00b4d8;
+            --primary-lighter: #90e0ef;
+            --danger: #ef4444;
+            --danger-light: #f87171;
+            --warning: #f59e0b;
+            --warning-light: #fbbf24;
+            --success: #10b981;
+            --success-light: #4ade80;
+            --white: rgba(255, 255, 255, 0.9);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #ef4444, #dc2626, #b91c1c);
+            min-height: 100vh;
+        }
+
+        /* Video Background */
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            overflow: hidden;
+        }
+
+        .video-background video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translate(-50%, -50%);
+            z-index: -2;
+            object-fit: cover;
+        }
+
+        .video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.8), rgba(220, 38, 38, 0.8), rgba(185, 28, 28, 0.8));
+            z-index: -1;
+        }
+
+        /* Particle Canvas */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* --- Header / Navbar --- */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.25rem 5%; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            padding: 1rem 5%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .navbar-logo i {
+            margin-right: 0.5rem;
+            color: var(--primary-lighter);
+        }
+
+        .navbar-nav {
+            list-style: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-item {
+            margin-left: 1.5rem;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding: 0.5rem 0;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link i {
+            margin-right: 8px;
+            font-size: 1rem;
+            color: var(--primary-lighter);
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary-lighter);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--text-primary);
+        }
+
+        .nav-link:hover::after, .nav-link.active::after {
+            width: 100%;
+        }
+
+        /* Language & Role Selectors (Matching index.html) */
+        .settings-nav {
+            display: flex;
+            align-items: center;
+            margin-left: 1.5rem;
+        }
+
+        .glass-select-wrapper {
+            position: relative;
+            margin-left: 1rem;
+        }
+
+        .glass-select {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.5rem 2.5rem 0.5rem 1rem;
+            border-radius: 10px;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        .glass-select option {
+            background: #001a29;
+            color: var(--text-primary);
+        }
+
+        .glass-select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary-lighter);
+        }
+
+        .glass-select-wrapper::after {
+            content: '\f078';
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        /* Mobile Nav (Matching index.html) */
+        .hamburger-menu {
+            display: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .mobile-nav {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: left 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            z-index: 1000;
+        }
+
+        .mobile-nav.open {
+            left: 0;
+        }
+
+        .mobile-nav .nav-item {
+            margin: 1.5rem 0;
+        }
+
+        .mobile-nav .nav-link {
+            font-size: 1.5rem;
+        }
+
+        /* Button Styles */
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border-radius: 50px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 122, 255, 0.6);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-outline:hover {
+            background: var(--glass-bg);
+            transform: translateY(-2px);
+        }
+
+        /* Page Header */
+        .page-header {
+            padding: 8rem 2rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .page-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            animation: fadeInUp 1s ease-out;
+            color: var(--white);
+        }
+
+        .page-subtitle {
+            font-size: 1.3rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        /* Glass Card */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            transition: var(--transition);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .glass-card:hover::before {
+            left: 100%;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+        }
+
+        /* Emergency Container */
+        .emergency-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* SOS Button */
+        .sos-section {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .sos-button {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--danger), var(--danger-light));
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 3rem;
+            font-weight: 700;
+            box-shadow: 0 8px 32px rgba(239, 68, 68, 0.5);
+            transition: var(--transition);
+            position: relative;
+            animation: pulse 2s infinite;
+        }
+
+        .sos-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 40px rgba(239, 68, 68, 0.7);
+        }
+
+        .sos-button:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 30px rgba(239, 68, 68, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        .sos-text {
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        /* Emergency Actions */
+        .emergency-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .action-card {
+            padding: 2rem;
+            border-radius: 20px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            text-align: center;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+        }
+
+        .action-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .action-icon.ambulance {
+            color: var(--danger-light);
+        }
+
+        .action-icon.hospital {
+            color: var(--primary-lighter);
+        }
+
+        .action-icon.location {
+            color: var(--warning-light);
+        }
+
+        .action-icon.contact {
+            color: var(--success-light);
+        }
+
+        .action-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .action-description {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .action-btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 122, 255, 0.6);
+        }
+
+        /* Emergency Contacts */
+        .contacts-section {
+            margin-bottom: 3rem;
+        }
+
+        .contacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .contact-card {
+            padding: 1.5rem;
+            border-radius: 15px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .contact-type {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-lighter);
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Map Section */
+        .map-section {
+            margin-bottom: 3rem;
+        }
+
+        .map-container {
+            height: 400px;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .map-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(0, 122, 255, 0.3), rgba(0, 180, 216, 0.3));
+        }
+
+        .map-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: var(--primary-lighter);
+        }
+
+        .map-text {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        /* First Aid Tips */
+        .tips-section {
+            margin-bottom: 3rem;
+        }
+
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .tip-card {
+            padding: 1.5rem;
+            border-radius: 15px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .tip-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tip-icon {
+            color: var(--warning-light);
+        }
+
+        .tip-list {
+            list-style: none;
+        }
+
+        .tip-item {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .tip-item::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: var(--warning-light);
+        }
+
+        /* Status Modal */
+        .status-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status-modal.active {
+            display: flex;
+        }
+
+        .status-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            padding: 3rem;
+            text-align: center;
+            max-width: 500px;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .status-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-icon.success {
+            color: var(--success-light);
+        }
+
+        .status-icon.processing {
+            color: var(--warning-light);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .status-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .status-message {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .status-btn {
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .status-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 122, 255, 0.6);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .mobile-menu {
+                position: fixed;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background: var(--glass-bg);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border-bottom: 1px solid var(--glass-border);
+                padding: 1rem 2rem;
+                transform: translateY(-100%);
+                opacity: 0;
+                visibility: hidden;
+                transition: var(--transition);
+                z-index: 999;
+            }
+
+            .mobile-menu.active {
+                transform: translateY(0);
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .mobile-menu-links {
+                list-style: none;
+            }
+
+            .mobile-menu-link {
+                padding: 1rem 0;
+                border-bottom: 1px solid var(--glass-border);
+            }
+
+            .mobile-menu-link:last-child {
+                border-bottom: none;
+            }
+
+            .mobile-menu-link a {
+                color: var(--text-primary);
+                text-decoration: none;
+                font-weight: 500;
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 2.5rem;
+            }
+
+            .sos-button {
+                width: 150px;
+                height: 150px;
+                font-size: 2.5rem;
+            }
+
+            .emergency-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .status-content {
+                margin: 1rem;
+                padding: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .sos-button {
+                width: 120px;
+                height: 120px;
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Video Background -->
+    <div class="video-background">
+        <video autoplay muted loop id="bg-video">
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-medical-technology-digital-animation-39879-large.mp4" type="video/mp4">
+        </video>
+    </div>
+    <div class="video-overlay"></div>
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="index.html" class="navbar-logo"><i class="fa-solid fa-heart-pulse"></i>Arogya</a>
+
+        <ul class="navbar-nav">
+            <li class="nav-item"><a href="index.html" class="nav-link" data-lang-key="navHome"><i class="fas fa-home"></i>Home</a></li>
+            <li class="nav-item"><a href="about.html" class="nav-link" data-lang-key="navAbout"><i class="fas fa-info-circle"></i>About Us</a></li>
+            <li class="nav-item"><a href="health-dashboard.html" class="nav-link" data-lang-key="navDashboard"><i class="fas fa-th-large"></i>Dashboard</a></li>
+            <li class="nav-item"><a href="symptom.html" class="nav-link" data-lang-key="navSymptom"><i class="fas fa-brain"></i>AI Checker</a></li>
+            <li class="nav-item"><a href="records.html" class="nav-link" data-lang-key="navRecords"><i class="fas fa-file-medical"></i>Records</a></li>
+            <li class="nav-item"><a href="donors.html" class="nav-link" data-lang-key="navDonors"><i class="fas fa-hand-holding-heart"></i>Donors</a></li>
+            <li class="nav-item"><a href="emergency.html" class="nav-link active" data-lang-key="navEmergency"><i class="fas fa-ambulance"></i>Emergency</a></li>
+            <li class="nav-item"><a href="contact.html" class="nav-link" data-lang-key="navContact"><i class="fas fa-envelope"></i>Contact</a></li>
+        </ul>
+
+        <div class="settings-nav">
+            <div class="glass-select-wrapper">
+                <select id="language-selector" class="glass-select">
+                    <option value="en">English</option>
+                    <option value="hi">हिंदी</option>
+                    <option value="te">తెలుగు</option>
+                </select>
+            </div>
+            <div id="auth-container" style="margin-left: 1rem;">
+                <a href="login.html" class="btn btn-primary" data-lang-key="navLogin">Login</a>
+            </div>
+            <div class="hamburger-menu">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="mobile-nav">
+    </div>
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <h1 class="page-title" data-translate="emergency_title">Emergency Services</h1>
+        <p class="page-subtitle" data-translate="emergency_subtitle">Get immediate medical assistance during emergencies</p>
+    </header>
+
+    <!-- Emergency Container -->
+    <div class="emergency-container">
+        <!-- SOS Section -->
+        <div class="sos-section">
+            <button class="sos-button" id="sos-btn">
+                <i class="fas fa-exclamation-triangle"></i>
+            </button>
+            <p class="sos-text" data-translate="sos_text">Press SOS for Immediate Help</p>
+        </div>
+
+        <!-- Emergency Actions -->
+        <div class="emergency-actions">
+            <div class="glass-card action-card" onclick="callAmbulance()">
+                <div class="action-icon ambulance">
+                    <i class="fas fa-ambulance"></i>
+                </div>
+                <h3 class="action-title" data-translate="call_ambulance">Call Ambulance</h3>
+                <p class="action-description" data-translate="ambulance_desc">Get emergency medical transport immediately</p>
+                <button class="action-btn" data-translate="call_now">Call Now</button>
+            </div>
+
+            <div class="glass-card action-card" onclick="findHospital()">
+                <div class="action-icon hospital">
+                    <i class="fas fa-hospital"></i>
+                </div>
+                <h3 class="action-title" data-translate="find_hospital">Find Hospital</h3>
+                <p class="action-description" data-translate="hospital_desc">Locate nearest hospitals and emergency rooms</p>
+                <button class="action-btn" data-translate="locate_now">Locate Now</button>
+            </div>
+
+            <div class="glass-card action-card" onclick="shareLocation()">
+                <div class="action-icon location">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <h3 class="action-title" data-translate="share_location">Share Location</h3>
+                <p class="action-description" data-translate="location_desc">Share your location with emergency contacts</p>
+                <button class="action-btn" data-translate="share_now">Share Now</button>
+            </div>
+
+            <div class="glass-card action-card" onclick="emergencyContact()">
+                <div class="action-icon contact">
+                    <i class="fas fa-phone-alt"></i>
+                </div>
+                <h3 class="action-title" data-translate="emergency_contact">Emergency Contact</h3>
+                <p class="action-description" data-translate="contact_desc">Call your designated emergency contact</p>
+                <button class="action-btn" data-translate="contact_now">Contact Now</button>
+            </div>
+
+            <div class="glass-card action-card" onclick="window.location.href='ambulance-hospital.html'">
+                <div class="action-icon" style="color: #00e676;">
+                    <i class="fas fa-map-location-dot"></i>
+                </div>
+                <h3 class="action-title">Live Tracking</h3>
+                <p class="action-description">View live ambulance map (Hospital View)</p>
+                <button class="action-btn">Open Map</button>
+            </div>
+        </div>
+
+        <!-- Emergency Contacts -->
+        <div class="contacts-section">
+            <h2 class="section-title" data-translate="emergency_numbers">Emergency Numbers</h2>
+            <div class="contacts-grid">
+                <div class="glass-card contact-card">
+                    <div class="contact-type" data-translate="ambulance_service">Ambulance Service</div>
+                    <div class="contact-number">108</div>
+                    <div class="contact-description" data-translate="ambulance_service_desc">24/7 Emergency Medical Service</div>
+                </div>
+
+                <div class="glass-card contact-card">
+                    <div class="contact-type" data-translate="police">Police</div>
+                    <div class="contact-number">100</div>
+                    <div class="contact-description" data-translate="police_desc">Emergency Police Assistance</div>
+                </div>
+
+                <div class="glass-card contact-card">
+                    <div class="contact-type" data-translate="fire_service">Fire Service</div>
+                    <div class="contact-number">101</div>
+                    <div class="contact-description" data-translate="fire_service_desc">Fire and Rescue Service</div>
+                </div>
+
+                <div class="glass-card contact-card">
+                    <div class="contact-type" data-translate="women_helpline">Women Helpline</div>
+                    <div class="contact-number">1091</div>
+                    <div class="contact-description" data-translate="women_helpline_desc">24/7 Women Emergency Helpline</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Section -->
+        <div class="map-section" id="nearby-hospitals">
+            <h2 class="section-title" data-translate="nearby_hospitals">Nearby Hospitals & Ambulances</h2>
+            <div class="glass-card map-container">
+                <div id="map" style="width: 100%; height: 100%; min-height: 400px; border-radius: 15px;"></div>
+            </div>
+        </div>
+
+        <!-- First Aid Tips -->
+        <div class="tips-section">
+            <h2 class="section-title" data-translate="first_aid_tips">First Aid Tips</h2>
+            <div class="tips-grid">
+                <div class="glass-card tip-card">
+                    <h3 class="tip-title">
+                        <i class="fas fa-heartbeat tip-icon"></i>
+                        <span data-translate="heart_attack">Heart Attack</span>
+                    </h3>
+                    <ul class="tip-list">
+                        <li class="tip-item" data-translate="heart_tip1">Call emergency services immediately</li>
+                        <li class="tip-item" data-translate="heart_tip2">Keep the person calm and seated</li>
+                        <li class="tip-item" data-translate="heart_tip3">Loosen tight clothing</li>
+                        <li class="tip-item" data-translate="heart_tip4">Give aspirin if available</li>
+                    </ul>
+                </div>
+
+                <div class="glass-card tip-card">
+                    <h3 class="tip-title">
+                        <i class="fas fa-lungs tip-icon"></i>
+                        <span data-translate="choking">Choking</span>
+                    </h3>
+                    <ul class="tip-list">
+                        <li class="tip-item" data-translate="choking_tip1">Perform 5 back blows</li>
+                        <li class="tip-item" data-translate="choking_tip2">Give 5 abdominal thrusts</li>
+                        <li class="tip-item" data-translate="choking_tip3">Repeat until object is expelled</li>
+                        <li class="tip-item" data-translate="choking_tip4">Call emergency if unsuccessful</li>
+                    </ul>
+                </div>
+
+                <div class="glass-card tip-card">
+                    <h3 class="tip-title">
+                        <i class="fas fa-thermometer-half tip-icon"></i>
+                        <span data-translate="fever">High Fever</span>
+                    </h3>
+                    <ul class="tip-list">
+                        <li class="tip-item" data-translate="fever_tip1">Rest and stay hydrated</li>
+                        <li class="tip-item" data-translate="fever_tip2">Take lukewarm bath</li>
+                        <li class="tip-item" data-translate="fever_tip3">Use light clothing</li>
+                        <li class="tip-item" data-translate="fever_tip4">Seek medical help if severe</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Modal -->
+    <div class="status-modal" id="status-modal">
+        <div class="status-content">
+            <div class="status-icon processing" id="status-icon">
+                <i class="fas fa-spinner"></i>
+            </div>
+            <h2 class="status-title" id="status-title">Processing...</h2>
+            <p class="status-message" id="status-message">Please wait while we connect you to emergency services.</p>
+            <button class="status-btn" id="status-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Translation Dictionary
+        const translations = {
+            en: {
+                logo: "Arogya",
+                navHome: "Home",
+                navAbout: "About Us",
+                navSymptom: "AI Checker",
+                navTelemedicine: "Telemedicine",
+                navPharmacy: "Pharmacy",
+                navDonors: "Blood Donors",
+                navEmergency: "Emergency",
+                navDashboard: "Dashboard",
+                navPatients: "Patients",
+                navAppointments: "Appointments",
+                navPrescription: "Create Prescription",
+                navAdminDashboard: "Dashboard",
+                navUserMgmt: "User Mgmt",
+                navAnalytics: "Analytics",
+                navSettings: "Settings",
+                navContact: "Contact",
+                navLogin: "Login / Sign Up",
+                emergency_title: "Emergency Services",
+                emergency_subtitle: "Get immediate medical assistance during emergencies",
+                sos_text: "Press SOS for Immediate Help",
+                call_ambulance: "Call Ambulance",
+                ambulance_desc: "Get emergency medical transport immediately",
+                call_now: "Call Now",
+                find_hospital: "Find Hospital",
+                hospital_desc: "Locate nearest hospitals and emergency rooms",
+                locate_now: "Locate Now",
+                share_location: "Share Location",
+                location_desc: "Share your location with emergency contacts",
+                share_now: "Share Now",
+                emergency_contact: "Emergency Contact",
+                contact_desc: "Call your designated emergency contact",
+                contact_now: "Contact Now",
+                emergency_numbers: "Emergency Numbers",
+                ambulance_service: "Ambulance Service",
+                ambulance_service_desc: "24/7 Emergency Medical Service",
+                police: "Police",
+                police_desc: "Emergency Police Assistance",
+                fire_service: "Fire Service",
+                fire_service_desc: "Fire and Rescue Service",
+                women_helpline: "Women Helpline",
+                women_helpline_desc: "24/7 Women Emergency Helpline",
+                nearby_hospitals: "Nearby Hospitals",
+                map_loading: "Loading nearby hospitals...",
+                first_aid_tips: "First Aid Tips",
+                heart_attack: "Heart Attack",
+                heart_tip1: "Call emergency services immediately",
+                heart_tip2: "Keep the person calm and seated",
+                heart_tip3: "Loosen tight clothing",
+                heart_tip4: "Give aspirin if available",
+                choking: "Choking",
+                choking_tip1: "Perform 5 back blows",
+                choking_tip2: "Give 5 abdominal thrusts",
+                choking_tip3: "Repeat until object is expelled",
+                choking_tip4: "Call emergency if unsuccessful",
+                fever: "High Fever",
+                fever_tip1: "Rest and stay hydrated",
+                fever_tip2: "Take lukewarm bath",
+                fever_tip3: "Use light clothing",
+                fever_tip4: "Seek medical help if severe"
+            },
+            hi: {
+                logo: "आरोग्य",
+                navHome: "होम",
+                navAbout: "हमारे बारे में",
+                navSymptom: "लक्षण परीक्षक",
+                navTelemedicine: "टेलीमेडिसिन",
+                navPharmacy: "फार्मेसी",
+                navDonors: "रक्त दाता",
+                navDashboard: "डैशबोर्ड",
+                navPatients: "मरीजों",
+                navAppointments: "मुलाकातें",
+                navPrescription: "प्रिस्क्रिप्शन बनाएं",
+                navAdminDashboard: "डैशबोर्ड",
+                navUserMgmt: "उपयोगकर्ता प्रबंधन",
+                navAnalytics: "विश्लेषिकी",
+                navSettings: "सेटिंग्स",
+                navContact: "संपर्क",
+                navLogin: "लॉगिन / साइन अप",
+                emergency_title: "आपातकालीन सेवाएं",
+                emergency_subtitle: "आपातकालीन स्थितियों में तत्काल चिकित्सा सहायता प्राप्त करें",
+                sos_text: "तत्काल सहायता के लिए SOS दबाएं",
+                call_ambulance: "एम्बुलेंस कॉल करें",
+                ambulance_desc: "तत्काल चिकित्सा परिवहन प्राप्त करें",
+                call_now: "अभी कॉल करें",
+                find_hospital: "अस्पताल खोजें",
+                hospital_desc: "निकटतम अस्पताल और आपातकालीन कमरे खोजें",
+                locate_now: "अभी खोजें",
+                share_location: "स्थान साझा करें",
+                location_desc: "अपना स्थान आपातकालीन संपर्कों के साथ साझा करें",
+                share_now: "अभी साझा करें",
+                emergency_contact: "आपातकालीन संपर्क",
+                contact_desc: "अपने निर्धारित आपातकालीन संपर्क को कॉल करें",
+                contact_now: "अभी संपर्क करें",
+                emergency_numbers: "आपातकालीन नंबर",
+                ambulance_service: "एम्बुलेंस सेवा",
+                ambulance_service_desc: "24/7 आपातकालीन चिकित्सा सेवा",
+                police: "पुलिस",
+                police_desc: "आपातकालीन पुलिस सहायता",
+                fire_service: "अग्निशमन सेवा",
+                fire_service_desc: "आग और बचाव सेवा",
+                women_helpline: "महिला हेल्पलाइन",
+                women_helpline_desc: "24/7 महिला आपातकालीन हेल्पलाइन",
+                nearby_hospitals: "निकट के अस्पताल",
+                map_loading: "निकट के अस्पताल लोड हो रहे हैं...",
+                first_aid_tips: "प्राथमिक चिकित्सा युक्तियां",
+                heart_attack: "दिल का दौरा",
+                heart_tip1: "तुरंत आपातकालीन सेवाओं को कॉल करें",
+                heart_tip2: "व्यक्ति को शांत और बैठे रखें",
+                heart_tip3: "तंग कपड़े ढीले करें",
+                heart_tip4: "यदि उपलब्ध हो तो एस्पिरिन दें",
+                choking: "गला घुटना",
+                choking_tip1: "5 पीठ थप्पड़ मारें",
+                choking_tip2: "5 पेट के धक्के दें",
+                choking_tip3: "वस्तु निकलने तक दोहराएं",
+                choking_tip4: "असफल होने पर आपातकालीन कॉल करें",
+                fever: "उच्च बुखार",
+                fever_tip1: "आराम करें और हाइड्रेटेड रहें",
+                fever_tip2: "गुनगुने स्नान लें",
+                fever_tip3: "हल्के कपड़े पहनें",
+                fever_tip4: "गंभीर होने पर चिकित्सकीय सहायता लें"
+            },
+            te: {
+                logo: "ఆరోగ్య",
+                navHome: "హోమ్",
+                navAbout: "మా గురించి",
+                navSymptom: "AI లక్షణ తనిఖీ",
+                navTelemedicine: "టెలిమెడిసిన్",
+                navPharmacy: "ఫార్మసీ",
+                navDonors: "రక్త దాతలు",
+                navDashboard: "డాష్బోర్డ్",
+                navPatients: "రోగులు",
+                navAppointments: "అపాయింట్‌మెంట్లు",
+                navPrescription: "ప్రిస్క్రిప్షన్ సృష్టించండి",
+                navAdminDashboard: "డాష్బోర్డ్",
+                navUserMgmt: "వినియోగదారు నిర్వహణ",
+                navAnalytics: "విశ్లేషణలు",
+                navSettings: "సెట్టింగ్‌లు",
+                navContact: "సంప్రదించండి",
+                navLogin: "లాగిన్ / సైన్ అప్",
+                emergency_title: "అత్యవసర సేవలలు",
+                emergency_subtitle: "అత్యవసర పరిస్థితులలో తక్షణ వైద్య సహాయం పొందండి",
+                sos_text: "తక్షణ సహాయం కోసం SOS నొక్కండి",
+                call_ambulance: "యాంబులెన్స్ కాల్ చేయండి",
+                ambulance_desc: "తక్షణ వైద్య రవాణా పొందండి",
+                call_now: "ఇప్పుడు కాల్ చేయండి",
+                find_hospital: "ఆసుపత్రిని కనుగొనండి",
+                hospital_desc: "సమీపంలోని ఆసుపత్రులు మరియు అత్యవసర గదులను కనుగొనండి",
+                locate_now: "ఇప్పుడు కనుగొనండి",
+                share_location: "స్థానాన్ని పంచుకోండి",
+                location_desc: "మీ స్థానాన్ని అత్యవసర సంపర్కాలతో పంచుకోండి",
+                share_now: "ఇప్పుడు పంచుకోండి",
+                emergency_contact: "అత్యవసర సంపర్కం",
+                contact_desc: "మీ నిర్ధారిత అత్యవసర సంపర్కాన్ని కాల్ చేయండి",
+                contact_now: "ఇప్పుడు సంపర్కండి",
+                emergency_numbers: "అత్యవసర నంబర్లు",
+                ambulance_service: "యాంబులెన్స్ సేవ",
+                ambulance_service_desc: "24/7 అత్యవసర వైద్య సేవ",
+                police: "పోలీస్",
+                police_desc: "అత్యవసర పోలీస్ సహాయం",
+                fire_service: "అగ్నిమాపక సేవ",
+                fire_service_desc: "అగ్ని మరియు రక్షణ సేవ",
+                women_helpline: "మహిళా హెల్ప్‌లైన్",
+                women_helpline_desc: "24/7 మహిళా అత్యవసర హెల్ప్‌లైన్",
+                nearby_hospitals: "సమీపంలోని ఆసుపత్రులు",
+                map_loading: "సమీపంలోని ఆసుపత్రులు లోడ్ అవుతున్నాయి...",
+                first_aid_tips: "ప్రాథమిక చికిత్స చిట్కాలు",
+                heart_attack: "గుండెపు నొప్పి",
+                heart_tip1: "వెంటనే అత్యవసర సేవలను కాల్ చేయండి",
+                heart_tip2: "వ్యక్తిని శాంతంగా మరియు కూర్చుండి ఉంచండి",
+                heart_tip3: "బిగ్గిరి బట్టలను వదులుగా వేయండి",
+                heart_tip4: "అందుబాటులో ఉంటే యాస్పిరిన్ ఇవ్వండి",
+                choking: "గొంతు దిబ్బడడం",
+                choking_tip1: "5 వీపు దెబ్బలు ఇవ్వండి",
+                choking_tip2: "5 ఉదర ధక్కలు ఇవ్వండి",
+                choking_tip3: "వస్తు బయటకు వచ్చే వరకు పునరావృతండి",
+                choking_tip4: "విఫలమైతే అత్యవసర కాల్ చేయండి",
+                fever: "అధిక జ్వరం",
+                fever_tip1: "విశ్రాంతి తీసుకోండి మరియు హైడ్రేటెడ్‌గా ఉండండి",
+                fever_tip2: "వెచ్చని నీటి స్నానం తీసుకోండి",
+                fever_tip3: "తేలిక బట్టలు ధరించండి",
+                fever_tip4: "తీవ్రంగా ఉంటే వైద్య సహాయం తీసుకోండి"
+            }
+        };
+
+        // Initialize language
+        let currentLanguage = localStorage.getItem('arogya-language') || 'en';
+        document.getElementById('language-selector').value = currentLanguage;
+
+        // Initialize user role
+        let currentUserRole = localStorage.getItem('arogya-role') || null;
+
+        // DOM Elements
+        const languageSelector = document.getElementById('language-selector');
+        const hamburger = document.querySelector('.hamburger-menu');
+        const mobileNav = document.querySelector('.mobile-nav');
+        const mainNavList = document.querySelector('.navbar-nav');
+        const bgVideo = document.getElementById('bg-video');
+        const sosBtn = document.getElementById('sos-btn');
+        const statusModal = document.getElementById('status-modal');
+        const statusIcon = document.getElementById('status-icon');
+        const statusTitle = document.getElementById('status-title');
+        const statusMessage = document.getElementById('status-message');
+        const statusBtn = document.getElementById('status-btn');
+
+        // Event Listeners
+        languageSelector.addEventListener('change', changeLanguage);
+        sosBtn.addEventListener('click', handleSOS);
+
+        // Functions
+        function changeLanguage() {
+            currentLanguage = languageSelector.value;
+            localStorage.setItem('arogya-language', currentLanguage);
+            updateLanguage();
+        }
+
+        function updateLanguage() {
+            document.querySelectorAll('[data-translate], [data-lang-key]').forEach(element => {
+                const key = element.getAttribute('data-translate') || element.getAttribute('data-lang-key');
+                if (translations[currentLanguage][key]) {
+                    element.textContent = translations[currentLanguage][key];
+                }
+            });
+        }
+
+        // Mobile Nav Logic
+        if (hamburger && mobileNav && mainNavList) {
+            mobileNav.innerHTML = mainNavList.innerHTML;
+            hamburger.addEventListener('click', () => {
+                mobileNav.classList.toggle('open');
+                hamburger.innerHTML = mobileNav.classList.contains('open') ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+            });
+            mobileNav.addEventListener('click', (e) => {
+                if (e.target.classList.contains('nav-link')) {
+                    mobileNav.classList.remove('open');
+                    hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+                }
+            });
+        }
+
+        function handleSOS() {
+            showStatusModal('processing', 'Emergency Alert Activated', 'Connecting you to emergency services...', false);
+            
+            // Simulate emergency response
+            setTimeout(() => {
+                showStatusModal('success', 'Help is on the way!', 'Ambulance has been dispatched to your location. ETA: 5-10 minutes.', true);
+                
+                // Vibrate if available
+                if ('vibrate' in navigator) {
+                    navigator.vibrate([200, 100, 200, 100, 200]);
+                }
+            }, 3000);
+        }
+
+        function callAmbulance() {
+            showStatusModal('processing', 'Calling Ambulance...', 'Connecting to emergency medical services...', false);
+            
+            setTimeout(() => {
+                showStatusModal('success', 'Ambulance Dispatched!', 'Help is on the way. Please stay on the line.', true);
+            }, 2000);
+        }
+
+        function findHospital() {
+            showStatusModal('processing', 'Finding Hospitals...', 'Locating nearest hospitals and emergency rooms...', false);
+            
+            setTimeout(() => {
+                showStatusModal('success', 'Hospitals Found!', '3 hospitals found within 5km radius. Check map below.', true);
+                document.getElementById('nearby-hospitals').scrollIntoView({behavior: 'smooth'});
+            }, 2000);
+        }
+
+        function shareLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        showStatusModal('success', 'Location Shared!', 'Your location has been shared with emergency contacts.', true);
+                    },
+                    (error) => {
+                        showStatusModal('error', 'Location Error', 'Unable to access your location. Please enable location services.', true);
+                    }
+                );
+            } else {
+                showStatusModal('error', 'Not Supported', 'Geolocation is not supported by your browser.', true);
+            }
+        }
+
+        function emergencyContact() {
+            showStatusModal('processing', 'Calling Emergency Contact...', 'Connecting to your designated emergency contact...', false);
+            
+            setTimeout(() => {
+                showStatusModal('success', 'Contact Notified!', 'Your emergency contact has been notified of your situation.', true);
+            }, 2000);
+        }
+
+        function showStatusModal(type, title, message, showCloseBtn) {
+            statusModal.classList.add('active');
+            statusTitle.textContent = title;
+            statusMessage.textContent = message;
+            
+            // Update icon based on type
+            statusIcon.className = `status-icon ${type}`;
+            if (type === 'success') {
+                statusIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+            } else if (type === 'error') {
+                statusIcon.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+            } else {
+                statusIcon.innerHTML = '<i class="fas fa-spinner"></i>';
+            }
+            
+            // Show/hide close button
+            statusBtn.style.display = showCloseBtn ? 'inline-flex' : 'none';
+        }
+
+        function closeModal() {
+            statusModal.classList.remove('active');
+        }
+
+        // Particle Animation
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function createParticle() {
+            return {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 3 + 1,
+                speedX: Math.random() * 1 - 0.5,
+                speedY: Math.random() * 1 - 0.5,
+                opacity: Math.random() * 0.5 + 0.2
+            };
+        }
+
+        function initParticles() {
+            particles = [];
+            const particleCount = Math.min(100, window.innerWidth / 10);
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(createParticle());
+            }
+        }
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach(particle => {
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${particle.opacity})`;
+                ctx.fill();
+                
+                // Update position
+                particle.x += particle.speedX;
+                particle.y += particle.speedY;
+                
+                // Reset if out of bounds
+                if (particle.x < 0 || particle.x > canvas.width) particle.speedX *= -1;
+                if (particle.y < 0 || particle.y > canvas.height) particle.speedY *= -1;
+            });
+            
+            requestAnimationFrame(drawParticles);
+        }
+
+        // Initialize
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            initParticles();
+        });
+
+        // Fallback for video background
+        bgVideo.addEventListener('error', () => {
+            bgVideo.style.display = 'none';
+        });
+
+        // Initialize everything
+        resizeCanvas();
+        initParticles();
+        drawParticles();
+        
+        // Role Based UI
+        let role = localStorage.getItem('arogyaRole') || 'patient';
+        document.body.setAttribute('data-role', role);
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            if (item.classList.contains('role-patient') || item.classList.contains('role-doctor') || item.classList.contains('role-admin')) {
+                item.style.display = 'none';
+            }
+        });
+        navItems.forEach(item => {
+            if (item.classList.contains(`role-${role}`)) {
+                item.style.display = 'block';
+            }
+        });
+        
+        updateLanguage();
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Back to top button
+        const backToTopBtn = document.createElement('button');
+        backToTopBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+        backToTopBtn.className = 'btn btn-primary';
+        backToTopBtn.style.cssText = 'position: fixed; bottom: 2rem; left: 2rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 999; opacity: 0; visibility: hidden; transition: all 0.3s ease;';
+        document.body.appendChild(backToTopBtn);
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTopBtn.style.opacity = '1';
+                backToTopBtn.style.visibility = 'visible';
+            } else {
+                backToTopBtn.style.opacity = '0';
+                backToTopBtn.style.visibility = 'hidden';
+            }
+        });
+
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDDV-p_a_-GyLGjAsaaLFkVLk79x3JqFyA",
+            authDomain: "asish-f7dd3.firebaseapp.com",
+            projectId: "asish-f7dd3",
+            databaseURL: "https://asish-f7dd3-default-rtdb.firebaseio.com",
+            storageBucket: "asish-f7dd3.firebasestorage.app",
+            messagingSenderId: "120249700723",
+            appId: "1:120249700723:web:22f1c37d6666f0c97f7506",
+            measurementId: "G-KKX5X8VD6M"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Initialize Map
+        const map = L.map('map').setView([20.5937, 78.9629], 5); // Default India view
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Icons
+        const hospitalIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/4320/4320371.png', // Hospital Icon
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+
+        const ambulanceIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/2636/2636282.png', // Ambulance Icon
+            iconSize: [38, 38],
+            iconAnchor: [19, 38],
+            popupAnchor: [0, -38]
+        });
+
+        const userIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/9131/9131529.png', // User Icon
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+
+        // Get User Location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                map.setView([lat, lng], 13);
+                L.marker([lat, lng], {icon: userIcon}).addTo(map).bindPopup("<b>You are here</b>").openPopup();
+
+                // Add Mock Hospitals around user
+                const hospitals = [
+                    { lat: lat + 0.01, lng: lng + 0.01, name: "City General Hospital" },
+                    { lat: lat - 0.015, lng: lng - 0.005, name: "Apollo Emergency Center" },
+                    { lat: lat + 0.005, lng: lng - 0.015, name: "Sunrise Medical Center" }
+                ];
+
+                hospitals.forEach(h => {
+                    L.marker([h.lat, h.lng], {icon: hospitalIcon}).addTo(map).bindPopup(`<b>${h.name}</b><br>24/7 Emergency`);
+                });
+            });
+        }
+
+        // Track Ambulances
+        const ambulanceMarkers = {};
+        onValue(ref(db, 'ambulances/'), (snapshot) => {
+            const data = snapshot.val();
+            if (!data) return;
+
+            Object.entries(data).forEach(([id, info]) => {
+                if (info.status !== 'online') return;
+
+                if (ambulanceMarkers[id]) {
+                    ambulanceMarkers[id].setLatLng([info.lat, info.lng]);
+                } else {
+                    ambulanceMarkers[id] = L.marker([info.lat, info.lng], {icon: ambulanceIcon})
+                        .addTo(map)
+                        .bindPopup(`<b>Ambulance ${id}</b><br>Status: Active`);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
