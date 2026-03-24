@@ -1,4 +1,4 @@
-import { Users, BarChart2, Settings, Stethoscope, Hospital, HeartHandshake, UserCog } from "lucide-react";
+import { Users, BarChart2, Settings, Stethoscope, Hospital, HeartHandshake, UserCog, Pill } from "lucide-react";
 import Link from "next/link";
 
 const quickLinks = [
@@ -7,6 +7,7 @@ const quickLinks = [
   { href: '/admin/doctors', label: 'Doctor Management', description: 'Add doctors with login credentials', icon: Stethoscope, color: 'text-emerald-500', bg: 'bg-emerald-50' },
   { href: '/admin/hospitals', label: 'Hospital Management', description: 'Add hospitals with Google Maps links', icon: Hospital, color: 'text-violet-500', bg: 'bg-violet-50' },
   { href: '/admin/donors', label: 'Donor Management', description: 'Register & manage blood donors', icon: HeartHandshake, color: 'text-rose-500', bg: 'bg-rose-50' },
+  { href: '/admin/pharmacy', label: 'Pharmacy Inventory', description: 'Manage e-store medications', icon: Pill, color: 'text-teal-500', bg: 'bg-teal-50' },
   { href: '/admin/reports', label: 'Reports Library', description: 'Search patient records & reports', icon: BarChart2, color: 'text-amber-500', bg: 'bg-amber-50' },
 ];
 

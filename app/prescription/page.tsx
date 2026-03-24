@@ -1,31 +1,44 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, ShoppingCart, Filter, Tag, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/lib/hooks/useUser";
 import { useRouter } from "next/navigation";
 
-const products = [
-  { id: "bp-1", name: "Omron Blood Pressure Monitor", category: "Devices", dosage: "N/A", price: 2499, img: "/images/products/bp_monitor.png" },
-  { id: "el-2", name: "Electrolytes Powder", category: "Supplements", dosage: "1 Sachet/day", price: 350, img: "/images/products/electrolytes.png" },
-  { id: "fa-3", name: "Comprehensive First Aid Kit", category: "Devices", dosage: "N/A", price: 1200, img: "/images/products/first_aid_kit.png" },
-  { id: "in-4", name: "Insulin Glargine Pen", category: "Prescription", dosage: "As prescribed", price: 850, img: "/images/products/insulin.png" },
-  { id: "me-5", name: "Metformin XR 500mg", category: "Prescription", dosage: "500mg tablet", price: 120, img: "/images/products/metformin.png" },
-  { id: "pa-6", name: "Lidocaine Pain Relief Patch", category: "Supplements", dosage: "1 patch/12 hrs", price: 450, img: "/images/products/pain_patch.png" },
-  { id: "sy-7", name: "Sterile Insulin Syringes", category: "Devices", dosage: "N/A", price: 299, img: "/images/products/syringes.png" },
-  { id: "vd-8", name: "Vitamin D3 60K IU", category: "Supplements", dosage: "1 cap/week", price: 180, img: "/images/products/vitamin_d3.png" }
-];
+// Live Database Integrator
+interface Product {
+  id: string;
+  name: string;
+  category: string;
+  dosage: string;
+  price: number;
+  img: string;
+}
 
 const EPrescription = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [purchasing, setPurchasing] = useState<string | null>(null);
   
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
   const { user } = useUser();
   const supabase = createClient();
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchInventory = async () => {
+      setLoadingProducts(true);
+      const { data } = await supabase.from('medications').select('*').order('name');
+      if (data) setProducts(data as Product[]);
+      setLoadingProducts(false);
+    };
+    fetchInventory();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
@@ -33,9 +46,9 @@ const EPrescription = () => {
       const matchesCat = activeCategory === "All" || p.category === activeCategory;
       return matchesSearch && matchesCat;
     });
-  }, [searchQuery, activeCategory]);
+  }, [searchQuery, activeCategory, products]);
 
-  const handleBuy = async (product: typeof products[0]) => {
+  const handleBuy = async (product: Product) => {
     if (!user) {
       toast.error("Please log in to make a purchase.");
       router.push("/auth");
@@ -113,6 +126,12 @@ const EPrescription = () => {
 
         {/* Product Grid */}
         <section className="container mx-auto px-6">
+          {loadingProducts ? (
+            <div className="flex items-center justify-center py-20 text-muted-foreground gap-3">
+              <div className="w-8 h-8 rounded-full border-4 border-primary/30 border-t-primary animate-spin"></div>
+              <span className="text-lg font-medium">Synchronizing Inventory...</span>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredProducts.map(product => (
               <div 
@@ -158,8 +177,9 @@ const EPrescription = () => {
               </div>
             ))}
           </div>
-          
-          {filteredProducts.length === 0 && (
+          )}
+
+          {!loadingProducts && filteredProducts.length === 0 && (
             <div className="text-center py-20 flex flex-col items-center">
               <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4 text-muted-foreground">
                 <Search className="w-8 h-8" />

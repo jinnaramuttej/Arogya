@@ -156,7 +156,75 @@ export const translations = {
     records_modal_desc: "Add new medical data to your secure vault.",
     records_modal_cancel: "CANCEL",
     records_modal_save: "SAVE SECURELY",
-    records_days: "Days"
+    records_days: "Days",
+    
+    // Emergency Route
+    emergencyTitle: "Emergency Services",
+    emergencySubtitle: "Rapid response and dispatch coordination unit.",
+    emergencyDispatchBadge: "SOS Dispatch Unit",
+    emergencyDispatchTitle: "Need Immediate Help?",
+    emergencyDispatchBody: "Our neural network will immediately broadcast your geolocation to nearby hospitals and available ambulances.",
+    sosText: "Press SOS for Immediate Help",
+    emergencyPreviewTitle: "Live Dispatch Protocol",
+    emergencyPreviewStepOne: "1. Lock GPS Coordinates",
+    emergencyPreviewStepTwo: "2. Broadcast to Hospitals",
+    emergencyPreviewStepThree: "3. Disptach Nearest EMT",
+    emergencyTimelineTitle: "Ambulance Tracker",
+    emergencyTimelineDetecting: "Locating user GPS coordinates",
+    emergencyTimelineAssigned: "Ambulance TS 07 CD 5678 assigned",
+    emergencyTimelineNotified: "Receiving hospital notified",
+    emergencyTimelineEnRoute: "Ambulance is en route",
+    emergencyTimelineActive: "(Active)",
+    emergencyTimelineArriving: "Arriving at patient location",
+    emergencyCoordinationTitle: "Neural Coordination",
+    emergencyCoordinationTraffic: "Traffic bypass requested",
+    emergencyCoordinationRoute: "Optimal route calculated",
+    callAmbulance: "Call Ambulance",
+    ambulanceDesc: "Get emergency medical transport immediately",
+    callNow: "Call Now",
+    findHospital: "Find Hospital",
+    hospitalDesc: "Locate nearest hospitals and emergency rooms",
+    locateNow: "Locate Now",
+    shareLocation: "Share Location",
+    locationDesc: "Share your location with emergency contacts",
+    shareNow: "Share Now",
+    emergencyContact: "Emergency Contact",
+    contactDesc: "Call your designated emergency contact",
+    contactNow: "Contact Now",
+    emergencyNumbers: "Emergency Numbers",
+    ambulanceService: "Ambulance",
+    ambulanceServiceDesc: "National Emergency Service",
+    police: "Police",
+    policeDesc: "Law Enforcement",
+    fireService: "Fire Service",
+    fireServiceDesc: "Fire & Rescue Department",
+    womenHelpline: "Women Helpline",
+    womenHelplineDesc: "24/7 Protection Hotline",
+    firstAidTips: "Critical First Aid",
+    heartAttack: "Heart Attack",
+    heartTip1: "Call emergency services immediately",
+    heartTip2: "Keep the person calm and seated",
+    heartTip3: "Loosen tight clothing",
+    heartTip4: "Give aspirin if available",
+    choking: "Choking",
+    chokingTip1: "Perform 5 back blows",
+    chokingTip2: "Give 5 abdominal thrusts",
+    chokingTip3: "Repeat until object is expelled",
+    chokingTip4: "Call emergency if unsuccessful",
+    fever: "High Fever",
+    feverTip1: "Rest and stay hydrated",
+    feverTip2: "Take a lukewarm bath",
+    feverTip3: "Use light clothing",
+    feverTip4: "Seek medical help if severe",
+    emergencyOverlayTitle: "Emergency Protocol Active",
+    emergencyLocationLive: "Live GPS tracking engaged",
+    emergencyOverlayETA: "ETA",
+    emergencyMinutes: "Minutes",
+    emergencyOverlayDistance: "DISTANCE",
+    emergencyKilometers: "Kilometers",
+    emergencyOverlayStatus: "STATUS",
+    emergencyOverlayDriver: "ASSIGNED EMT:",
+    emergencyOverlayCallDriver: "Call Driver"
   },
   hi: {
     // Navbar
@@ -479,11 +547,13 @@ export type TranslationKey = keyof typeof translations.en | string;
 // Fallback static translation function for components that import t directly
 export const t = (key: TranslationKey | string, explicitLang?: string): string => {
   if (explicitLang) {
-    return translations[explicitLang as Language]?.[key as keyof typeof translations.en] || key as string;
+    const tl = translations[explicitLang as Language] as Record<string, string> | undefined;
+    return tl?.[key] || (translations.en as Record<string, string>)[key] || (key as string);
   }
   if (typeof window !== "undefined") {
     const lang = (localStorage.getItem("app-language") || "en") as Language;
-    return translations[lang]?.[key as keyof typeof translations.en] || key as string;
+    const tl = translations[lang] as Record<string, string> | undefined;
+    return tl?.[key] || (translations.en as Record<string, string>)[key] || (key as string);
   }
-  return translations.en[key as keyof typeof translations.en] || key as string;
+  return (translations.en as Record<string, string>)[key] || (key as string);
 };
