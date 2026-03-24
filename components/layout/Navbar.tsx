@@ -29,7 +29,7 @@ const navLinks = [
   { href: "/donor",     label: "Blood Donor",         icon: Droplet },
   { href: "/pharmacy",  label: "Pharmacy",            icon: ShoppingBag },
   { href: "/emergency", label: "Emergency",           icon: Siren    },
-  { href: "/dashboard", label: "Records",             icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard",           icon: LayoutDashboard },
 ];
 
 export default function Navbar() {
