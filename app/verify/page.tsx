@@ -172,11 +172,29 @@ function VerifyContent() {
   }, [isScanning, mode]);
 
   // --- BUTTON CLICK HANDLER (Starts Scanning) ---
-  const handleStartScan = () => {
+  const handleStartScan = async () => {
     if (mode === "register" && (!email || !name)) {
       alert("Please enter both Name and Email to register.");
       return;
     }
+
+    if (mode === "register") {
+      setIsProcessing(true);
+      setStatusMsg("Checking biometric status...");
+      const supabase = createClient();
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("face_descriptor")
+        .eq("email", email)
+        .maybeSingle();
+      
+      if (existing?.face_descriptor) {
+        setFaceAlreadyRegistered(true);
+        setIsProcessing(false);
+        return;
+      }
+    }
+
     if ((mode === "login" || mode === "2fa") && !email) {
       alert("Please enter the email associated with your account.");
       return;
