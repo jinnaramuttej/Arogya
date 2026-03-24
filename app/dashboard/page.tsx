@@ -74,7 +74,7 @@ export default function DashboardPage() {
       if (recordsError) {
         setError("Could not fetch medical records. " + recordsError.message);
       } else {
-        setRecords(recordsData as MedicalRecord[]);
+        setRecords(recordsData as unknown as MedicalRecord[]);
       }
       
       setIsLoadingData(false);
