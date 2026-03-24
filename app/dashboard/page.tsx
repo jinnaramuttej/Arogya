@@ -135,12 +135,12 @@ export default function DashboardPage() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-8"
       >
-        <h1 className="text-3xl sm:text-4xl font-semibold text-white">
+        <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white">
           {t("dashTitle", lang)}
         </h1>
-        <p className="text-white/70 mt-2">{t("dashSubtitle", lang)}</p>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">{t("dashSubtitle", lang)}</p>
         {user && (
-          <p className="text-accent-lighter text-sm mt-1">{user.email}</p>
+          <p className="text-red-500 text-sm mt-1">{user.email}</p>
         )}
       </motion.div>
 
@@ -152,8 +152,8 @@ export default function DashboardPage() {
             onClick={() => setTab(item.key)}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all cursor-pointer border ${
               tab === item.key
-                ? "bg-accent text-white border-accent shadow-accent"
-                : "bg-white/5 text-white/70 border-glass-border hover:bg-white/10"
+                ? "bg-red-600 text-white border-red-600 shadow-brand"
+                : "bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
             }`}
           >
             <item.icon className="w-4 h-4" />
@@ -173,7 +173,7 @@ export default function DashboardPage() {
           <div className="flex justify-end mb-2">
             <Link
               href="/book"
-              className="flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-accent-light to-accent text-white text-sm font-semibold shadow-accent hover:shadow-accent-hover transition-all no-underline"
+              className="flex items-center gap-2 px-5 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white text-sm font-semibold shadow-brand hover:shadow-brand-hover transition-all no-underline"
             >
               <Plus className="w-4 h-4" />
               {t("bookNow", lang)}
@@ -192,11 +192,11 @@ export default function DashboardPage() {
             </div>
           ) : appointments.length === 0 ? (
             <GlassCard noHover className="text-center py-12">
-              <CalendarDays className="w-12 h-12 text-white/30 mx-auto mb-4" />
-              <p className="text-white/60">{t("noAppointments", lang)}</p>
+              <CalendarDays className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">{t("noAppointments", lang)}</p>
               <Link
                 href="/book"
-                className="mt-4 inline-block px-6 py-2 rounded-full bg-gradient-to-r from-accent-light to-accent text-white text-sm font-semibold no-underline"
+                className="mt-4 inline-block px-6 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white text-sm font-semibold no-underline"
               >
                 {t("bookNow", lang)}
               </Link>
@@ -208,15 +208,15 @@ export default function DashboardPage() {
                 <GlassCard key={apt.id} noHover>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <h3 className="text-white font-semibold">{apt.doctor_name}</h3>
-                      <p className="text-white/60 text-sm">{apt.specialty}</p>
+                      <h3 className="text-gray-900 dark:text-white font-semibold">{apt.doctor_name}</h3>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">{apt.specialty}</p>
                     </div>
                     <div className="flex items-center gap-4 text-sm">
-                      <div className="text-white/70 flex items-center gap-1">
+                      <div className="text-gray-600 dark:text-gray-400 flex items-center gap-1">
                         <CalendarDays className="w-3.5 h-3.5" />
                         {apt.date}
                       </div>
-                      <div className="text-white/70 flex items-center gap-1">
+                      <div className="text-gray-600 dark:text-gray-400 flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5" />
                         {apt.time}
                       </div>
@@ -249,7 +249,7 @@ export default function DashboardPage() {
             <div className="flex justify-end mb-2">
               <button
                 onClick={() => setShowRxForm(true)}
-                className="flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-accent-light to-accent text-white text-sm font-semibold shadow-accent hover:shadow-accent-hover transition-all cursor-pointer border-none"
+                className="flex items-center gap-2 px-5 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white text-sm font-semibold shadow-brand hover:shadow-brand-hover transition-all cursor-pointer border-none"
               >
                 <Plus className="w-4 h-4" />
                 {t("addPrescription", lang)}
@@ -267,8 +267,8 @@ export default function DashboardPage() {
             </div>
           ) : prescriptions.length === 0 && !showRxForm ? (
             <GlassCard noHover className="text-center py-12">
-              <FileText className="w-12 h-12 text-white/30 mx-auto mb-4" />
-              <p className="text-white/60">{t("noPrescriptions", lang)}</p>
+              <FileText className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">{t("noPrescriptions", lang)}</p>
             </GlassCard>
           ) : (
             prescriptions.map((rx) => (

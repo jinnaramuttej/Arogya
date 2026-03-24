@@ -25,8 +25,8 @@ import { t, type TranslationKey } from "@/lib/i18n/translations";
 const AmbulanceMap = dynamic(() => import("@/components/features/AmbulanceMap"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-[350px] w-full items-center justify-center rounded-2xl bg-glass-white">
-      <div className="h-10 w-10 rounded-full border-2 border-accent-lighter border-t-transparent animate-spin" />
+    <div className="flex h-[350px] w-full items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-800">
+      <div className="h-10 w-10 rounded-full border-2 border-red-400 border-t-transparent animate-spin" />
     </div>
   ),
 });
@@ -314,7 +314,7 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] h-[100dvh] w-screen overflow-y-auto bg-navy-950"
+      className="fixed inset-0 z-[100] h-[100dvh] w-screen overflow-y-auto bg-gray-50 dark:bg-gray-900"
       aria-modal="true"
       role="dialog"
     >
@@ -325,10 +325,10 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
               <AlertTriangle className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white sm:text-xl">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
                 {t("emergencyOverlayTitle", lang)}
               </h2>
-              <p className="text-sm text-white/60">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {locationSource
                   ? t(
                       locationSource === "live"
@@ -342,14 +342,14 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden rounded-full border border-glass-border bg-white/5 px-4 py-2 text-sm text-white/70 sm:flex sm:items-center sm:gap-2">
-              <Clock3 className="h-4 w-4 text-accent-lighter" />
+            <div className="hidden rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 sm:flex sm:items-center sm:gap-2">
+              <Clock3 className="h-4 w-4 text-red-500" />
               <span>{elapsedLabel}</span>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-glass-border bg-white/10 text-white/60 transition-colors hover:bg-white/20 hover:text-white"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200"
               aria-label={t("emergencyClose", lang)}
             >
               <X className="h-4 w-4" />
@@ -377,24 +377,24 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
                 {t("emergencyOverlayEta", lang)}
               </span>
             </div>
-            <div className="text-3xl font-semibold text-white">
+            <div className="text-3xl font-semibold text-gray-900 dark:text-white">
               {eta}
-              <span className="ml-1 text-base font-medium text-white/60">
+              <span className="ml-1 text-base font-medium text-gray-500 dark:text-gray-400">
                 {t("emergencyMinutes", lang)}
               </span>
             </div>
           </GlassCard>
 
           <GlassCard noHover>
-            <div className="mb-2 flex items-center gap-2 text-accent-lighter">
+            <div className="mb-2 flex items-center gap-2 text-red-500">
               <MapPin className="h-4 w-4" />
               <span className="text-xs font-semibold uppercase tracking-[0.18em]">
                 {t("emergencyOverlayDistance", lang)}
               </span>
             </div>
-            <div className="text-3xl font-semibold text-white">
+            <div className="text-3xl font-semibold text-gray-900 dark:text-white">
               {distance.toFixed(1)}
-              <span className="ml-1 text-base font-medium text-white/60">
+              <span className="ml-1 text-base font-medium text-gray-500 dark:text-gray-400">
                 {t("emergencyKilometers", lang)}
               </span>
             </div>
@@ -407,7 +407,7 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
                 {t("emergencyOverlayStatus", lang)}
               </span>
             </div>
-            <div className="text-lg font-semibold text-white">
+            <div className="text-lg font-semibold text-gray-900 dark:text-white">
               {t(
                 status === "detecting"
                   ? "emergencyTimelineDetecting"
@@ -436,8 +436,8 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
                 />
               ) : (
                 <div className="flex h-[350px] items-center justify-center rounded-2xl">
-                  <div className="flex items-center gap-3 text-white/70">
-                    <Loader2 className="h-5 w-5 animate-spin text-accent-lighter" />
+                  <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400">
+                    <Loader2 className="h-5 w-5 animate-spin text-red-500" />
                     <span>{t("emergencyOverlayLocating", lang)}</span>
                   </div>
                 </div>
@@ -446,8 +446,8 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
 
             <GlassCard noHover>
               <div className="mb-4 flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-success-light" />
-                <h3 className="font-semibold text-white">
+                <ShieldCheck className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
+                <h3 className="font-semibold text-gray-900 dark:text-white">
                   {t("emergencyCoordinationTitle", lang)}
                 </h3>
               </div>
@@ -458,8 +458,8 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
                     key={item.key}
                     className={`rounded-2xl border px-4 py-3 text-sm transition-colors ${
                       item.active
-                        ? "border-success/40 bg-success/10 text-success-light"
-                        : "border-glass-border bg-white/5 text-white/45"
+                        ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+                        : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500"
                     }`}
                   >
                     {t(item.key, lang)}
@@ -476,10 +476,10 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
                   <Truck className="h-6 w-6 text-danger-light" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="truncate font-semibold text-white">
+                  <h3 className="truncate font-semibold text-gray-900 dark:text-white">
                     {ambulance?.name ?? t("emergencyOverlaySearching", lang)}
                   </h3>
-                  <p className="text-sm text-white/60">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {ambulance?.vehicleNumber ?? t("emergencyOverlayLocating", lang)}
                   </p>
                 </div>
@@ -487,26 +487,26 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
 
               {ambulance ? (
                 <div className="space-y-4">
-                  <div className="rounded-2xl border border-glass-border bg-white/5 p-4">
-                    <div className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                  <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4">
+                    <div className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
                       {t("emergencyOverlayDriver", lang)}
                     </div>
-                    <div className="text-base font-medium text-white">
+                    <div className="text-base font-medium text-gray-900 dark:text-white">
                       {ambulance.driver}
                     </div>
                   </div>
 
                   <a
                     href={`tel:${ambulance.phone.replace(/\s/g, "")}`}
-                    className="inline-flex items-center gap-2 rounded-full bg-success/15 px-4 py-2 text-sm font-medium text-success-light no-underline transition-colors hover:bg-success/25"
+                    className="inline-flex items-center gap-2 rounded-full bg-emerald-50 dark:bg-emerald-900/30 px-4 py-2 text-sm font-medium text-emerald-600 dark:text-emerald-400 no-underline transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
                   >
                     <Phone className="h-4 w-4" />
                     {t("emergencyOverlayCallDriver", lang)}
                   </a>
                 </div>
               ) : (
-                <div className="flex items-center gap-3 text-white/70">
-                  <Loader2 className="h-4 w-4 animate-spin text-accent-lighter" />
+                <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400">
+                  <Loader2 className="h-4 w-4 animate-spin text-red-500" />
                   <span>{t("emergencyOverlayLocating", lang)}</span>
                 </div>
               )}
@@ -514,8 +514,8 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
 
             <GlassCard noHover>
               <div className="mb-4 flex items-center gap-2">
-                <Siren className="h-4 w-4 text-accent-lighter" />
-                <h3 className="font-semibold text-white">
+                <Siren className="h-4 w-4 text-red-500" />
+                <h3 className="font-semibold text-gray-900 dark:text-white">
                   {t("emergencyTimelineTitle", lang)}
                 </h3>
               </div>
@@ -524,8 +524,8 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
 
             <GlassCard noHover>
               <div className="mb-4 flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-success-light" />
-                <h3 className="font-semibold text-white">
+                <ShieldCheck className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
+                <h3 className="font-semibold text-gray-900 dark:text-white">
                   {t("emergencyLiveUpdatesTitle", lang)}
                 </h3>
               </div>
@@ -536,16 +536,16 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
                     key={updateKey}
                     initial={{ opacity: 0, x: -12 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="flex items-start gap-3 text-sm text-white/75"
+                    className="flex items-start gap-3 text-sm text-gray-700 dark:text-gray-300"
                   >
-                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-success-light" />
+                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-500 dark:bg-emerald-400" />
                     <span>{t(updateKey, lang)}</span>
                   </motion.div>
                 ))}
 
                 {!updates.length && (
-                  <div className="flex items-center gap-3 text-sm text-white/60">
-                    <Loader2 className="h-4 w-4 animate-spin text-accent-lighter" />
+                  <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                    <Loader2 className="h-4 w-4 animate-spin text-red-500" />
                     <span>{t("emergencyOverlaySearching", lang)}</span>
                   </div>
                 )}
@@ -558,7 +558,7 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center justify-center rounded-full border border-glass-border bg-white/5 px-5 py-3 text-sm font-medium text-white/80 transition-colors hover:bg-white/10"
+            className="inline-flex items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-5 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             {t("emergencyClose", lang)}
           </button>

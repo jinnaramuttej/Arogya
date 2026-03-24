@@ -10,16 +10,16 @@ export default function LanguageSwitcher() {
     <select
       value={lang}
       onChange={(e) => setLang(e.target.value as Language)}
-      className="bg-glass-white border border-glass-border text-white text-sm rounded-lg px-3 py-2 cursor-pointer font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-accent-lighter"
+      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-sm rounded-lg px-3 py-2 cursor-pointer font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-brand-400"
       aria-label="Select language"
     >
-      <option value="en" className="bg-navy-950 text-white">
+      <option value="en" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
         English
       </option>
-      <option value="hi" className="bg-navy-950 text-white">
+      <option value="hi" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
         हिंदी
       </option>
-      <option value="te" className="bg-navy-950 text-white">
+      <option value="te" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
         తెలుగు
       </option>
     </select>

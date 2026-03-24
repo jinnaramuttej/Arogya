@@ -60,28 +60,31 @@ export default function AuthPage() {
     });
   };
 
+  const inputClass =
+    "w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500";
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 -mt-24 pt-24">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
-        className="glass p-8 sm:p-10 w-full max-w-md"
+        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-card p-8 sm:p-10 w-full max-w-md"
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <HeartPulse className="w-10 h-10 text-accent-lighter mx-auto mb-2" />
-          <h1 className="text-2xl font-semibold text-white">{t("logo", lang)}</h1>
-          <p className="text-white/60 text-sm">{t("logoSubtitle", lang)}</p>
+          <HeartPulse className="w-10 h-10 text-red-500 mx-auto mb-2" />
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">{t("logo", lang)}</h1>
+          <p className="text-gray-500 text-sm">{t("logoSubtitle", lang)}</p>
         </div>
 
         {/* Title */}
-        <h2 className="text-xl font-semibold text-white text-center mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white text-center mb-6">
           {isLogin ? t("loginTitle", lang) : t("signupTitle", lang)}
         </h2>
 
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-danger/20 border border-danger/30 text-danger-light text-sm text-center">
+          <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm text-center">
             {error}
           </div>
         )}
@@ -89,63 +92,63 @@ export default function AuthPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <div>
-              <label className="text-white/80 text-sm mb-1 block">{t("nameLabel", lang)}</label>
+              <label className="text-gray-700 dark:text-gray-300 text-sm mb-1 block">{t("nameLabel", lang)}</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder={t("namePlaceholder", lang)}
                   required={!isLogin}
-                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-glass-border rounded-xl text-white text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-accent-lighter"
+                  className={inputClass}
                 />
               </div>
             </div>
           )}
 
           <div>
-            <label className="text-white/80 text-sm mb-1 block">{t("emailLabel", lang)}</label>
+            <label className="text-gray-700 dark:text-gray-300 text-sm mb-1 block">{t("emailLabel", lang)}</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t("emailPlaceholder", lang)}
                 required
-                className="w-full pl-10 pr-4 py-3 bg-white/10 border border-glass-border rounded-xl text-white text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-accent-lighter"
+                className={inputClass}
               />
             </div>
           </div>
 
           <div>
-            <label className="text-white/80 text-sm mb-1 block">{t("passwordLabel", lang)}</label>
+            <label className="text-gray-700 dark:text-gray-300 text-sm mb-1 block">{t("passwordLabel", lang)}</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={t("passwordPlaceholder", lang)}
                 required
-                className="w-full pl-10 pr-4 py-3 bg-white/10 border border-glass-border rounded-xl text-white text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-accent-lighter"
+                className={inputClass}
               />
             </div>
           </div>
 
           {!isLogin && (
             <div>
-              <label className="text-white/80 text-sm mb-1 block">{t("confirmPasswordLabel", lang)}</label>
+              <label className="text-gray-700 dark:text-gray-300 text-sm mb-1 block">{t("confirmPasswordLabel", lang)}</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder={t("confirmPasswordPlaceholder", lang)}
                   required={!isLogin}
-                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-glass-border rounded-xl text-white text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-accent-lighter"
+                  className={inputClass}
                 />
               </div>
             </div>
@@ -154,7 +157,7 @@ export default function AuthPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-full bg-gradient-to-r from-accent-light to-accent text-white font-semibold shadow-accent hover:shadow-accent-hover hover:-translate-y-0.5 transition-all disabled:opacity-50 cursor-pointer border-none"
+            className="w-full py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold shadow-brand hover:shadow-brand-hover transition-all disabled:opacity-50 cursor-pointer border-none"
           >
             {loading ? "..." : isLogin ? t("loginBtn", lang) : t("signupBtn", lang)}
           </button>
@@ -162,15 +165,15 @@ export default function AuthPage() {
 
         {/* Divider */}
         <div className="flex items-center gap-4 my-6">
-          <div className="flex-1 h-px bg-glass-border" />
-          <span className="text-white/40 text-xs">{t("orContinue", lang)}</span>
-          <div className="flex-1 h-px bg-glass-border" />
+          <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+          <span className="text-gray-400 text-xs">{t("orContinue", lang)}</span>
+          <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
         </div>
 
         {/* Google */}
         <button
           onClick={handleGoogleLogin}
-          className="w-full py-3 rounded-full bg-white/10 border border-glass-border text-white font-medium hover:bg-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full py-3 rounded-lg bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path
@@ -194,11 +197,11 @@ export default function AuthPage() {
         </button>
 
         {/* Toggle */}
-        <p className="text-center text-white/60 text-sm mt-6">
+        <p className="text-center text-gray-500 text-sm mt-6">
           {isLogin ? t("noAccount", lang) : t("haveAccount", lang)}{" "}
           <button
             onClick={() => { setIsLogin(!isLogin); setError(""); }}
-            className="text-accent-lighter font-medium bg-transparent border-none cursor-pointer"
+            className="text-red-500 font-medium bg-transparent border-none cursor-pointer"
           >
             {isLogin ? t("signupLink", lang) : t("loginLink", lang)}
           </button>
@@ -206,7 +209,7 @@ export default function AuthPage() {
 
         <Link
           href="/"
-          className="mt-4 flex items-center justify-center gap-2 text-white/50 text-sm hover:text-white/80 transition-colors no-underline"
+          className="mt-4 flex items-center justify-center gap-2 text-gray-400 text-sm hover:text-gray-700 transition-colors no-underline"
         >
           <ArrowLeft className="w-4 h-4" />
           {t("backHome", lang)}

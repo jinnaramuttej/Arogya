@@ -38,7 +38,7 @@ export default function PrescriptionCard({
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           {doctorName && (
-            <p className="text-white/60 text-sm mb-3">
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-3">
               {t("prescribedBy", lang)} {doctorName}
             </p>
           )}
@@ -47,12 +47,12 @@ export default function PrescriptionCard({
             {medicines.map((med, idx) => (
               <div
                 key={idx}
-                className="flex items-start gap-3 rounded-xl border border-glass-border bg-white/5 px-4 py-3"
+                className="flex items-start gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3"
               >
-                <Pill className="w-4 h-4 text-accent-lighter mt-0.5 shrink-0" />
+                <Pill className="w-4 h-4 text-brand-500 mt-0.5 shrink-0" />
                 <div className="min-w-0">
-                  <h4 className="text-white font-medium text-sm">{med.name}</h4>
-                  <p className="text-white/60 text-xs mt-0.5">
+                  <h4 className="text-gray-900 dark:text-white font-medium text-sm">{med.name}</h4>
+                  <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">
                     {t("dosageLabel", lang)}: {med.dosage}
                     {med.duration && ` · ${t("durationLabel", lang)}: ${med.duration}`}
                   </p>
@@ -62,16 +62,16 @@ export default function PrescriptionCard({
           </div>
 
           {instructions && (
-            <div className="mt-3 rounded-xl border border-glass-border bg-white/5 px-4 py-3">
-              <p className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-1">
+            <div className="mt-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3">
+              <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wide mb-1">
                 {t("instructionsLabel", lang)}
               </p>
-              <p className="text-white/80 text-sm">{instructions}</p>
+              <p className="text-gray-700 dark:text-gray-300 text-sm">{instructions}</p>
             </div>
           )}
         </div>
 
-        <div className="text-white/50 text-sm flex items-center gap-1 shrink-0">
+        <div className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-1 shrink-0">
           <CalendarDays className="w-3.5 h-3.5" />
           {date}
         </div>

@@ -18,9 +18,13 @@ export default function GlassCard({
   onClick,
 }: GlassCardProps) {
   const base =
-    "glass glass-shimmer " +
-    (noHover ? "" : "glass-hover ") +
-    "p-6 " +
+    "rounded-xl p-6 " +
+    "bg-white border border-gray-200 shadow-card " +
+    "dark:bg-gray-800 dark:border-gray-700 " +
+    (noHover
+      ? ""
+      : "transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover ") +
+    "card-shimmer " +
     className;
 
   if (as === "a" && href) {

@@ -113,10 +113,10 @@ function BookContent() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-10"
       >
-        <h1 className="text-3xl sm:text-4xl font-semibold text-white">
+        <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white">
           {t("bookTitle", lang)}
         </h1>
-        <p className="text-white/70 mt-2">{t("bookSubtitle", lang)}</p>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">{t("bookSubtitle", lang)}</p>
       </motion.div>
 
       {error && (
@@ -153,7 +153,7 @@ function BookContent() {
               <GlassCard
                 noHover={isSelected}
                 className={`cursor-pointer ${
-                  isSelected ? "!border-accent-lighter !shadow-glass-hover" : ""
+                  isSelected ? "!border-red-400 !shadow-card-hover" : ""
                 }`}
                 onClick={() => {
                   setSelectedDoctor(doc.id);
@@ -163,8 +163,8 @@ function BookContent() {
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-white">{doc.name}</h3>
-                    <p className="text-white/60 text-sm">{doc.specialty}</p>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{doc.name}</h3>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">{doc.specialty}</p>
                   </div>
                   <div className="flex items-center gap-1 text-warning-light text-sm">
                     <Star className="w-4 h-4 fill-current" />
@@ -177,9 +177,9 @@ function BookContent() {
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
-                    className="mt-4 pt-4 border-t border-glass-border"
+                    className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600"
                   >
-                    <p className="text-white/70 text-sm mb-3">{t("selectSlot", lang)}</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">{t("selectSlot", lang)}</p>
                     <div className="flex flex-wrap gap-2">
                       {doc.slots.map((slot) => (
                         <button
@@ -190,8 +190,8 @@ function BookContent() {
                           }}
                           className={`px-4 py-2 rounded-full text-sm border transition-all cursor-pointer ${
                             selectedSlot === slot
-                              ? "bg-accent text-white border-accent shadow-accent"
-                              : "bg-white/5 text-white/80 border-glass-border hover:bg-white/10"
+                              ? "bg-red-600 text-white border-red-600 shadow-brand"
+                              : "bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
                           }`}
                         >
                           <Clock className="w-3 h-3 inline mr-1" />
@@ -206,7 +206,7 @@ function BookContent() {
                           handleBook();
                         }}
                         disabled={loading}
-                        className="mt-4 w-full py-3 rounded-full bg-gradient-to-r from-accent-light to-accent text-white font-semibold shadow-accent hover:shadow-accent-hover hover:-translate-y-0.5 transition-all cursor-pointer border-none disabled:opacity-50"
+                        className="mt-4 w-full py-3 rounded-full bg-red-600 hover:bg-red-700 text-white font-semibold shadow-brand hover:shadow-brand-hover hover:-translate-y-0.5 transition-all cursor-pointer border-none disabled:opacity-50"
                       >
                         {loading ? "Booking..." : t("confirmBooking", lang)}
                       </button>

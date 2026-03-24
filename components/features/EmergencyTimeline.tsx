@@ -73,25 +73,25 @@ export default function EmergencyTimeline({
               <div
                 className={`flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${
                   completed
-                    ? "border-success/40 bg-success/15"
+                    ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30"
                     : active
-                    ? "border-accent/40 bg-accent/15"
-                    : "border-glass-border bg-white/5"
+                    ? "border-brand-200 dark:border-brand-800 bg-brand-50 dark:bg-brand-900/30"
+                    : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
                 }`}
               >
                 {completed ? (
-                  <CheckCircle className="h-4 w-4 text-success-light" />
+                  <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 ) : active ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-accent-lighter" />
+                  <Loader2 className="h-4 w-4 animate-spin text-brand-500" />
                 ) : (
-                  <Icon className="h-4 w-4 text-white/35" />
+                  <Icon className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                 )}
               </div>
 
               {index < STEPS.length - 1 && (
                 <div
                   className={`h-6 w-0.5 transition-colors ${
-                    completed ? "bg-success/45" : "bg-white/10"
+                    completed ? "bg-emerald-200 dark:bg-emerald-800" : "bg-gray-200 dark:bg-gray-700"
                   }`}
                 />
               )}
@@ -100,15 +100,15 @@ export default function EmergencyTimeline({
             <span
               className={`text-sm font-medium ${
                 completed
-                  ? "text-success-light"
+                  ? "text-emerald-600 dark:text-emerald-400"
                   : active
-                  ? "text-white"
-                  : "text-white/35"
+                  ? "text-gray-900 dark:text-white"
+                  : "text-gray-400 dark:text-gray-500"
               }`}
             >
               {t(step.labelKey, lang)}
               {active && (
-                <span className="ml-2 text-xs text-accent-lighter">
+                <span className="ml-2 text-xs text-brand-500">
                   {t("emergencyTimelineActive", lang)}
                 </span>
               )}

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
 import { t } from "@/lib/i18n/translations";
@@ -27,6 +28,10 @@ export default function SOSButton({
   title,
 }: SOSButtonProps) {
   const { lang } = useLanguage();
+  const pathname = usePathname();
+
+  if (pathname?.startsWith("/admin")) return null;
+
   const sizeClasses =
     size === "hero" ? "h-28 w-28 sm:h-32 sm:w-32" : "h-16 w-16";
 

@@ -96,18 +96,18 @@ export default function ReportUpload({ userId, onUploaded }: ReportUploadProps) 
         type="button"
         onClick={() => fileRef.current?.click()}
         disabled={uploading}
-        className="w-full flex flex-col items-center gap-3 py-6 rounded-xl border-2 border-dashed border-glass-border bg-white/5 hover:bg-white/10 transition-colors cursor-pointer text-white/60 hover:text-white/80 disabled:opacity-50"
+        className="w-full flex flex-col items-center gap-3 py-6 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-50"
       >
         {uploading ? (
           <>
-            <Loader2 className="w-8 h-8 animate-spin text-accent-lighter" />
+            <Loader2 className="w-8 h-8 animate-spin text-red-500" />
             <span className="text-sm">{fileName}</span>
           </>
         ) : (
           <>
             <FileUp className="w-8 h-8" />
             <span className="text-sm font-medium">{t("uploadReport", lang)}</span>
-            <span className="text-xs text-white/40">PDF, JPG, PNG (max 10MB)</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">PDF, JPG, PNG (max 10MB)</span>
           </>
         )}
       </button>

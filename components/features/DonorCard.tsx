@@ -51,13 +51,13 @@ export default function DonorCard({ donor, userLat, userLng }: DonorCardProps) {
             <Droplet className="w-5 h-5 text-danger-light" />
           </div>
           <div className="min-w-0">
-            <h4 className="text-white font-semibold text-sm truncate">{donor.name}</h4>
+            <h4 className="text-gray-900 dark:text-white font-semibold text-sm truncate">{donor.name}</h4>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="px-2 py-0.5 rounded-full bg-danger/20 text-danger-light text-xs font-semibold">
                 {donor.blood_group}
               </span>
               {distance && (
-                <span className="flex items-center gap-1 text-white/50 text-xs">
+                <span className="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-xs">
                   <MapPin className="w-3 h-3" />
                   {distance} {t("donorDistance", lang)}
                 </span>

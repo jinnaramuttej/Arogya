@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Ambulance,
+  Droplet,
   Flame,
   HeartPulse,
   Hospital,
@@ -237,10 +238,10 @@ function EmergencyContent() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8 text-center"
       >
-        <h1 className="text-3xl font-semibold text-white sm:text-4xl">
+        <h1 className="text-3xl font-semibold text-gray-900 dark:text-white sm:text-4xl">
           {t("emergencyTitle", lang)}
         </h1>
-        <p className="mt-2 text-white/70">{t("emergencySubtitle", lang)}</p>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">{t("emergencySubtitle", lang)}</p>
       </motion.div>
 
       {showSuggestion && !overlayOpen && (
@@ -256,10 +257,10 @@ function EmergencyContent() {
                   <span className="h-2 w-2 rounded-full bg-danger-light" />
                   {t("emergencySuggestionBadge", lang)}
                 </div>
-                <h2 className="text-xl font-semibold text-white">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   {t("emergencySuggestionTitle", lang)}
                 </h2>
-                <p className="mt-2 text-sm text-white/75">
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                   {t("emergencySuggestionBody", lang)}
                 </p>
               </div>
@@ -274,7 +275,7 @@ function EmergencyContent() {
                 </button>
                 <a
                   href="tel:108"
-                  className="inline-flex items-center justify-center rounded-full border border-glass-border bg-white/5 px-5 py-3 text-sm font-medium text-white/80 no-underline transition-colors hover:bg-white/10"
+                  className="inline-flex items-center justify-center rounded-full border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-5 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 no-underline transition-colors hover:bg-gray-100 dark:hover:bg-gray-600"
                 >
                   {t("emergencySuggestionSecondary", lang)}
                 </a>
@@ -296,10 +297,10 @@ function EmergencyContent() {
             {t("emergencyDispatchBadge", lang)}
           </div>
 
-          <h2 className="mx-auto max-w-xl text-2xl font-semibold text-white sm:text-3xl">
+          <h2 className="mx-auto max-w-xl text-2xl font-semibold text-gray-900 dark:text-white sm:text-3xl">
             {t("emergencyDispatchTitle", lang)}
           </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm text-white/70 sm:text-base">
+          <p className="mx-auto mt-3 max-w-2xl text-sm text-gray-600 dark:text-gray-400 sm:text-base">
             {t("emergencyDispatchBody", lang)}
           </p>
 
@@ -318,7 +319,7 @@ function EmergencyContent() {
                 Cooldown: {cooldown}s
               </p>
             ) : (
-              <p className="mt-4 text-sm font-medium text-white/80">
+              <p className="mt-4 text-sm font-medium text-gray-700 dark:text-gray-200">
                 {t("sosText", lang)}
               </p>
             )}
@@ -328,7 +329,7 @@ function EmergencyContent() {
         <GlassCard noHover>
           <div className="mb-4 flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-accent-lighter" />
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               {t("emergencyPreviewTitle", lang)}
             </h3>
           </div>
@@ -341,17 +342,17 @@ function EmergencyContent() {
             ].map((step) => (
               <div
                 key={step.titleKey}
-                className="flex items-start gap-3 rounded-2xl border border-glass-border bg-white/5 p-4"
+                className="flex items-start gap-3 rounded-2xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 p-4"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/15">
                   <step.icon className="h-5 w-5 text-accent-lighter" />
                 </div>
-                <p className="text-sm text-white/75">{t(step.titleKey, lang)}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">{t(step.titleKey, lang)}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-5 rounded-2xl border border-glass-border bg-white/5 p-4">
+          <div className="mt-5 rounded-2xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 p-4">
             <EmergencyTimeline currentStatus="en_route" />
           </div>
         </GlassCard>
@@ -367,11 +368,11 @@ function EmergencyContent() {
           <motion.div key={card.labelKey} variants={item}>
             <GlassCard className="cursor-pointer text-center" onClick={() => void card.action()}>
               <card.icon className={`mx-auto mb-3 h-10 w-10 ${card.color}`} />
-              <h3 className="mb-1 font-semibold text-white">
+              <h3 className="mb-1 font-semibold text-gray-900 dark:text-white">
                 {t(card.labelKey, lang)}
               </h3>
-              <p className="mb-3 text-xs text-white/60">{t(card.descKey, lang)}</p>
-              <span className="inline-block rounded-full bg-gradient-to-r from-accent-light to-accent px-4 py-1.5 text-xs font-semibold text-white">
+              <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">{t(card.descKey, lang)}</p>
+              <span className="inline-block rounded-full bg-red-600 px-4 py-1.5 text-xs font-semibold text-white">
                 {t(card.btnKey, lang)}
               </span>
             </GlassCard>
@@ -380,25 +381,25 @@ function EmergencyContent() {
       </motion.div>
 
       <section className="mb-16">
-        <h2 className="mb-8 text-center text-2xl font-semibold text-white">
+        <h2 className="mb-8 text-center text-2xl font-semibold text-gray-900 dark:text-white">
           {t("emergencyNumbers", lang)}
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {emergencyContacts.map((contact) => (
             <GlassCard key={contact.number} noHover className="text-center">
               <contact.icon className={`mx-auto mb-2 h-8 w-8 ${contact.color}`} />
-              <div className="text-sm text-white/70">{t(contact.labelKey, lang)}</div>
-              <div className="my-2 text-3xl font-semibold text-white">
+              <div className="text-sm text-gray-500 dark:text-gray-400">{t(contact.labelKey, lang)}</div>
+              <div className="my-2 text-3xl font-semibold text-gray-900 dark:text-white">
                 {contact.number}
               </div>
-              <div className="text-xs text-white/50">{t(contact.descKey, lang)}</div>
+              <div className="text-xs text-gray-400 dark:text-gray-500">{t(contact.descKey, lang)}</div>
             </GlassCard>
           ))}
         </div>
       </section>
 
       <section>
-        <h2 className="mb-8 text-center text-2xl font-semibold text-white">
+        <h2 className="mb-8 text-center text-2xl font-semibold text-gray-900 dark:text-white">
           {t("firstAidTips", lang)}
         </h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -406,13 +407,13 @@ function EmergencyContent() {
             <GlassCard key={tip.titleKey} noHover>
               <div className="mb-4 flex items-center gap-3">
                 <tip.icon className={`h-6 w-6 ${tip.color}`} />
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   {t(tip.titleKey, lang)}
                 </h3>
               </div>
               <ul className="space-y-2">
                 {tip.tips.map((tipKey) => (
-                  <li key={tipKey} className="flex items-start gap-2 text-sm text-white/80">
+                  <li key={tipKey} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent-lighter" />
                     {t(tipKey, lang)}
                   </li>
@@ -423,23 +424,25 @@ function EmergencyContent() {
         </div>
       </section>
 
+
+
       {/* Confirmation Modal */}
       {showConfirm && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-navy-950/80 px-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 dark:bg-black/60 px-4 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="w-full max-w-sm"
           >
-            <GlassCard noHover className="border-danger/30 bg-navy-900/90 shadow-2xl">
+            <GlassCard noHover className="border-red-200 dark:border-red-800 !bg-white dark:!bg-gray-800 shadow-2xl">
               <div className="flex flex-col items-center text-center">
                 <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-danger/20 text-danger-light">
                   <AlertTriangle className="h-7 w-7" />
                 </div>
-                <h3 className="mb-2 text-xl font-bold text-white">
+                <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
                   Confirm Emergency
                 </h3>
-                <p className="mb-6 text-sm text-white/70">
+                <p className="mb-6 text-sm text-gray-600 dark:text-gray-300">
                   Are you sure this is an emergency? This will immediately alert response teams and assign an ambulance to your location.
                 </p>
                 <div className="flex w-full flex-col gap-3">
@@ -451,7 +454,7 @@ function EmergencyContent() {
                   </button>
                   <button
                     onClick={cancelEmergency}
-                    className="w-full rounded-xl border border-glass-border bg-white/5 py-3 text-sm font-medium text-white/80 transition-colors hover:bg-white/10"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors hover:bg-gray-100 dark:hover:bg-gray-600"
                   >
                     Cancel
                   </button>

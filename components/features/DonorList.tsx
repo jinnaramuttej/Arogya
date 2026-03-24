@@ -80,18 +80,18 @@ export default function DonorList() {
       {/* Search bar */}
       <GlassCard noHover>
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex items-center gap-2 bg-white/5 border border-glass-border rounded-xl px-4 py-2.5 flex-1">
-            <Droplet className="w-4 h-4 text-danger-light shrink-0" />
+          <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 flex-1">
+            <Droplet className="w-4 h-4 text-brand-500 shrink-0" />
             <select
               value={selectedGroup}
               onChange={(e) => setSelectedGroup(e.target.value)}
-              className="bg-transparent text-white text-sm w-full outline-none cursor-pointer appearance-none"
+              className="bg-transparent text-gray-900 dark:text-white text-sm w-full outline-none cursor-pointer appearance-none"
             >
-              <option value="" className="bg-navy-950 text-white/50">
+              <option value="" className="bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
                 {t("bloodGroup", lang)}
               </option>
               {BLOOD_GROUPS.map((bg) => (
-                <option key={bg} value={bg} className="bg-navy-950 text-white">
+                <option key={bg} value={bg} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
                   {bg}
                 </option>
               ))}
@@ -100,7 +100,7 @@ export default function DonorList() {
           <button
             onClick={searchDonors}
             disabled={!selectedGroup || loading}
-            className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-accent-light to-accent text-white text-sm font-semibold cursor-pointer border-none transition-all hover:shadow-accent-hover disabled:opacity-50"
+            className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold cursor-pointer border-none transition-all shadow-brand hover:shadow-brand-hover hover:-translate-y-0.5 disabled:opacity-50"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -122,8 +122,8 @@ export default function DonorList() {
       {/* Results */}
       {searched && !loading && donors.length === 0 && !error && (
         <GlassCard noHover className="text-center py-8">
-          <Droplet className="w-10 h-10 text-white/20 mx-auto mb-3" />
-          <p className="text-white/50 text-sm">{t("noDonorsFound", lang)}</p>
+          <Droplet className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+          <p className="text-gray-500 dark:text-gray-400 text-sm">{t("noDonorsFound", lang)}</p>
         </GlassCard>
       )}
 
@@ -142,7 +142,7 @@ export default function DonorList() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 onClick={handleRequestBlood}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-danger to-danger-light text-white font-semibold text-sm cursor-pointer border-none transition-all hover:shadow-danger flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm cursor-pointer border-none transition-all shadow-brand hover:-translate-y-0.5 flex items-center justify-center gap-2"
               >
                 <Bell className="w-4 h-4" />
                 {t("requestBlood", lang)}
@@ -151,16 +151,16 @@ export default function DonorList() {
 
             {notifStage === "sending" && (
               <GlassCard noHover className="text-center py-4">
-                <Loader2 className="w-5 h-5 text-accent-lighter animate-spin mx-auto mb-2" />
-                <p className="text-white/70 text-sm">{t("alertSent", lang)}...</p>
+                <Loader2 className="w-5 h-5 text-brand-500 animate-spin mx-auto mb-2" />
+                <p className="text-gray-600 dark:text-gray-300 text-sm">{t("alertSent", lang)}...</p>
               </GlassCard>
             )}
 
             {notifStage === "sent" && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                <GlassCard noHover className="text-center py-4 border-accent/30">
-                  <Bell className="w-5 h-5 text-accent-lighter mx-auto mb-2" />
-                  <p className="text-accent-lighter text-sm font-medium">{t("alertSent", lang)}</p>
+                <GlassCard noHover className="text-center py-4 border-brand-200 dark:border-brand-800">
+                  <Bell className="w-5 h-5 text-brand-500 mx-auto mb-2" />
+                  <p className="text-brand-600 dark:text-brand-400 text-sm font-medium">{t("alertSent", lang)}</p>
                 </GlassCard>
               </motion.div>
             )}
@@ -179,7 +179,7 @@ export default function DonorList() {
                 <GlassCard noHover className="text-center py-6 border-success/30">
                   <CheckCircle className="w-8 h-8 text-success-light mx-auto mb-3" />
                   <p className="text-success-light font-semibold mb-1">{t("donorConfirmed", lang)}</p>
-                  <div className="flex items-center justify-center gap-1.5 text-white/60 text-sm">
+                  <div className="flex items-center justify-center gap-1.5 text-gray-500 dark:text-gray-400 text-sm">
                     <Clock className="w-3.5 h-3.5" />
                     {t("donorETA", lang)}
                   </div>

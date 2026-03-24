@@ -40,10 +40,10 @@ function Counter({ target, label }: { target: number; label: string }) {
 
   return (
     <div ref={ref} className="text-center">
-      <div className="text-4xl font-semibold text-white">
+      <div className="text-4xl font-semibold text-red-600">
         {value.toLocaleString()}+
       </div>
-      <div className="text-white/80 text-sm mt-1">{label}</div>
+      <div className="text-gray-600 dark:text-gray-400 text-sm mt-1">{label}</div>
     </div>
   );
 }
@@ -62,9 +62,9 @@ const howSteps = [
 ];
 
 const testimonials = [
-  { key: "testi1Text" as const, name: "Anjali Rao", initials: "AR", color: "bg-accent" },
-  { key: "testi2Text" as const, name: "Mark Chen", initials: "MC", color: "bg-accent-light" },
-  { key: "testi3Text" as const, name: "Sarah Patel", initials: "SP", color: "bg-accent-lighter" },
+  { key: "testi1Text" as const, name: "Anjali Rao", initials: "AR", color: "bg-red-500" },
+  { key: "testi2Text" as const, name: "Mark Chen", initials: "MC", color: "bg-red-400" },
+  { key: "testi3Text" as const, name: "Sarah Patel", initials: "SP", color: "bg-red-300" },
 ];
 
 /* ---------- Staggered fade ---------- */
@@ -78,12 +78,12 @@ export default function HomePage() {
   return (
     <div className="overflow-hidden">
       {/* ---- Hero ---- */}
-      <header className="relative flex flex-col items-center justify-center text-center min-h-[85vh] px-6">
+      <header className="relative flex flex-col items-center justify-center text-center min-h-[85vh] px-6 bg-gradient-to-b from-red-50 to-white dark:from-gray-900 dark:to-gray-800">
         <motion.h1
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-white max-w-4xl leading-tight"
+          className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-gray-900 dark:text-white max-w-4xl leading-tight"
         >
           {t("heroTitle", lang)}
         </motion.h1>
@@ -91,7 +91,7 @@ export default function HomePage() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25, duration: 0.6 }}
-          className="mt-6 text-lg sm:text-xl text-white/80 max-w-2xl"
+          className="mt-6 text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-2xl"
         >
           {t("heroSubtitle", lang)}
         </motion.p>
@@ -103,25 +103,25 @@ export default function HomePage() {
         >
           <Link
             href="/symptom"
-            className="px-8 py-3 rounded-full bg-gradient-to-r from-accent-light to-accent text-white font-semibold shadow-accent hover:shadow-accent-hover hover:-translate-y-1 transition-all no-underline"
+            className="px-8 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold shadow-brand hover:shadow-brand-hover hover:-translate-y-1 transition-all no-underline"
           >
             {t("heroBtnCheck", lang)}
           </Link>
           <Link
             href="/book"
-            className="px-8 py-3 rounded-full bg-glass-white border border-glass-border text-white font-semibold hover:bg-white/25 transition-all no-underline"
+            className="px-8 py-3 rounded-lg bg-white border border-gray-300 text-gray-800 font-semibold hover:bg-gray-50 transition-all no-underline dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:hover:bg-gray-700"
           >
             {t("heroBtnBook", lang)}
           </Link>
         </motion.div>
-        <a href="#features" className="absolute bottom-10 text-white/50 animate-bounce" aria-label="Scroll to features">
+        <a href="#features" className="absolute bottom-10 text-gray-400 animate-bounce" aria-label="Scroll to features">
           <ChevronDown className="w-8 h-8" />
         </a>
       </header>
 
       {/* ---- Features ---- */}
       <section id="features" className="px-6 py-20 max-w-6xl mx-auto">
-        <h2 className="text-3xl sm:text-4xl font-semibold text-white text-center mb-12">
+        <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white text-center mb-12">
           {t("featuresTitle", lang)}
         </h2>
         <motion.div
@@ -134,11 +134,11 @@ export default function HomePage() {
           {features.map((f) => (
             <motion.div key={f.titleKey} variants={item}>
               <GlassCard as="a" href={f.href} className="text-center">
-                <f.icon className="w-12 h-12 text-accent-lighter mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">
+                <f.icon className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                   {t(f.titleKey, lang)}
                 </h3>
-                <p className="text-white/80 text-sm">{t(f.descKey, lang)}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">{t(f.descKey, lang)}</p>
               </GlassCard>
             </motion.div>
           ))}
@@ -156,7 +156,7 @@ export default function HomePage() {
 
       {/* ---- How It Works ---- */}
       <section className="px-6 py-20 max-w-6xl mx-auto">
-        <h2 className="text-3xl sm:text-4xl font-semibold text-white text-center mb-12">
+        <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white text-center mb-12">
           {t("howTitle", lang)}
         </h2>
         <motion.div
@@ -169,14 +169,14 @@ export default function HomePage() {
           {howSteps.map((s, i) => (
             <motion.div key={s.titleKey} variants={item}>
               <GlassCard noHover className="text-center">
-                <div className="w-14 h-14 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-4">
-                  <s.icon className="w-7 h-7 text-accent-lighter" />
+                <div className="w-14 h-14 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-4">
+                  <s.icon className="w-7 h-7 text-red-500" />
                 </div>
-                <div className="text-accent-lighter text-xs font-semibold mb-2">
+                <div className="text-red-500 text-xs font-semibold mb-2">
                   STEP {i + 1}
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{t(s.titleKey, lang)}</h3>
-                <p className="text-white/80 text-sm">{t(s.descKey, lang)}</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t(s.titleKey, lang)}</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">{t(s.descKey, lang)}</p>
               </GlassCard>
             </motion.div>
           ))}
@@ -185,7 +185,7 @@ export default function HomePage() {
 
       {/* ---- Testimonials ---- */}
       <section className="px-6 py-20 max-w-6xl mx-auto">
-        <h2 className="text-3xl sm:text-4xl font-semibold text-white text-center mb-12">
+        <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white text-center mb-12">
           {t("testiTitle", lang)}
         </h2>
         <motion.div
@@ -198,7 +198,7 @@ export default function HomePage() {
           {testimonials.map((tst) => (
             <motion.div key={tst.name} variants={item}>
               <GlassCard noHover>
-                <p className="text-white/90 text-sm italic mb-6 leading-relaxed">
+                <p className="text-gray-700 dark:text-gray-300 text-sm italic mb-6 leading-relaxed">
                   {t(tst.key, lang)}
                 </p>
                 <div className="flex items-center gap-3">
@@ -207,7 +207,7 @@ export default function HomePage() {
                   >
                     {tst.initials}
                   </div>
-                  <span className="text-white font-medium text-sm">{tst.name}</span>
+                  <span className="text-gray-900 dark:text-white font-medium text-sm">{tst.name}</span>
                 </div>
               </GlassCard>
             </motion.div>

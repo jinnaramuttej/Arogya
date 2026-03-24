@@ -67,8 +67,8 @@ export default function ReportList({ userId, refreshKey }: ReportListProps) {
   if (reports.length === 0) {
     return (
       <GlassCard noHover className="text-center py-10">
-        <FileText className="w-10 h-10 text-white/20 mx-auto mb-3" />
-        <p className="text-white/50 text-sm">{t("noReports", lang)}</p>
+        <FileText className="w-10 h-10 text-gray-400 dark:text-gray-600 mx-auto mb-3" />
+        <p className="text-gray-500 dark:text-gray-400 text-sm">{t("noReports", lang)}</p>
       </GlassCard>
     );
   }
@@ -96,8 +96,8 @@ export default function ReportList({ userId, refreshKey }: ReportListProps) {
                     <FileText className="w-5 h-5 text-accent-lighter" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-white font-medium text-sm truncate">{report.file_name}</p>
-                    <p className="text-white/50 text-xs">{date}</p>
+                    <p className="text-gray-900 dark:text-white font-medium text-sm truncate">{report.file_name}</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs">{date}</p>
                   </div>
                 </div>
                 <a

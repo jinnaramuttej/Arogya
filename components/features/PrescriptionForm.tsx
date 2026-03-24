@@ -92,33 +92,33 @@ export default function PrescriptionForm({ userId, onSaved }: PrescriptionFormPr
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Doctor name */}
           <div>
-            <label className="text-white/70 text-sm mb-1.5 block">{t("doctorNameLabel", lang)}</label>
-            <div className="flex items-center gap-2 bg-white/5 border border-glass-border rounded-xl px-4 py-2.5">
-              <Stethoscope className="w-4 h-4 text-white/40 shrink-0" />
+            <label className="text-gray-600 dark:text-gray-400 text-sm mb-1.5 block">{t("doctorNameLabel", lang)}</label>
+            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5">
+              <Stethoscope className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
               <input
                 type="text"
                 value={doctorName}
                 onChange={(e) => setDoctorName(e.target.value)}
                 placeholder={t("doctorNameLabel", lang)}
-                className="bg-transparent text-white text-sm w-full outline-none placeholder:text-white/30"
+                className="bg-transparent text-gray-900 dark:text-white text-sm w-full outline-none placeholder-gray-400 dark:placeholder-gray-500"
               />
             </div>
           </div>
 
           {/* Medicines */}
           <div className="space-y-3">
-            <label className="text-white/70 text-sm block">{t("medicineName", lang)}</label>
+            <label className="text-gray-600 dark:text-gray-400 text-sm block">{t("medicineName", lang)}</label>
             {medicines.map((med, idx) => (
-              <div key={idx} className="rounded-xl border border-glass-border bg-white/5 p-3 space-y-2">
+              <div key={idx} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 space-y-2">
                 <div className="flex items-center gap-2">
-                  <Pill className="w-4 h-4 text-accent-lighter shrink-0" />
+                  <Pill className="w-4 h-4 text-brand-500 shrink-0" />
                   <input
                     type="text"
                     value={med.name}
                     onChange={(e) => updateMedicine(idx, "name", e.target.value)}
                     placeholder={t("medicineName", lang)}
                     required
-                    className="bg-transparent text-white text-sm w-full outline-none placeholder:text-white/30"
+                    className="bg-transparent text-gray-900 dark:text-white text-sm w-full outline-none placeholder-gray-400 dark:placeholder-gray-500"
                   />
                   {medicines.length > 1 && (
                     <button
@@ -136,14 +136,14 @@ export default function PrescriptionForm({ userId, onSaved }: PrescriptionFormPr
                     value={med.dosage}
                     onChange={(e) => updateMedicine(idx, "dosage", e.target.value)}
                     placeholder={t("dosageLabel", lang)}
-                    className="bg-transparent text-white text-xs border border-glass-border rounded-lg px-3 py-2 outline-none placeholder:text-white/30"
+                    className="bg-transparent text-gray-900 dark:text-white text-xs border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 outline-none placeholder-gray-400 dark:placeholder-gray-500"
                   />
                   <input
                     type="text"
                     value={med.duration}
                     onChange={(e) => updateMedicine(idx, "duration", e.target.value)}
                     placeholder={t("durationLabel", lang)}
-                    className="bg-transparent text-white text-xs border border-glass-border rounded-lg px-3 py-2 outline-none placeholder:text-white/30"
+                    className="bg-transparent text-gray-900 dark:text-white text-xs border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 outline-none placeholder-gray-400 dark:placeholder-gray-500"
                   />
                 </div>
               </div>
@@ -151,7 +151,7 @@ export default function PrescriptionForm({ userId, onSaved }: PrescriptionFormPr
             <button
               type="button"
               onClick={addMedicine}
-              className="flex items-center gap-1.5 text-accent-lighter text-xs font-medium cursor-pointer bg-transparent border-none hover:text-white transition-colors"
+              className="flex items-center gap-1.5 text-brand-500 text-xs font-medium cursor-pointer bg-transparent border-none hover:text-brand-600 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               {t("addMedicine", lang)}
@@ -160,13 +160,13 @@ export default function PrescriptionForm({ userId, onSaved }: PrescriptionFormPr
 
           {/* Instructions */}
           <div>
-            <label className="text-white/70 text-sm mb-1.5 block">{t("instructionsLabel", lang)}</label>
+            <label className="text-gray-600 dark:text-gray-400 text-sm mb-1.5 block">{t("instructionsLabel", lang)}</label>
             <textarea
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
               placeholder={t("instructionsLabel", lang)}
               rows={3}
-              className="w-full bg-white/5 border border-glass-border rounded-xl px-4 py-2.5 text-white text-sm outline-none placeholder:text-white/30 resize-none"
+              className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-gray-900 dark:text-white text-sm outline-none placeholder-gray-400 dark:placeholder-gray-500 resize-none"
             />
           </div>
 
@@ -179,7 +179,7 @@ export default function PrescriptionForm({ userId, onSaved }: PrescriptionFormPr
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-accent-light to-accent text-white font-semibold text-sm cursor-pointer border-none transition-all hover:shadow-accent-hover disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-xl bg-brand-600 text-white hover:bg-brand-700 font-semibold text-sm cursor-pointer border-none transition-all shadow-brand hover:shadow-brand-hover hover:-translate-y-0.5 disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {submitting ? (
               <Loader2 className="w-4 h-4 animate-spin" />
