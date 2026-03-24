@@ -201,27 +201,40 @@ const DoctorDashboardPage = () => {
     let fileUrl: string | null = null;
     let fileName: string | null = null;
 
-    // Upload file to Supabase Storage if selected
+    // Upload file to Cloudinary if selected
     if (selectedFile) {
-      const fileExt = selectedFile.name.split('.').pop();
-      const filePath = `${searchedPatient.patient_id}/${Date.now()}.${fileExt}`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('medical-reports')
-        .upload(filePath, selectedFile);
-
-      if (uploadError) {
-        showNotification('error', 'File upload failed: ' + uploadError.message);
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+      if (!cloudName) {
+        showNotification('error', 'Cloudinary cloud name is not configured. Add NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME to .env.local');
         setSubmitting(false);
         return;
       }
 
-      const { data: urlData } = supabase.storage
-        .from('medical-reports')
-        .getPublicUrl(filePath);
-      
-      fileUrl = urlData.publicUrl;
-      fileName = selectedFile.name;
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('upload_preset', 'oqens-arogya');
+      formData.append('folder', `arogya/medical-reports/${searchedPatient.patient_id}`);
+
+      try {
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          showNotification('error', 'Upload failed: ' + data.error.message);
+          setSubmitting(false);
+          return;
+        }
+
+        fileUrl = data.secure_url;
+        fileName = selectedFile.name;
+      } catch (err: any) {
+        showNotification('error', 'Upload failed: ' + (err?.message || 'Network error'));
+        setSubmitting(false);
+        return;
+      }
     }
 
     const { error: insertError } = await supabase
