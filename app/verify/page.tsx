@@ -23,6 +23,8 @@ function VerifyContent() {
   const [isScanning, setIsScanning] = useState(false);
   const [statusMsg, setStatusMsg] = useState("Loading facial recognition models...");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [hasFailed, setHasFailed] = useState(false);
+  const [hasAutoStarted, setHasAutoStarted] = useState(false);
   
   // Form fields
   const [email, setEmail] = useState("");
@@ -138,6 +140,9 @@ function VerifyContent() {
       alert("Please enter the email associated with your account.");
       return;
     }
+    
+    setCapturedImage(null);
+    setHasFailed(false);
     setIsProcessing(true);
     setIsScanning(true);
     setStatusMsg("Scanning for a clear face... Please look directly at the camera.");
@@ -145,13 +150,14 @@ function VerifyContent() {
 
   // --- AUTO START SCAN ---
   useEffect(() => {
-    if (modelsLoaded && !isProcessing && !isScanning) {
-      // Automatically start scan if we're in 2FA or login mode and have an email (from session auto-fill)
+    if (modelsLoaded && !hasAutoStarted) {
+      // Automatically start scan ONCE if we're in 2FA or login mode and have an email
       if ((mode === "2fa" || mode === "login") && email) {
+        setHasAutoStarted(true);
         handleStartScan();
       }
     }
-  }, [modelsLoaded, email, mode, isProcessing, isScanning]);
+  }, [modelsLoaded, email, mode, hasAutoStarted]);
 
 
   // --- REGISTRATION LOGIC ---
@@ -219,6 +225,7 @@ function VerifyContent() {
       console.error(e);
       setStatusMsg(e.message || "An error occurred during registration.");
       setIsProcessing(false);
+      setHasFailed(true);
     }
   };
 
@@ -263,6 +270,7 @@ function VerifyContent() {
       console.error(e);
       setStatusMsg(e.message || "An error occurred during verification.");
       setIsProcessing(false);
+      setHasFailed(true);
     }
   };
 
@@ -364,11 +372,13 @@ function VerifyContent() {
 
           <button
             onClick={handleStartScan}
-            disabled={!modelsLoaded || isScanning || (isProcessing && !isScanning)}
+            disabled={!modelsLoaded || isScanning || (isProcessing && !isScanning && !hasFailed)}
             className="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg transition-transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isScanning && <Loader2 className="w-5 h-5 animate-spin" />}
-            {isScanning ? "Scanning Camera..." : (mode === "register" ? "Register Face ID" : mode === "2fa" ? "Verify 2nd Step" : "Verify & Login")}
+            {isScanning ? "Scanning Camera..." : 
+             hasFailed ? "Try Again" :
+             (mode === "register" ? "Register Face ID" : mode === "2fa" ? "Verify 2nd Step" : "Verify & Login")}
           </button>
         </div>
         

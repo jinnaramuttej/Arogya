@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -8,6 +8,7 @@ import { HeartPulse, ArrowLeft, Mail, Lock, User } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
 import { t } from "@/lib/i18n/translations";
 import { createClient } from "@/lib/supabase/client";
+import { useUser } from "@/lib/hooks/useUser";
 
 export default function AuthPage() {
   const { lang } = useLanguage();
@@ -19,6 +20,13 @@ export default function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { user, loading: userLoading } = useUser();
+
+  useEffect(() => {
+    if (user && !userLoading) {
+      router.push("/dashboard");
+    }
+  }, [user, userLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
