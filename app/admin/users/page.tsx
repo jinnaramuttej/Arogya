@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Users, Search, Shield, Stethoscope, User, Loader2, AlertCircle, CheckCircle2, ChevronDown, Camera } from 'lucide-react';
+import { Users, Search, Shield, Stethoscope, User, Loader2, AlertCircle, CheckCircle2, ChevronDown, Camera, CameraOff } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -10,6 +10,7 @@ interface UserProfile {
   name: string;
   role: 'patient' | 'doctor' | 'admin';
   created_at: string;
+  face_verification_disabled?: boolean;
 }
 
 interface Notification {
@@ -45,7 +46,7 @@ const ManageUsersPage = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, email, name, role, created_at')
+        .select('id, email, name, role, created_at, face_verification_disabled')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -106,6 +107,21 @@ const ManageUsersPage = () => {
 
     setUsers(users.map(u => u.id === user.id ? { ...u, role: newRole as UserProfile['role'] } : u));
     showNotification('success', `Role updated to ${newRole} successfully.`);
+  };
+
+  const handleToggleFaceVerification = async (user: UserProfile) => {
+    const newValue = !user.face_verification_disabled;
+    const { error } = await supabase
+      .from('profiles')
+      .update({ face_verification_disabled: newValue })
+      .eq('id', user.id);
+
+    if (error) {
+      showNotification('error', 'Failed to update face verification setting: ' + error.message);
+    } else {
+      setUsers(users.map(u => u.id === user.id ? { ...u, face_verification_disabled: newValue } : u));
+      showNotification('success', `Face verification ${newValue ? 'disabled' : 'enabled'} for ${user.name || user.email}.`);
+    }
   };
 
   const handleEnableReverify = async (user: UserProfile) => {
@@ -292,17 +308,37 @@ const ManageUsersPage = () => {
                             ))}
                           </div>
                         </div>
-                        <div className="md:col-span-2 pt-2 mt-2 border-t border-gray-200/50">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleEnableReverify(user); }}
-                            className="px-4 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
-                          >
-                            <Camera className="w-4 h-4" />
-                            Enable Face Re-verify
-                          </button>
-                          <p className="text-xs text-gray-500 mt-1">
-                            This will clear their current face data and force them to register a new face upon next login.
-                          </p>
+                        <div className="md:col-span-2 pt-2 mt-2 border-t border-gray-200/50 flex flex-col md:flex-row gap-4">
+                          <div>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleEnableReverify(user); }}
+                              className="px-4 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+                            >
+                              <Camera className="w-4 h-4" />
+                              Enable Face Re-verify
+                            </button>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Clears current face data so they must re-register.
+                            </p>
+                          </div>
+                          <div>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleToggleFaceVerification(user); }}
+                              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
+                                user.face_verification_disabled
+                                  ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                                  : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                              }`}
+                            >
+                              <CameraOff className="w-4 h-4" />
+                              {user.face_verification_disabled ? 'Enable Face Verification' : 'Disable Face Verification'}
+                            </button>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {user.face_verification_disabled
+                                ? 'Verification currently ON HOLD. They skip biometric checks.'
+                                : 'Biometric checks REQUIRED for this account.'}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
