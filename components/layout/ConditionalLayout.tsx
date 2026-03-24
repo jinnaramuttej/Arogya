@@ -1,6 +1,7 @@
 "use client";
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import ParticleCanvas from "@/components/features/ParticleCanvas";
@@ -8,6 +9,15 @@ import SOSButton from "@/components/ui/SOSButton";
 
 const ConditionalLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check if user is locked in 2FA mode
+    const needs2FA = sessionStorage.getItem('needs_2fa');
+    if (needs2FA === 'true' && !pathname.includes('/verify')) {
+      router.push('/verify?mode=2fa');
+    }
+  }, [pathname, router]);
 
   // Define the paths where the main Navbar and Footer should NOT be shown
   const isDashboardRoute = pathname.startsWith('/admin') || pathname.startsWith('/doctor');

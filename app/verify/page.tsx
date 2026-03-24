@@ -134,7 +134,7 @@ function VerifyContent() {
       alert("Please enter both Name and Email to register.");
       return;
     }
-    if (mode === "login" && !email) {
+    if ((mode === "login" || mode === "2fa") && !email) {
       alert("Please enter the email associated with your account.");
       return;
     }
@@ -142,6 +142,17 @@ function VerifyContent() {
     setIsScanning(true);
     setStatusMsg("Scanning for a clear face... Please look directly at the camera.");
   };
+
+  // --- AUTO START SCAN ---
+  useEffect(() => {
+    if (modelsLoaded && !isProcessing && !isScanning) {
+      // Automatically start scan if we're in 2FA or login mode and have an email (from session auto-fill)
+      if ((mode === "2fa" || mode === "login") && email) {
+        handleStartScan();
+      }
+    }
+  }, [modelsLoaded, email, mode, isProcessing, isScanning]);
+
 
   // --- REGISTRATION LOGIC ---
   const processRegistration = async (descriptor: Float32Array, base64Avatar?: string | null) => {
@@ -245,6 +256,7 @@ function VerifyContent() {
         }
       }
 
+      sessionStorage.removeItem('needs_2fa');
       setTimeout(() => router.push("/dashboard"), 1000);
 
     } catch (e: any) {

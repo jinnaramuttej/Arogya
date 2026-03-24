@@ -40,6 +40,7 @@ export default function AuthPage() {
             .single();
             
           if (profile?.face_descriptor) {
+            sessionStorage.setItem('needs_2fa', 'true');
             router.push(`/verify?mode=2fa`);
             return;
           }

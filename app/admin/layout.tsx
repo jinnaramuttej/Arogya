@@ -44,7 +44,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const breadcrumb = getBreadcrumb(pathname);
 
   return (
-    <div className="flex h-screen bg-gray-50 font-sans -mt-24">
+    <div className="flex h-screen bg-gray-50 font-sans">
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
         <div className="h-16 flex items-center justify-center gap-2 text-xl font-bold border-b border-gray-200 text-red-600">
