@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -15,6 +15,7 @@ import {
   Siren,
   Thermometer,
   Wind,
+  AlertTriangle,
   type LucideIcon,
 } from "lucide-react";
 import EmergencyTimeline from "@/components/features/EmergencyTimeline";
@@ -138,13 +139,33 @@ function EmergencyContent() {
   const showSuggestion =
     searchParams.get("emergency") === "true" && !dismissedSuggestion;
 
-  const startEmergencyFlow = () => {
-    if (overlayOpen) {
-      return;
-    }
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
 
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => setCooldown((c) => c - 1), 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
+  const handleSOSClick = () => {
+    if (cooldown > 0 || overlayOpen) return;
+    setShowConfirm(true);
+  };
+
+  const confirmEmergency = () => {
+    setShowConfirm(false);
     setDismissedSuggestion(true);
     setOverlayOpen(true);
+  };
+
+  const cancelEmergency = () => {
+    setShowConfirm(false);
+  };
+
+  const handleCloseOverlay = () => {
+    setOverlayOpen(false);
+    setCooldown(60);
   };
 
   const actionCards: ActionCard[] = [
@@ -164,7 +185,7 @@ function EmergencyContent() {
       btnKey: "locateNow",
       icon: Hospital,
       color: "text-success-light",
-      action: startEmergencyFlow,
+      action: handleSOSClick,
     },
     {
       labelKey: "shareLocation",
@@ -205,7 +226,7 @@ function EmergencyContent() {
       btnKey: "contactNow",
       icon: Phone,
       color: "text-warning-light",
-      action: startEmergencyFlow,
+      action: handleSOSClick,
     },
   ];
 
@@ -246,7 +267,7 @@ function EmergencyContent() {
               <div className="flex flex-col gap-3 sm:flex-row">
                 <button
                   type="button"
-                  onClick={startEmergencyFlow}
+                  onClick={handleSOSClick}
                   className="inline-flex items-center justify-center rounded-full bg-danger px-5 py-3 text-sm font-semibold text-white shadow-danger transition-transform hover:scale-[1.02]"
                 >
                   {t("emergencySuggestionPrimary", lang)}
@@ -269,7 +290,7 @@ function EmergencyContent() {
         transition={{ delay: 0.15 }}
         className="mb-12 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]"
       >
-        <GlassCard noHover className="text-center">
+        <GlassCard noHover className="text-center relative">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-danger/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-danger-light">
             <Siren className="h-4 w-4" />
             {t("emergencyDispatchBadge", lang)}
@@ -282,19 +303,25 @@ function EmergencyContent() {
             {t("emergencyDispatchBody", lang)}
           </p>
 
-          <div className="mt-8">
+          <div className="mt-8 flex flex-col items-center">
             <SOSButton
               fixed={false}
               size="hero"
-              onClick={startEmergencyFlow}
-              disabled={overlayOpen}
+              onClick={handleSOSClick}
+              disabled={overlayOpen || cooldown > 0}
               className="mx-auto"
               ariaLabel={t("sosText", lang)}
               title={t("sosText", lang)}
             />
-            <p className="mt-4 text-sm font-medium text-white/80">
-              {t("sosText", lang)}
-            </p>
+            {cooldown > 0 ? (
+              <p className="mt-4 text-sm font-medium text-warning-light">
+                Cooldown: {cooldown}s
+              </p>
+            ) : (
+              <p className="mt-4 text-sm font-medium text-white/80">
+                {t("sosText", lang)}
+              </p>
+            )}
           </div>
         </GlassCard>
 
@@ -396,7 +423,46 @@ function EmergencyContent() {
         </div>
       </section>
 
-      {overlayOpen && <SOSOverlay onClose={() => setOverlayOpen(false)} />}
+      {/* Confirmation Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-navy-950/80 px-4 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-sm"
+          >
+            <GlassCard noHover className="border-danger/30 bg-navy-900/90 shadow-2xl">
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-danger/20 text-danger-light">
+                  <AlertTriangle className="h-7 w-7" />
+                </div>
+                <h3 className="mb-2 text-xl font-bold text-white">
+                  Confirm Emergency
+                </h3>
+                <p className="mb-6 text-sm text-white/70">
+                  Are you sure this is an emergency? This will immediately alert response teams and assign an ambulance to your location.
+                </p>
+                <div className="flex w-full flex-col gap-3">
+                  <button
+                    onClick={confirmEmergency}
+                    className="w-full rounded-xl bg-danger py-3 text-sm font-semibold text-white shadow-danger transition-transform hover:scale-[1.02]"
+                  >
+                    Yes, Request Help
+                  </button>
+                  <button
+                    onClick={cancelEmergency}
+                    className="w-full rounded-xl border border-glass-border bg-white/5 py-3 text-sm font-medium text-white/80 transition-colors hover:bg-white/10"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </GlassCard>
+          </motion.div>
+        </div>
+      )}
+
+      {overlayOpen && <SOSOverlay onClose={handleCloseOverlay} />}
     </div>
   );
 }

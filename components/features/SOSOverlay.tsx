@@ -314,7 +314,7 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] overflow-y-auto bg-navy-950/95 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] h-[100dvh] w-screen overflow-y-auto bg-navy-950"
       aria-modal="true"
       role="dialog"
     >
@@ -356,6 +356,18 @@ export default function SOSOverlay({ onClose }: SOSOverlayProps) {
             </button>
           </div>
         </div>
+
+        {locationSource === "fallback" && (
+          <div className="mb-6 rounded-xl bg-warning/20 border border-warning/30 p-4 text-warning-light">
+            <div className="flex items-center gap-2 font-semibold mb-1">
+              <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+              Location Detection Failed
+            </div>
+            <p className="text-sm text-warning-light/80">
+              We couldn't access your precise live GPS location. Using fallback coordinates. Please contact the driver to confirm your exact location.
+            </p>
+          </div>
+        )}
 
         <div className="mb-6 grid gap-4 sm:grid-cols-3">
           <GlassCard noHover>

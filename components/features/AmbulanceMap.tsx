@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useLanguage } from "@/lib/i18n/context";
@@ -19,12 +19,13 @@ interface AmbulanceMapProps {
 }
 
 function getThemeColor(variable: string) {
+  if (typeof window === "undefined") return "#000";
   return getComputedStyle(document.documentElement)
     .getPropertyValue(variable)
     .trim();
 }
 
-export default function AmbulanceMap({
+const AmbulanceMap = memo(function AmbulanceMap({
   userLocation,
   ambulanceLocation,
   eta,
@@ -34,9 +35,9 @@ export default function AmbulanceMap({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const ambulanceMarkerRef = useRef<L.CircleMarker | null>(null);
-  const userMarkerRef = useRef<L.CircleMarker | null>(null);
   const routeRef = useRef<L.Polyline | null>(null);
 
+  // Initialize map ONLY ONCE (when it first gets userLocation and ambulanceLocation)
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current || !userLocation || !ambulanceLocation) {
       return;
@@ -51,14 +52,14 @@ export default function AmbulanceMap({
       center: [userLocation.lat, userLocation.lng],
       zoom: 14,
       zoomControl: true,
+      attributionControl: false,
     });
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "&copy; OpenStreetMap contributors",
       maxZoom: 19,
     }).addTo(map);
 
-    const userMarker = L.circleMarker([userLocation.lat, userLocation.lng], {
+    L.circleMarker([userLocation.lat, userLocation.lng], {
       radius: 10,
       color: accentLightColor,
       fillColor: accentColor,
@@ -99,19 +100,19 @@ export default function AmbulanceMap({
     map.fitBounds(route.getBounds(), { padding: [48, 48] });
 
     mapInstanceRef.current = map;
-    userMarkerRef.current = userMarker;
     ambulanceMarkerRef.current = ambulanceMarker;
     routeRef.current = route;
 
     return () => {
       map.remove();
       mapInstanceRef.current = null;
-      userMarkerRef.current = null;
       ambulanceMarkerRef.current = null;
       routeRef.current = null;
     };
-  }, [ambulanceLocation, distance, eta, lang, userLocation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run ONLY once when we first have locations
 
+  // Update markers on state change WITHOUT remounting map
   useEffect(() => {
     if (
       !ambulanceMarkerRef.current ||
@@ -137,5 +138,7 @@ export default function AmbulanceMap({
     ]);
   }, [ambulanceLocation, distance, eta, lang, userLocation]);
 
-  return <div ref={mapRef} className="h-[350px] min-h-[350px] w-full rounded-2xl" />;
-}
+  return <div ref={mapRef} className="h-[350px] min-h-[350px] w-full rounded-2xl z-0 relative isolate" />;
+});
+
+export default AmbulanceMap;
