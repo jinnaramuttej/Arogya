@@ -14,7 +14,10 @@ import {
 } from "lucide-react";
 
 const Profile = () => {
-  const userName = useMemo(() => localStorage.getItem("az_user_name") || "Aarav Mehta", []);
+  const userName = useMemo(() => {
+    if (typeof window === "undefined") return "Aarav Mehta";
+    return localStorage.getItem("az_user_name") || "Aarav Mehta";
+  }, []);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
