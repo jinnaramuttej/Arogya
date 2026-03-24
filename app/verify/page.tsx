@@ -92,7 +92,9 @@ function VerifyContent() {
       }
 
       // 2. Liveness Check (Prevent Screen Spoofing)
-      if (detections.expressions.happy < 0.3) {
+      // Accept happy (mouth closed smile) OR surprised (mouth open smile)
+      const liveness = Math.max(detections.expressions.happy, detections.expressions.surprised);
+      if (liveness < 0.25) {
         setStatusMsg("Liveness Check: Please SMILE at the camera to continue.");
         return null; // Force retry
       }

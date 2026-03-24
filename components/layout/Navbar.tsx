@@ -16,6 +16,8 @@ import {
   Droplet,
   ShoppingBag,
   ShieldCheck,
+  Settings,
+  User,
 } from "lucide-react";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useLanguage } from "@/lib/i18n/context";
@@ -202,13 +204,31 @@ export default function Navbar() {
 
           <div className="mt-auto flex flex-col gap-3">
             {user ? (
-              <button
-                onClick={() => { setMobileOpen(false); handleLogout(); }}
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm border-none cursor-pointer transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                {t("navLogout", lang)}
-              </button>
+              <>
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium no-underline text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <User className="w-5 h-5" />
+                  My Profile
+                </Link>
+                <Link
+                  href="/dashboard/settings"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium no-underline text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <Settings className="w-5 h-5" />
+                  Settings
+                </Link>
+                <button
+                  onClick={() => { setMobileOpen(false); handleLogout(); }}
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm border-none cursor-pointer transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  {t("navLogout", lang)}
+                </button>
+              </>
             ) : (
               <Link
                 href="/auth"
