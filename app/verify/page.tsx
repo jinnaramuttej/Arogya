@@ -25,6 +25,7 @@ function VerifyContent() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [hasFailed, setHasFailed] = useState(false);
   const [hasAutoStarted, setHasAutoStarted] = useState(false);
+  const [faceAlreadyRegistered, setFaceAlreadyRegistered] = useState(false);
   
   // Form fields
   const [email, setEmail] = useState("");
@@ -33,15 +34,18 @@ function VerifyContent() {
   useEffect(() => {
     if (user?.email) {
       setEmail(user.email);
-      // Fetch full name from profile
       const fetchProfile = async () => {
         const supabase = createClient();
-        const { data } = await supabase.from("profiles").select("name").eq("id", user.id).single();
+        const { data } = await supabase.from("profiles").select("name, face_descriptor").eq("id", user.id).single();
         if (data?.name) setName(data.name);
+        // Block register mode if face already exists
+        if (mode === "register" && data?.face_descriptor) {
+          setFaceAlreadyRegistered(true);
+        }
       };
       fetchProfile();
     }
-  }, [user]);
+  }, [user, mode]);
 
   // Store faceapi instance
   const [faceapi, setFaceapi] = useState<any>(null);
@@ -336,6 +340,35 @@ function VerifyContent() {
 
         {/* Content */}
         <div className="p-8 space-y-6">
+
+          {/* BLOCKED: Face already registered */}
+          {mode === "register" && faceAlreadyRegistered ? (
+            <div className="text-center space-y-4 py-6">
+              <div className="w-16 h-16 mx-auto rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
+                <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Face Already Registered</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                Your biometric data is securely locked.<br />
+                To re-register, ask an Admin to <strong>Enable Face Re-verify</strong> from the User Directory.
+              </p>
+              <div className="flex flex-col gap-3 pt-2">
+                <button
+                  onClick={() => router.push("/verify?mode=login")}
+                  className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold transition-colors"
+                >
+                  Go to Face Login
+                </button>
+                <button
+                  onClick={() => router.push("/dashboard/settings")}
+                  className="w-full py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                >
+                  Back to Settings
+                </button>
+              </div>
+            </div>
+          ) : (
+          <>
           
           <div className="relative rounded-xl overflow-hidden bg-slate-900 aspect-video shadow-inner flex items-center justify-center">
             {capturedImage ? (
@@ -426,6 +459,8 @@ function VerifyContent() {
              hasFailed ? "Try Again" :
              (mode === "register" ? "Register Face ID" : mode === "2fa" ? "Verify 2nd Step" : "Verify & Login")}
           </button>
+          </>
+          )}
         </div>
         
         {/* Footer Toggle */}
