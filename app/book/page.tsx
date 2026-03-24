@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Clock, CheckCircle, Star } from "lucide-react";
+import { Clock, CheckCircle, Star, Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import GlassCard from "@/components/ui/GlassCard";
@@ -11,37 +11,15 @@ import { t } from "@/lib/i18n/translations";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/lib/hooks/useUser";
 
-/* Mock doctor data — in production this comes from Supabase */
-const doctors = [
-  {
-    id: "1",
-    name: "Dr. Priya Sharma",
-    specialty: "General Physician",
-    rating: 4.8,
-    slots: ["9:00 AM", "10:00 AM", "11:00 AM", "2:00 PM", "3:00 PM"],
-  },
-  {
-    id: "2",
-    name: "Dr. Ravi Kumar",
-    specialty: "Cardiologist",
-    rating: 4.9,
-    slots: ["10:30 AM", "11:30 AM", "1:00 PM", "4:00 PM"],
-  },
-  {
-    id: "3",
-    name: "Dr. Ananya Reddy",
-    specialty: "Dermatologist",
-    rating: 4.7,
-    slots: ["9:30 AM", "12:00 PM", "2:30 PM", "5:00 PM"],
-  },
-  {
-    id: "4",
-    name: "Dr. Vikram Patel",
-    specialty: "Orthopedic Surgeon",
-    rating: 4.6,
-    slots: ["8:00 AM", "10:00 AM", "1:00 PM", "3:30 PM"],
-  },
-];
+interface Doctor {
+  id: string;
+  name: string;
+  specialty: string;
+  rating?: number;
+}
+
+/* Default time slots for booking */
+const DEFAULT_SLOTS = ["9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "2:00 PM", "3:00 PM", "4:00 PM"];
 
 const container = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
@@ -49,6 +27,8 @@ const item = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, trans
 function BookContent() {
   const { lang } = useLanguage();
   const { user } = useUser();
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [loadingDoctors, setLoadingDoctors] = useState(true);
   const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [booked, setBooked] = useState(false);
@@ -56,8 +36,34 @@ function BookContent() {
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
 
+  /* Fetch real doctors from Supabase */
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      setLoadingDoctors(true);
+      const supabase = createClient();
+      const { data, error: fetchError } = await supabase
+        .from("doctors")
+        .select("id, name, specialty")
+        .order("name");
+
+      if (fetchError) {
+        setError("Failed to load doctors: " + fetchError.message);
+      } else if (data) {
+        // Add a pseudo-random rating for display based on the name hash
+        const enriched = data.map((doc) => ({
+          ...doc,
+          rating: parseFloat((4.5 + ((doc.name.charCodeAt(0) % 5) / 10)).toFixed(1)),
+        }));
+        setDoctors(enriched);
+      }
+      setLoadingDoctors(false);
+    };
+    fetchDoctors();
+  }, []);
+
   /* Auto-select doctor when coming from /symptom with ?specialty= */
   useEffect(() => {
+    if (doctors.length === 0) return;
     const specialty = searchParams.get("specialty");
     if (specialty) {
       const match = doctors.find(
@@ -65,7 +71,7 @@ function BookContent() {
       );
       if (match) setSelectedDoctor(match.id);
     }
-  }, [searchParams]);
+  }, [searchParams, doctors]);
 
   const handleBook = async () => {
     if (!selectedDoctor || !selectedSlot) return;
@@ -73,20 +79,21 @@ function BookContent() {
       setError("Please login to book an appointment.");
       return;
     }
-    
+
     setLoading(true);
     setError(null);
     const supabase = createClient();
-    
+
     const doc = doctors.find((d) => d.id === selectedDoctor);
     if (!doc) return;
 
-    const { data: _data, error: insertError } = await supabase
+    const { error: insertError } = await supabase
       .from("appointments")
       .insert([
         {
           user_id: user.id,
-          doctor_name: doc.name,
+          doctor_id: doc.id,
+          doctor_name: `Dr. ${doc.name}`,
           specialty: doc.specialty,
           date: new Date().toISOString().split("T")[0],
           time: selectedSlot,
@@ -140,84 +147,96 @@ function BookContent() {
         </motion.div>
       )}
 
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-1 md:grid-cols-2 gap-6"
-      >
-        {doctors.map((doc) => {
-          const isSelected = selectedDoctor === doc.id;
-          return (
-            <motion.div key={doc.id} variants={item}>
-              <GlassCard
-                noHover={isSelected}
-                className={`cursor-pointer ${
-                  isSelected ? "!border-red-400 !shadow-card-hover" : ""
-                }`}
-                onClick={() => {
-                  setSelectedDoctor(doc.id);
-                  setSelectedSlot(null);
-                }}
-              >
-                {/* Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{doc.name}</h3>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">{doc.specialty}</p>
+      {loadingDoctors ? (
+        <div className="flex items-center justify-center py-20 text-gray-400 gap-3">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <span className="text-lg">Loading doctors...</span>
+        </div>
+      ) : doctors.length === 0 ? (
+        <div className="text-center py-20 text-gray-400">
+          <p className="text-lg font-medium">No doctors available.</p>
+          <p className="text-sm mt-1">Please ask an admin to register doctors first.</p>
+        </div>
+      ) : (
+        <motion.div
+          variants={container}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        >
+          {doctors.map((doc) => {
+            const isSelected = selectedDoctor === doc.id;
+            return (
+              <motion.div key={doc.id} variants={item}>
+                <GlassCard
+                  noHover={isSelected}
+                  className={`cursor-pointer ${
+                    isSelected ? "!border-red-400 !shadow-card-hover" : ""
+                  }`}
+                  onClick={() => {
+                    setSelectedDoctor(doc.id);
+                    setSelectedSlot(null);
+                  }}
+                >
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Dr. {doc.name}</h3>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">{doc.specialty}</p>
+                    </div>
+                    <div className="flex items-center gap-1 text-warning-light text-sm">
+                      <Star className="w-4 h-4 fill-current" />
+                      {doc.rating}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 text-warning-light text-sm">
-                    <Star className="w-4 h-4 fill-current" />
-                    {doc.rating}
-                  </div>
-                </div>
 
-                {/* Slots */}
-                {isSelected && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600"
-                  >
-                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">{t("selectSlot", lang)}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {doc.slots.map((slot) => (
+                  {/* Slots */}
+                  {isSelected && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600"
+                    >
+                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">{t("selectSlot", lang)}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {DEFAULT_SLOTS.map((slot) => (
+                          <button
+                            key={slot}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedSlot(slot);
+                            }}
+                            className={`px-4 py-2 rounded-full text-sm border transition-all cursor-pointer ${
+                              selectedSlot === slot
+                                ? "bg-red-600 text-white border-red-600 shadow-brand"
+                                : "bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+                            }`}
+                          >
+                            <Clock className="w-3 h-3 inline mr-1" />
+                            {slot}
+                          </button>
+                        ))}
+                      </div>
+                      {selectedSlot && (
                         <button
-                          key={slot}
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedSlot(slot);
+                            handleBook();
                           }}
-                          className={`px-4 py-2 rounded-full text-sm border transition-all cursor-pointer ${
-                            selectedSlot === slot
-                              ? "bg-red-600 text-white border-red-600 shadow-brand"
-                              : "bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
-                          }`}
+                          disabled={loading}
+                          className="mt-4 w-full py-3 rounded-full bg-red-600 hover:bg-red-700 text-white font-semibold shadow-brand hover:shadow-brand-hover hover:-translate-y-0.5 transition-all cursor-pointer border-none disabled:opacity-50"
                         >
-                          <Clock className="w-3 h-3 inline mr-1" />
-                          {slot}
+                          {loading ? "Booking..." : t("confirmBooking", lang)}
                         </button>
-                      ))}
-                    </div>
-                    {selectedSlot && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleBook();
-                        }}
-                        disabled={loading}
-                        className="mt-4 w-full py-3 rounded-full bg-red-600 hover:bg-red-700 text-white font-semibold shadow-brand hover:shadow-brand-hover hover:-translate-y-0.5 transition-all cursor-pointer border-none disabled:opacity-50"
-                      >
-                        {loading ? "Booking..." : t("confirmBooking", lang)}
-                      </button>
-                    )}
-                  </motion.div>
-                )}
-              </GlassCard>
-            </motion.div>
-          );
-        })}
-      </motion.div>
+                      )}
+                    </motion.div>
+                  )}
+                </GlassCard>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+      )}
     </div>
   );
 }
