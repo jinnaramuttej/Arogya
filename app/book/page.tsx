@@ -46,18 +46,25 @@ function BookContent() {
       
       const { data, error: fetchError } = await supabase
         .from('doctors')
-        .select('id, name, specialty')
+        .select('id, name, specialty, available_slots')
         .order('name');
       
       if (!fetchError && data) {
-        // Map DB doctors to include mock ratings and dummy time slots
-        const formatted = data.map(d => ({
-          id: d.id,
-          name: `Dr. ${d.name}`,
-          specialty: d.specialty,
-          rating: (4.5 + Math.random() * 0.5).toFixed(1),
-          slots: ["9:00 AM", "10:30 AM", "1:00 PM", "3:30 PM", "5:00 PM"]
-        }));
+        // Map DB doctors — use real available_slots from database
+        const formatted = data.map(d => {
+          let slots: string[] = ["9:00 AM", "10:30 AM", "1:00 PM", "3:30 PM", "5:00 PM"];
+          if (d.available_slots) {
+            const parsed = Array.isArray(d.available_slots) ? d.available_slots : JSON.parse(d.available_slots as string);
+            if (parsed.length > 0) slots = parsed;
+          }
+          return {
+            id: d.id,
+            name: `Dr. ${d.name}`,
+            specialty: d.specialty,
+            rating: (4.5 + Math.random() * 0.5).toFixed(1),
+            slots
+          };
+        });
         
         setDbDoctors(formatted);
         setFilteredDoctors(formatted);

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useUser } from '@/lib/hooks/useUser';
-import { Search, User, PlusCircle, BookText, Stethoscope, AlertCircle, CheckCircle2, Loader2, Activity, Droplets, FileText, Hash, CalendarDays, Clock, Upload, Download } from 'lucide-react';
+import { Search, User, PlusCircle, BookText, Stethoscope, AlertCircle, CheckCircle2, Loader2, Activity, Droplets, FileText, Hash, CalendarDays, Clock, Upload, Download, Check, XCircle, Ticket } from 'lucide-react';
 
 interface Doctor {
   id: string;
@@ -18,6 +18,7 @@ interface Appointment {
   time: string;
   status: string;
   booking_number: string;
+  token_number: number | null;
   patient_name: string;
 }
 
@@ -44,6 +45,13 @@ interface Notification {
   message: string;
 }
 
+interface RecordField {
+  id: string;
+  field_name: string;
+  field_type: string;
+  is_required: boolean;
+}
+
 const DoctorDashboardPage = () => {
   const { user, loading: userLoading } = useUser();
   const [doctorProfile, setDoctorProfile] = useState<Doctor | null>(null);
@@ -60,6 +68,10 @@ const DoctorDashboardPage = () => {
   const [newDescription, setNewDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Dynamic fields from admin settings
+  const [recordFields, setRecordFields] = useState<RecordField[]>([]);
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
 
   const supabase = createClient();
 
@@ -105,8 +117,15 @@ const DoctorDashboardPage = () => {
           setUpcomingAppointments(mappedAppts);
         }
       }
-    };
+    }
     fetchDoctorProfile();
+
+    // Also fetch dynamic record fields
+    const fetchRecordFields = async () => {
+      const { data } = await supabase.from('record_fields').select('*').order('sort_order');
+      if (data) setRecordFields(data);
+    };
+    fetchRecordFields();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -184,6 +203,56 @@ const DoctorDashboardPage = () => {
     setLoading(false);
   };
 
+  // Approve appointment: set confirmed + assign 3-digit token
+  const handleApproveAppointment = async (appointmentId: string) => {
+    // Get current max token for today
+    const today = new Date().toISOString().split('T')[0];
+    const { data: todayAppts } = await supabase
+      .from('appointments')
+      .select('token_number')
+      .eq('date', today)
+      .eq('status', 'confirmed')
+      .not('token_number', 'is', null)
+      .order('token_number', { ascending: false })
+      .limit(1);
+
+    const nextToken = (todayAppts && todayAppts.length > 0 && todayAppts[0].token_number)
+      ? todayAppts[0].token_number + 1
+      : 1;
+
+    const { error } = await supabase
+      .from('appointments')
+      .update({ status: 'confirmed', token_number: nextToken })
+      .eq('id', appointmentId);
+
+    if (error) {
+      showNotification('error', 'Failed to approve: ' + error.message);
+    } else {
+      showNotification('success', `Appointment approved! Token #${String(nextToken).padStart(3, '0')} assigned.`);
+      // Update local state
+      setUpcomingAppointments(prev => prev.map(a =>
+        a.id === appointmentId ? { ...a, status: 'confirmed', token_number: nextToken } : a
+      ));
+    }
+  };
+
+  // Reject appointment
+  const handleRejectAppointment = async (appointmentId: string) => {
+    const { error } = await supabase
+      .from('appointments')
+      .update({ status: 'cancelled' })
+      .eq('id', appointmentId);
+
+    if (error) {
+      showNotification('error', 'Failed to reject: ' + error.message);
+    } else {
+      showNotification('success', 'Appointment rejected.');
+      setUpcomingAppointments(prev => prev.map(a =>
+        a.id === appointmentId ? { ...a, status: 'cancelled' } : a
+      ));
+    }
+  };
+
   const handleAddRecord = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchedPatient || (!newBp && !newSugar && !newDescription)) {
@@ -247,6 +316,7 @@ const DoctorDashboardPage = () => {
         description: newDescription,
         file_url: fileUrl,
         file_name: fileName,
+        custom_data: customFieldValues,
       }]);
 
     if (insertError) {
@@ -259,6 +329,7 @@ const DoctorDashboardPage = () => {
       setNewSugar('');
       setNewDescription('');
       setSelectedFile(null);
+      setCustomFieldValues({});
     }
     setSubmitting(false);
   };
@@ -306,7 +377,6 @@ const DoctorDashboardPage = () => {
         </div>
       )}
 
-      {/* Upcoming Appointments */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
         <h2 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
           <CalendarDays className="w-6 h-6 text-emerald-500" />
@@ -330,18 +400,44 @@ const DoctorDashboardPage = () => {
                       <span className="flex items-center gap-1"><Clock className="w-4 h-4"/> {appt.time}</span>
                     </div>
                   </div>
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase ${
-                    appt.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' :
-                    appt.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-gray-200 text-gray-700'
-                  }`}>
-                    {appt.status}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {appt.token_number && (
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200 flex items-center gap-1">
+                        <Ticket className="w-3.5 h-3.5" />
+                        #{String(appt.token_number).padStart(3, '0')}
+                      </span>
+                    )}
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase ${
+                      appt.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' :
+                      appt.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                      appt.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                      'bg-gray-200 text-gray-700'
+                    }`}>
+                      {appt.status}
+                    </span>
+                  </div>
                 </div>
                 {appt.booking_number && (
-                  <div className="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
+                  <div className="mt-3 pt-2 border-t border-gray-200 flex items-center justify-between">
                     <span className="text-xs text-gray-500 uppercase font-semibold">Booking ID</span>
                     <span className="font-mono text-sm font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">{appt.booking_number}</span>
+                  </div>
+                )}
+                {/* Approve / Reject Buttons */}
+                {appt.status === 'pending' && (
+                  <div className="mt-4 flex gap-3">
+                    <button
+                      onClick={() => handleApproveAppointment(appt.id)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-emerald-500 text-white rounded-md hover:bg-emerald-600 transition-colors font-semibold text-sm"
+                    >
+                      <Check className="w-4 h-4" /> Approve
+                    </button>
+                    <button
+                      onClick={() => handleRejectAppointment(appt.id)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors font-semibold text-sm"
+                    >
+                      <XCircle className="w-4 h-4" /> Reject
+                    </button>
                   </div>
                 )}
               </div>
@@ -429,6 +525,65 @@ const DoctorDashboardPage = () => {
                 onChange={e => setNewDescription(e.target.value)}
                 className="w-full p-3 border-2 border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-emerald-300 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder-gray-400 h-28 resize-none text-gray-800"
               />
+              {/* Dynamic Admin-Defined Fields */}
+              {recordFields.length > 0 && (
+                <div className="border-t-2 border-dashed border-gray-200 pt-4">
+                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-3">Additional Fields</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {recordFields.map(field => (
+                      <div key={field.id}>
+                        <label className="text-sm font-medium text-gray-700 mb-1 block">
+                          {field.field_name}
+                          {field.is_required && <span className="text-red-500 ml-1">*</span>}
+                        </label>
+                        {field.field_type === 'text' && (
+                          <input
+                            type="text"
+                            placeholder={`Enter ${field.field_name}...`}
+                            value={customFieldValues[field.field_name] || ''}
+                            onChange={e => setCustomFieldValues({...customFieldValues, [field.field_name]: e.target.value})}
+                            className="p-3 border-2 border-gray-300 rounded-md w-full bg-gray-50 focus:ring-2 focus:ring-emerald-300 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder-gray-400 text-gray-800"
+                          />
+                        )}
+                        {field.field_type === 'url' && (
+                          <input
+                            type="url"
+                            placeholder="https://..."
+                            value={customFieldValues[field.field_name] || ''}
+                            onChange={e => setCustomFieldValues({...customFieldValues, [field.field_name]: e.target.value})}
+                            className="p-3 border-2 border-gray-300 rounded-md w-full bg-gray-50 focus:ring-2 focus:ring-emerald-300 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder-gray-400 text-gray-800"
+                          />
+                        )}
+                        {field.field_type === 'time' && (
+                          <input
+                            type="time"
+                            value={customFieldValues[field.field_name] || ''}
+                            onChange={e => setCustomFieldValues({...customFieldValues, [field.field_name]: e.target.value})}
+                            className="p-3 border-2 border-gray-300 rounded-md w-full bg-gray-50 focus:ring-2 focus:ring-emerald-300 focus:border-emerald-500 focus:bg-white outline-none transition-all text-gray-800"
+                          />
+                        )}
+                        {field.field_type === 'date' && (
+                          <input
+                            type="date"
+                            value={customFieldValues[field.field_name] || ''}
+                            onChange={e => setCustomFieldValues({...customFieldValues, [field.field_name]: e.target.value})}
+                            className="p-3 border-2 border-gray-300 rounded-md w-full bg-gray-50 focus:ring-2 focus:ring-emerald-300 focus:border-emerald-500 focus:bg-white outline-none transition-all text-gray-800"
+                          />
+                        )}
+                        {field.field_type === 'file' && (
+                          <input
+                            type="text"
+                            placeholder="Paste file URL or Cloudinary link..."
+                            value={customFieldValues[field.field_name] || ''}
+                            onChange={e => setCustomFieldValues({...customFieldValues, [field.field_name]: e.target.value})}
+                            className="p-3 border-2 border-gray-300 rounded-md w-full bg-gray-50 focus:ring-2 focus:ring-emerald-300 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder-gray-400 text-gray-800"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               {/* File Upload */}
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 hover:bg-emerald-50/50 transition-colors">
                 <label className="flex flex-col items-center gap-2 cursor-pointer">

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { CalendarDays, FileText, Clock, CheckCircle, XCircle, Plus, User, Download } from "lucide-react";
+import { CalendarDays, FileText, Clock, CheckCircle, XCircle, Plus, User, Download, Ticket } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 import { useLanguage } from "@/lib/i18n/context";
 import { t } from "@/lib/i18n/translations";
@@ -33,6 +33,7 @@ interface Appointment {
   time: string;
   status: string;
   booking_number: string;
+  token_number: number | null;
 }
 
 interface PatientProfile {
@@ -185,6 +186,7 @@ export default function DashboardPage() {
                           <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
                             apt.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
                             apt.status === 'pending' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
+                            apt.status === 'cancelled' ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
                             'bg-white/10 text-white/70 border border-white/20'
                           }`}>
                             {apt.status}
@@ -197,7 +199,14 @@ export default function DashboardPage() {
                         {apt.booking_number && (
                           <div className="border-t border-white/10 pt-3 mt-1 flex items-center justify-between">
                             <span className="text-xs text-white/50 uppercase tracking-widest font-semibold flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Reference</span>
-                            <span className="font-mono text-sm font-bold tracking-widest text-emerald-300 bg-emerald-900/30 px-2.5 py-1 rounded border border-emerald-500/20">{apt.booking_number}</span>
+                            <div className="flex items-center gap-2">
+                              {apt.token_number && (
+                                <span className="font-mono text-sm font-bold tracking-widest text-blue-300 bg-blue-900/30 px-2.5 py-1 rounded border border-blue-500/20 flex items-center gap-1">
+                                  <Ticket className="w-3.5 h-3.5" /> #{String(apt.token_number).padStart(3, '0')}
+                                </span>
+                              )}
+                              <span className="font-mono text-sm font-bold tracking-widest text-emerald-300 bg-emerald-900/30 px-2.5 py-1 rounded border border-emerald-500/20">{apt.booking_number}</span>
+                            </div>
                           </div>
                         )}
                       </div>
