@@ -6,7 +6,7 @@ import AIBotExperience from "@/components/AIBotExperience";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import dynamic from "next/dynamic";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { useMemo, useState } from "react";
+import { useMemo, useState, Suspense } from "react";
 
 const SymptomMap = dynamic(() => import("@/components/features/SymptomMap"), { ssr: false });
 
@@ -64,7 +64,9 @@ const SymptomChecker = () => {
         </section>
 
         <section className="container mx-auto px-6 mt-12 mb-12">
-          <AIBotExperience />
+          <Suspense fallback={<div className="h-96 flex items-center justify-center animate-pulse text-muted-foreground text-sm tracking-widest uppercase">Initializing Neural Matrix...</div>}>
+            <AIBotExperience />
+          </Suspense>
         </section>
 
         <section className="container mx-auto px-6">
