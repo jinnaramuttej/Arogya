@@ -68,6 +68,7 @@ const DoctorDashboardPage = () => {
   const [searchedPatient, setSearchedPatient] = useState<Patient | null>(null);
   const [patientRecords, setPatientRecords] = useState<MedicalRecord[]>([]);
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
+  const [dayAppointments, setDayAppointments] = useState<Appointment[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState<Notification | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -147,12 +148,56 @@ const DoctorDashboardPage = () => {
     setError(null);
     setSearchedPatient(null);
     setPatientRecords([]);
+    setDayAppointments(null);
+
+    // MODE 1: Pure 8-digit date (YYYYMMDD) → show all appointments for that day
+    const dateMatch = query.match(/^(\d{4})(\d{2})(\d{2})$/);
+    if (dateMatch && query.length === 8) {
+      const dateStr = `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`;
+      const doctorId = doctorProfile?.id;
+      
+      let apptQuery = supabase
+        .from('appointments')
+        .select('*')
+        .eq('date', dateStr)
+        .order('time', { ascending: true });
+      
+      if (doctorId) {
+        apptQuery = apptQuery.eq('doctor_id', doctorId);
+      }
+
+      const { data: appts, error: apptErr } = await apptQuery;
+
+      if (apptErr) {
+        setError('Error searching appointments: ' + apptErr.message);
+        setLoading(false);
+        return;
+      }
+
+      if (!appts || appts.length === 0) {
+        setError(`No appointments found for ${dateStr}.`);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch patient names for these appointments
+      const userIds = appts.map((a: any) => a.user_id);
+      const { data: profiles } = await supabase.from('profiles').select('id, name').in('id', userIds);
+
+      const mapped = appts.map((a: any) => ({
+        ...a,
+        patient_name: profiles?.find(p => p.id === a.user_id)?.name || 'Unknown Patient'
+      }));
+
+      setDayAppointments(mapped);
+      setLoading(false);
+      return;
+    }
 
     let patientData = null;
 
-    // Check if it looks like a booking number (length > 6)
-    if (query.length > 6) {
-      // Find patient user_id from appointments
+    // MODE 2: Booking number (length > 8, e.g. 202603241234)
+    if (query.length > 8) {
       const { data: appt, error: apptError } = await supabase
         .from('appointments')
         .select('user_id')
@@ -165,7 +210,6 @@ const DoctorDashboardPage = () => {
         return;
       }
 
-      // Fetch the actual patient profile using user_id
       const { data: pData, error: pError } = await supabase
         .from('patients')
         .select('*')
@@ -180,7 +224,7 @@ const DoctorDashboardPage = () => {
       patientData = pData;
 
     } else {
-      // Treat as a 5-digit Patient ID
+      // MODE 3: 5-digit Patient ID
       const { data: pData, error: patientError } = await supabase
         .from('patients')
         .select('*')
@@ -701,13 +745,66 @@ const DoctorDashboardPage = () => {
         </div>
       )}
 
+      {/* Day Appointments Results */}
+      {dayAppointments && dayAppointments.length > 0 && (
+        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+          <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+            <CalendarDays className="w-5 h-5 text-emerald-500" />
+            Appointments Found
+            <span className="ml-2 text-sm bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full font-normal">
+              {dayAppointments.length}
+            </span>
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {dayAppointments.map((appt: any) => (
+              <Link key={appt.id} href={`/doctor/appointments/${appt.id}`}
+                className="block border border-gray-100 bg-gray-50 rounded-lg p-5 hover:bg-emerald-50/50 hover:shadow-md transition-all"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="font-bold text-gray-800 text-lg">{appt.patient_name}</p>
+                    <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
+                      <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {appt.time}</span>
+                      {appt.booking_number && (
+                        <span className="font-mono text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">
+                          {appt.booking_number}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {appt.token_number && (
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200 flex items-center gap-1">
+                        <Ticket className="w-3.5 h-3.5" />
+                        #{String(appt.token_number).padStart(3, '0')}
+                      </span>
+                    )}
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase ${
+                      appt.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' :
+                      appt.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                      appt.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                      'bg-gray-200 text-gray-700'
+                    }`}>
+                      {appt.status}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-end text-xs text-emerald-600 font-semibold gap-1 mt-2">
+                  View Session <ChevronRight className="w-3.5 h-3.5" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Pre-search empty state */}
-      {!searchedPatient && !error && !loading && (
+      {!searchedPatient && !dayAppointments && !error && !loading && (
         <div className="bg-white p-12 rounded-lg shadow-md text-center text-gray-400 mt-6 border-2 border-dashed border-gray-200">
           <Search className="w-16 h-16 mx-auto mb-4 opacity-30 text-emerald-500" />
-          <p className="text-xl font-bold text-gray-600 mb-2">Search for a patient appointment</p>
+          <p className="text-xl font-bold text-gray-600 mb-2">Search for appointments</p>
           <p className="text-sm max-w-md mx-auto leading-relaxed">
-            The search bar is automatically pre-filled with today's date prefix. Just type the last 4 digits of the patient's booking number to pull up their profile and add securely to their medical records! You can also clear it and search by their 5-digit Patient ID.
+            Enter today's date (YYYYMMDD) to see all appointments for the day. You can also search by a full 12-digit Booking Number or a 5-digit Patient ID.
           </p>
         </div>
       )}

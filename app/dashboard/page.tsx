@@ -13,6 +13,13 @@ import {
   Pill,
   FolderOpen,
   LayoutDashboard,
+  Trash2,
+  Ticket,
+  ChevronDown,
+  Stethoscope,
+  Hash,
+  Activity,
+  Droplets,
 } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 import PrescriptionCard from "@/components/features/PrescriptionCard";
@@ -32,6 +39,8 @@ interface Appointment {
   date: string;
   time: string;
   status: string;
+  booking_number?: string;
+  token_number?: number | null;
 }
 
 interface Prescription {
@@ -69,6 +78,9 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [showRxForm, setShowRxForm] = useState(false);
   const [reportRefreshKey, setReportRefreshKey] = useState(0);
+  const [expandedAppt, setExpandedAppt] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [apptRecords, setApptRecords] = useState<Record<string, any[]>>({});
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -128,9 +140,76 @@ export default function DashboardPage() {
     fetchData();
   }, [fetchData]);
 
+  // Fetch records when an appointment is expanded
+  useEffect(() => {
+    if (!expandedAppt || !user) return;
+    // Skip if already fetched
+    if (apptRecords[expandedAppt]) return;
+
+    const fetchRecords = async () => {
+      const supabase = createClient();
+      // Get patient record for this user
+      const { data: patient } = await supabase
+        .from("patients")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!patient) {
+        setApptRecords((prev) => ({ ...prev, [expandedAppt]: [] }));
+        return;
+      }
+
+      const { data: recs } = await supabase
+        .from("records")
+        .select("*, doctors(name, specialty)")
+        .eq("patient_id", patient.id)
+        .order("record_date", { ascending: false });
+
+      setApptRecords((prev) => ({ ...prev, [expandedAppt]: recs || [] }));
+    };
+    fetchRecords();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandedAppt, user]);
+
   const handlePrescriptionSaved = () => {
     setShowRxForm(false);
     fetchData();
+  };
+
+  const handleCancelAppointment = async (aptId: string) => {
+    setCancellingId(aptId);
+    const supabase = createClient();
+    const { error: cancelError } = await supabase
+      .from("appointments")
+      .update({ status: "cancelled" })
+      .eq("id", aptId);
+
+    if (cancelError) {
+      setError("Failed to cancel: " + cancelError.message);
+    } else {
+      setAppointments((prev) =>
+        prev.map((a) => (a.id === aptId ? { ...a, status: "cancelled" } : a))
+      );
+    }
+    setCancellingId(null);
+  };
+
+  const handleDeleteAppointment = async (aptId: string) => {
+    setCancellingId(aptId);
+    const supabase = createClient();
+    const { error: deleteError } = await supabase
+      .from("appointments")
+      .delete()
+      .eq("id", aptId);
+
+    if (deleteError) {
+      setError("Failed to delete: " + deleteError.message);
+    } else {
+      setAppointments((prev) => prev.filter((a) => a.id !== aptId));
+      setExpandedAppt(null);
+    }
+    setCancellingId(null);
   };
 
   if (loading) {
@@ -237,12 +316,27 @@ export default function DashboardPage() {
           ) : (
             appointments.map((apt) => {
               const StatusIcon = statusIcons[apt.status] || Clock;
+              const isExpanded = expandedAppt === apt.id;
               return (
                 <GlassCard key={apt.id} noHover>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <h3 className="text-gray-900 dark:text-white font-semibold">{apt.doctor_name}</h3>
-                      <p className="text-gray-500 dark:text-gray-400 text-sm">{apt.specialty}</p>
+                  {/* Clickable header */}
+                  <div
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer"
+                    onClick={() => setExpandedAppt(isExpanded ? null : apt.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                        <Stethoscope className="w-5 h-5 text-red-600 dark:text-red-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-gray-900 dark:text-white font-semibold">{apt.doctor_name}</h3>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">{apt.specialty}</p>
+                      </div>
+                      {apt.booking_number && (
+                        <span className="ml-2 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
+                          #{apt.booking_number}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-4 text-sm">
                       <div className="text-gray-600 dark:text-gray-400 flex items-center gap-1">
@@ -261,8 +355,121 @@ export default function DashboardPage() {
                         <StatusIcon className="w-3 h-3" />
                         {apt.status}
                       </span>
+                      <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                     </div>
                   </div>
+
+                  {/* Expanded details panel */}
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700"
+                    >
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                        <div>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Full Date</p>
+                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                            {new Date(apt.date).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Time Slot</p>
+                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-red-500" />
+                            {apt.time}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Booking ID</p>
+                          <p className="text-sm font-mono font-bold text-red-600 dark:text-red-400">
+                            {apt.booking_number || 'N/A'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Token Number</p>
+                          {apt.token_number ? (
+                            <p className="text-sm font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                              <Ticket className="w-3.5 h-3.5" />
+                              #{String(apt.token_number).padStart(3, '0')}
+                            </p>
+                          ) : (
+                            <p className="text-sm text-gray-400">Pending approval</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Medical Records */}
+                      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-gray-400" />
+                          Session Records
+                        </h4>
+                        {!apptRecords[apt.id] ? (
+                          <p className="text-sm text-gray-400 italic">Loading records...</p>
+                        ) : apptRecords[apt.id].length === 0 ? (
+                          <div className="text-center py-4 text-gray-400">
+                            <FileText className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                            <p className="text-sm">No medical records for this appointment yet.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {apptRecords[apt.id].map((rec: any) => (
+                              <div key={rec.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs text-gray-500">
+                                    {new Date(rec.record_date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                  </span>
+                                  <span className="text-xs text-gray-400">{rec.doctors?.name}</span>
+                                </div>
+                                <div className="flex gap-4 flex-wrap text-sm">
+                                  {rec.blood_pressure && (
+                                    <span className="flex items-center gap-1 text-gray-700 dark:text-gray-300">
+                                      <Activity className="w-3.5 h-3.5 text-rose-500" />
+                                      BP: <strong>{rec.blood_pressure}</strong>
+                                    </span>
+                                  )}
+                                  {rec.blood_sugar && (
+                                    <span className="flex items-center gap-1 text-gray-700 dark:text-gray-300">
+                                      <Droplets className="w-3.5 h-3.5 text-blue-500" />
+                                      Sugar: <strong>{rec.blood_sugar}</strong>
+                                    </span>
+                                  )}
+                                </div>
+                                {rec.description && (
+                                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{rec.description}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="flex gap-3 flex-wrap mt-4">
+                        {(apt.status === 'pending' || apt.status === 'confirmed') && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleCancelAppointment(apt.id); }}
+                            disabled={cancellingId === apt.id}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-sm font-semibold hover:bg-yellow-200 dark:hover:bg-yellow-900/50 transition-colors border border-yellow-200 dark:border-yellow-800 disabled:opacity-50 cursor-pointer"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            {cancellingId === apt.id ? 'Cancelling...' : 'Cancel Appointment'}
+                          </button>
+                        )}
+                        {apt.status === 'cancelled' && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteAppointment(apt.id); }}
+                            disabled={cancellingId === apt.id}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm font-semibold hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors border border-red-200 dark:border-red-800 disabled:opacity-50 cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            {cancellingId === apt.id ? 'Deleting...' : 'Delete'}
+                          </button>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
                 </GlassCard>
               );
             })

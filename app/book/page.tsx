@@ -87,6 +87,11 @@ function BookContent() {
     const doc = doctors.find((d) => d.id === selectedDoctor);
     if (!doc) return;
 
+    // Generate a booking number: YYYYMMDD + 4 random digits
+    const today = new Date().toISOString().split("T")[0].replace(/-/g, "");
+    const randomSuffix = String(Math.floor(1000 + Math.random() * 9000));
+    const bookingNumber = today + randomSuffix;
+
     const { error: insertError } = await supabase
       .from("appointments")
       .insert([
@@ -98,6 +103,7 @@ function BookContent() {
           date: new Date().toISOString().split("T")[0],
           time: selectedSlot,
           status: "pending",
+          booking_number: bookingNumber,
         },
       ]);
 
