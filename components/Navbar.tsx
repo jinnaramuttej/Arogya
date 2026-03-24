@@ -116,7 +116,7 @@ const Navbar = () => {
               <Activity className="text-white w-6 h-6" />
             </div>
             <span className={`font-heading text-2xl font-extrabold tracking-tight ${navText}`}>
-              Arogya<span className="text-primary">Zenith</span>
+              Arogya
             </span>
           </Link>
 
@@ -310,7 +310,7 @@ const Navbar = () => {
               >
                 <div className="absolute top-8 left-10 right-10 flex items-center justify-between">
                   <span className={`font-heading text-xl font-extrabold tracking-tight ${dropdownText}`}>
-                    Arogya<span className="text-primary">Zenith</span>
+                    Arogya
                   </span>
                   <button
                     onClick={() => setMobileOpen(false)}

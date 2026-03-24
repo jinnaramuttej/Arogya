@@ -12,7 +12,7 @@ const Footer = () => (
             <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
               <Activity className="text-white w-6 h-6" />
             </div>
-            <span className="font-heading text-2xl font-bold tracking-tight">Arogya<span className="text-primary">Zenith</span></span>
+            <span className="font-heading text-2xl font-bold tracking-tight">Arogya</span>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
             Leading the digital healthcare revolution with AI-driven intelligence and decentralized networks.
