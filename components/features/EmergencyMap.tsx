@@ -72,8 +72,7 @@ export default function EmergencyMap() {
   return (
     <div
       ref={mapRef}
-      className="w-full h-[400px] rounded-2xl"
-      style={{ minHeight: 400 }}
+      className="w-full h-[400px] min-h-[400px] rounded-2xl"
     />
   );
 }

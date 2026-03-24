@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Clock, CheckCircle, Star } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import GlassCard from "@/components/ui/GlassCard";
 import { useLanguage } from "@/lib/i18n/context";
 import { t } from "@/lib/i18n/translations";
@@ -45,7 +46,7 @@ const doctors = [
 const container = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
 
-export default function BookPage() {
+function BookContent() {
   const { lang } = useLanguage();
   const { user } = useUser();
   const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
@@ -218,5 +219,13 @@ export default function BookPage() {
         })}
       </motion.div>
     </div>
+  );
+}
+
+export default function BookPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 max-w-7xl mx-auto flex items-center justify-center"><div className="w-10 h-10 border-2 border-accent-lighter border-t-transparent rounded-full animate-spin" /></div>}>
+      <BookContent />
+    </Suspense>
   );
 }

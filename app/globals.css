@@ -1,6 +1,19 @@
 @import "tailwindcss";
 
 @layer base {
+  :root {
+    --color-accent: #007aff;
+    --color-accent-light: #00b4d8;
+    --color-accent-lighter: #90e0ef;
+    --color-danger: #ef4444;
+    --color-danger-light: #f87171;
+    --color-success: #10b981;
+    --color-success-light: #4ade80;
+    --color-warning: #f59e0b;
+    --color-warning-light: #fbbf24;
+    --color-navy-950: #001a29;
+  }
+
   * {
     box-sizing: border-box;
     margin: 0;
@@ -101,4 +114,11 @@
 .leaflet-container {
   background: #001a29 !important;
   border-radius: 1rem;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: rgba(0, 26, 41, 0.92);
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }

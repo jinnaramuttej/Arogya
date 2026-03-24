@@ -31,12 +31,7 @@ export default function RootLayout({
         <LanguageProvider>
           {/* Background gradient overlay */}
           <div
-            className="fixed inset-0 pointer-events-none"
-            style={{
-              zIndex: -2,
-              background:
-                "linear-gradient(135deg, hsla(240, 70%, 50%, 0.3), rgba(0, 0, 0, 0.6))",
-            }}
+            className="fixed inset-0 pointer-events-none -z-[2] bg-[linear-gradient(135deg,hsla(240,70%,50%,0.3),rgba(0,0,0,0.6))]"
             aria-hidden="true"
           />
           <ParticleCanvas />
