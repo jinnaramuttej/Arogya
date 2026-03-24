@@ -89,15 +89,33 @@ export default function AuthPage() {
           }, { onConflict: 'patient_id' });
         }
 
+        // If Supabase returned a session (email confirm disabled), go to dashboard
+        // If no session (email confirm enabled), auto-sign-in immediately
+        if (!data.session) {
+          const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+          if (signInError) {
+            // If auto-sign-in fails, it could be email confirmation is enforced
+            setError("Account created! Please check your email to confirm, then sign in.");
+            setIsLogin(true);
+            setLoading(false);
+            return;
+          }
+        }
+
         router.push("/dashboard");
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "An error occurred";
       // Make common Supabase auth errors more user-friendly
-      if (msg.includes("Invalid login")) {
+      if (msg.includes("Invalid login") || msg.includes("invalid_credentials")) {
         setError("Invalid email or password. Please try again.");
-      } else if (msg.includes("Email not confirmed")) {
-        setError("Please confirm your email before logging in.");
+      } else if (msg.includes("Email not confirmed") || msg.includes("email_not_confirmed")) {
+        setError("Please confirm your email before logging in. Check your inbox.");
+      } else if (msg.includes("User already registered")) {
+        setError("This email is already registered. Please sign in instead.");
+        setIsLogin(true);
+      } else if (msg.includes("422")) {
+        setError("Sign-in failed. Your email may not be confirmed yet — check your inbox.");
       } else {
         setError(msg);
       }
