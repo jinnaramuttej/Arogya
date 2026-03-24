@@ -37,12 +37,34 @@ export default function AuthPage() {
           setLoading(false);
           return;
         }
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { data: { name } },
         });
         if (error) throw error;
+
+        // Sync signup to profiles table for admin visibility
+        if (data.user) {
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            email: email,
+            name: name,
+            role: 'patient',
+            created_at: new Date().toISOString(),
+          }, { onConflict: 'id' });
+
+          // Also create the patient record so they appear in Patient Management
+          // Generate a random 5-digit ID (10000-99999)
+          const randomPatientId = Math.floor(10000 + Math.random() * 90000);
+          await supabase.from('patients').upsert({
+            user_id: data.user.id,
+            patient_id: randomPatientId,
+            name: name,
+            created_at: new Date().toISOString(),
+          }, { onConflict: 'patient_id' });
+        }
+
         router.push("/dashboard");
       }
     } catch (err: unknown) {

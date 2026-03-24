@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { HeartPulse, Home, Stethoscope, CalendarDays, Siren, LayoutDashboard, Menu, X, LogOut } from "lucide-react";
+import { HeartPulse, Home, Stethoscope, CalendarDays, Siren, LayoutDashboard, Menu, X, LogOut, ShieldCheck } from "lucide-react";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useLanguage } from "@/lib/i18n/context";
 import { t } from "@/lib/i18n/translations";
@@ -73,20 +73,37 @@ export default function Navbar() {
             );
           })}
           {user && (
-            <li>
-              <Link
-                href="/dashboard"
-                className={`flex items-center gap-2 text-sm font-medium transition-colors relative pb-1 ${
-                  pathname === "/dashboard" ? "text-white" : "text-white/80 hover:text-white"
-                }`}
-              >
-                <LayoutDashboard className="w-4 h-4 text-accent-lighter" />
-                {t("navDashboard", lang)}
-                {pathname === "/dashboard" && (
-                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-accent-lighter rounded-full" />
-                )}
-              </Link>
-            </li>
+            <>
+              <li>
+                <Link
+                  href="/dashboard"
+                  className={`flex items-center gap-2 text-sm font-medium transition-colors relative pb-1 ${
+                    pathname === "/dashboard" ? "text-white" : "text-white/80 hover:text-white"
+                  }`}
+                >
+                  <LayoutDashboard className="w-4 h-4 text-accent-lighter" />
+                  {t("navDashboard", lang)}
+                  {pathname === "/dashboard" && (
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-accent-lighter rounded-full" />
+                  )}
+                </Link>
+              </li>
+              {(user.email === "admin@arogya.com" || user.app_metadata?.role === "admin") && (
+                <li>
+                  <Link
+                    href="/admin"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex items-center gap-2 text-sm font-medium transition-colors relative pb-1 ${
+                      pathname === "/admin" ? "text-white" : "text-white/80 hover:text-white"
+                    }`}
+                  >
+                    <ShieldCheck className="w-4 h-4 text-accent-lighter" />
+                    Admin
+                  </Link>
+                </li>
+              )}
+            </>
           )}
         </ul>
 
@@ -139,14 +156,32 @@ export default function Navbar() {
           </Link>
         ))}
         {user && (
-          <Link
-            href="/dashboard"
-            onClick={() => setMobileOpen(false)}
-            className="flex items-center gap-3 text-xl font-medium text-white/80 no-underline"
-          >
-            <LayoutDashboard className="w-5 h-5 text-accent-lighter" />
-            {t("navDashboard", lang)}
-          </Link>
+          <>
+            <Link
+              href="/dashboard"
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center gap-3 text-xl font-medium no-underline ${
+                pathname === "/dashboard" ? "text-white" : "text-white/80"
+              }`}
+            >
+              <LayoutDashboard className="w-5 h-5 text-accent-lighter" />
+              {t("navDashboard", lang)}
+            </Link>
+            {(user.email === "admin@arogya.com" || user.app_metadata?.role === "admin") && (
+              <Link
+                href="/admin"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3 text-xl font-medium no-underline ${
+                  pathname === "/admin" ? "text-white" : "text-white/80"
+                }`}
+              >
+                <ShieldCheck className="w-5 h-5 text-accent-lighter" />
+                Admin
+              </Link>
+            )}
+          </>
         )}
         {user ? (
           <button

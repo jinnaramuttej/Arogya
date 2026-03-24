@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import ParticleCanvas from "@/components/features/ParticleCanvas";
 import SOSButton from "@/components/ui/SOSButton";
 import { LanguageProvider } from "@/lib/i18n/context";
+import ConditionalLayout from "@/components/layout/ConditionalLayout";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -40,9 +39,7 @@ export default function RootLayout({
             aria-hidden="true"
           />
           <ParticleCanvas />
-          <Navbar />
-          <main className="pt-24 min-h-screen">{children}</main>
-          <Footer />
+          <ConditionalLayout>{children}</ConditionalLayout>
           <SOSButton />
         </LanguageProvider>
       </body>
