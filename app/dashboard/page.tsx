@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { CalendarDays, FileText, Clock, CheckCircle, XCircle, Plus } from "lucide-react";
@@ -47,31 +47,29 @@ export default function DashboardPage() {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  import("react").then((React) => {
-    React.useEffect(() => {
-      async function fetchAppointments() {
-        if (!user) {
-          setIsLoadingData(false);
-          return;
-        }
-        setIsLoadingData(true);
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from("appointments")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("date", { ascending: false });
-
-        if (error) {
-          setError(error.message);
-        } else {
-          setAppointments(data || []);
-        }
+  useEffect(() => {
+    async function fetchAppointments() {
+      if (!user) {
         setIsLoadingData(false);
+        return;
       }
-      fetchAppointments();
-    }, [user]);
-  });
+      setIsLoadingData(true);
+      const supabase = createClient();
+      const { data, error: fetchError } = await supabase
+        .from("appointments")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("date", { ascending: false });
+
+      if (fetchError) {
+        setError(fetchError.message);
+      } else {
+        setAppointments(data || []);
+      }
+      setIsLoadingData(false);
+    }
+    fetchAppointments();
+  }, [user]);
 
   if (loading) {
     return (
