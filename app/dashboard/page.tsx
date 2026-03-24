@@ -71,6 +71,7 @@ const PatientDashboard = () => {
   const { user } = useUser();
   const supabase = createClient();
   const [liveMedications, setLiveMedications] = useState<any[]>([]);
+  const [profile, setProfile] = useState<any>(null);
   const [loadingMeds, setLoadingMeds] = useState(true);
 
   const userName = useMemo(() => {
@@ -96,6 +97,10 @@ const PatientDashboard = () => {
         .order('ordered_at', { ascending: false });
         
       if (data) setLiveMedications(data);
+
+      const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      if (profileData) setProfile(profileData);
+
       setLoadingMeds(false);
     };
     fetchMeds();
@@ -116,9 +121,19 @@ const PatientDashboard = () => {
                 {t("home_ai_title") || "Welcome back,"} <span className="gradient-text">{userName}</span>
               </h1>
               <div className="mt-3 text-sm text-muted-foreground space-y-1">
-                <p>Age 42 • Male • MRN: AZ-239418</p>
-                <p>Primary conditions: Type 2 Diabetes, Mild Hypertension</p>
-                <p>Allergies: Penicillin • Latex</p>
+                {profile ? (
+                  <>
+                    <p>Age {profile.age || "--"} • {profile.gender || "Not specified"} • MRN: AZ-{user?.id?.substring(0,8).toUpperCase()}</p>
+                    <p>Primary conditions: {profile.conditions || "None recorded"}</p>
+                    <p>Allergies: {profile.allergies || "None recorded"}</p>
+                    <p>Blood Group: <span className="font-semibold text-primary">{profile.blood_group || "Unknown"}</span></p>
+                  </>
+                ) : (
+                  <>
+                    <p>Pending profile completion • MRN: AZ-{user?.id?.substring(0,8).toUpperCase() || "NEW"}</p>
+                    <p>Please update your medical profile securely underneath <a href="/dashboard/settings" className="text-primary hover:underline">Settings</a>.</p>
+                  </>
+                )}
               </div>
             </div>
           <div className="rounded-3xl border border-border/60 bg-card/80 p-6 shadow-lg shadow-primary/5">

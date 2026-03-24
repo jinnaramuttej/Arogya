@@ -2,34 +2,33 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { PlusCircle, Trash2, HeartHandshake, AlertCircle, CheckCircle2, Loader2, Droplets, Phone, MapPin } from 'lucide-react';
+import { PlusCircle, Trash2, Droplet, AlertCircle, CheckCircle2, Loader2, MapPin } from 'lucide-react';
 
 interface Donor {
   id: string;
   name: string;
   blood_group: string;
-  phone: string;
   location: string;
+  distance_km: number;
+  last_donation: string;
+  status: string;
+  phone: string;
 }
 
-interface Notification {
-  type: 'success' | 'error';
-  message: string;
-}
-
-const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 const ManageDonorsPage = () => {
   const [donors, setDonors] = useState<Donor[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notification, setNotification] = useState<Notification | null>(null);
+  const [notification, setNotification] = useState<{type: 'success' | 'error', message: string} | null>(null);
 
   const [newName, setNewName] = useState('');
-  const [newBloodGroup, setNewBloodGroup] = useState('');
-  const [newPhone, setNewPhone] = useState('');
+  const [newGroup, setNewGroup] = useState('O+');
   const [newLocation, setNewLocation] = useState('');
+  const [newDistance, setNewDistance] = useState('5.0');
+  const [newPhone, setNewPhone] = useState('Hidden');
 
   const supabase = createClient();
 
@@ -41,11 +40,7 @@ const ManageDonorsPage = () => {
   useEffect(() => {
     const fetchDonors = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('donors')
-        .select('id, name, blood_group, phone, location')
-        .order('name', { ascending: true });
-
+      const { data, error } = await supabase.from('blood_donors').select('*');
       if (error) {
         setError(error.message);
       } else {
@@ -54,65 +49,61 @@ const ManageDonorsPage = () => {
       setLoading(false);
     };
     fetchDonors();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [supabase]);
 
   const handleAddDonor = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName || !newBloodGroup || !newPhone || !newLocation) {
-      showNotification('error', 'Please fill out all fields for the new donor.');
+    if (!newName || !newLocation || !newDistance) {
+      showNotification('error', 'Please fill out all required fields.');
       return;
     }
 
     setSubmitting(true);
     const { data, error } = await supabase
-      .from('donors')
-      .insert([{ name: newName, blood_group: newBloodGroup, phone: newPhone, location: newLocation }])
+      .from('blood_donors')
+      .insert([{ 
+        name: newName, 
+        blood_group: newGroup, 
+        location: newLocation, 
+        distance_km: parseFloat(newDistance), 
+        last_donation: new Date().toISOString().split('T')[0],
+        status: 'Available',
+        phone: newPhone
+      }])
       .select();
 
     if (error) {
       showNotification('error', 'Error adding donor: ' + error.message);
     } else if (data) {
-      setDonors([...donors, ...data as Donor[]]);
-      showNotification('success', `${newName} added as a donor successfully.`);
+      setDonors([data[0] as Donor, ...donors]);
+      showNotification('success', `${newName} added successfully.`);
       setNewName('');
-      setNewBloodGroup('');
-      setNewPhone('');
       setNewLocation('');
+      setNewDistance('5.0');
+      setNewPhone('Hidden');
     }
     setSubmitting(false);
   };
 
-  const handleDeleteDonor = async (id: string, name: string) => {
-    if (!confirm('Are you sure you want to remove this donor?')) return;
-
-    const { error } = await supabase.from('donors').delete().eq('id', id);
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm('Are you sure you want to remove this donor from the network?')) return;
+    
+    const { error } = await supabase.from('blood_donors').delete().eq('id', id);
     if (error) {
-      showNotification('error', 'Error removing donor: ' + error.message);
+      showNotification('error', 'Error deleting donor: ' + error.message);
     } else {
       setDonors(donors.filter(d => d.id !== id));
-      showNotification('success', `${name} removed successfully.`);
+      showNotification('success', `${name} removed securely.`);
     }
-  };
-
-  const bloodGroupColor = (bg: string) => {
-    const colors: Record<string, string> = {
-      'A+': 'bg-red-100 text-red-700', 'A-': 'bg-red-50 text-red-600',
-      'B+': 'bg-blue-100 text-blue-700', 'B-': 'bg-blue-50 text-blue-600',
-      'AB+': 'bg-purple-100 text-purple-700', 'AB-': 'bg-purple-50 text-purple-600',
-      'O+': 'bg-emerald-100 text-emerald-700', 'O-': 'bg-emerald-50 text-emerald-600',
-    };
-    return colors[bg] || 'bg-gray-100 text-gray-700';
   };
 
   return (
     <div>
       <h1 className="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-        <HeartHandshake className="w-8 h-8 text-rose-500" />
-        Donor Management
+        <Droplet className="w-8 h-8 text-rose-500" />
+        Blood Donor Network Management
       </h1>
 
-      {/* Inline Notification */}
       {notification && (
         <div className={`flex items-center gap-3 p-4 rounded-lg mb-6 transition-all ${
           notification.type === 'success'
@@ -127,118 +118,94 @@ const ManageDonorsPage = () => {
         </div>
       )}
 
-      {/* Add Donor Form */}
+      {/* Add Form */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <h2 className="text-xl font-bold text-gray-700 mb-4 flex items-center">
-          <PlusCircle className="w-6 h-6 mr-2 text-blue-500" />
+          <PlusCircle className="w-6 h-6 mr-2 text-rose-500" />
           Register New Donor
         </h2>
         <form onSubmit={handleAddDonor} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <input
               type="text"
-              placeholder="Full Name"
+              placeholder="Donor Name"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              className="p-3 border-2 border-gray-300 rounded-md w-full bg-gray-50 focus:ring-2 focus:ring-blue-300 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder-gray-400"
+              className="p-3 border-2 border-gray-300 rounded-md w-full bg-gray-50 focus:ring-2 focus:ring-rose-300 focus:border-rose-500"
             />
             <select
-              value={newBloodGroup}
-              onChange={(e) => setNewBloodGroup(e.target.value)}
-              className="p-3 border-2 border-gray-300 rounded-md w-full bg-gray-50 focus:ring-2 focus:ring-blue-300 focus:border-blue-500 focus:bg-white outline-none transition-all text-gray-700"
+              value={newGroup}
+              onChange={(e) => setNewGroup(e.target.value)}
+              className="p-3 border-2 border-gray-300 rounded-md w-full bg-gray-50 focus:ring-2 focus:ring-rose-300 focus:border-rose-500"
             >
-              <option value="">Select Blood Group</option>
-              {BLOOD_GROUPS.map(bg => (
-                <option key={bg} value={bg}>{bg}</option>
-              ))}
+              {BLOOD_GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
             </select>
             <input
-              type="tel"
-              placeholder="Phone Number"
-              value={newPhone}
-              onChange={(e) => setNewPhone(e.target.value)}
-              className="p-3 border-2 border-gray-300 rounded-md w-full bg-gray-50 focus:ring-2 focus:ring-blue-300 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder-gray-400"
+              type="text"
+              placeholder="City / Region"
+              value={newLocation}
+              onChange={(e) => setNewLocation(e.target.value)}
+              className="p-3 border-2 border-gray-300 rounded-md w-full bg-gray-50 focus:ring-2 focus:ring-rose-300 focus:border-rose-500"
+            />
+            <input
+              type="number"
+              step="0.1"
+              placeholder="Radius Distance (km)"
+              value={newDistance}
+              onChange={(e) => setNewDistance(e.target.value)}
+              className="p-3 border-2 border-gray-300 rounded-md w-full bg-gray-50 focus:ring-2 focus:ring-rose-300 focus:border-rose-500"
             />
             <input
               type="text"
-              placeholder="Location"
-              value={newLocation}
-              onChange={(e) => setNewLocation(e.target.value)}
-              className="p-3 border-2 border-gray-300 rounded-md w-full bg-gray-50 focus:ring-2 focus:ring-blue-300 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder-gray-400"
+              placeholder="Phone (e.g. Hidden or +91...)"
+              value={newPhone}
+              onChange={(e) => setNewPhone(e.target.value)}
+              className="p-3 border-2 border-gray-300 rounded-md w-full bg-gray-50 focus:ring-2 focus:ring-rose-300 focus:border-rose-500 lg:col-span-2"
             />
           </div>
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-rose-500 text-white py-2.5 px-4 rounded-md hover:bg-rose-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-rose-500 text-white py-2.5 px-4 rounded-md hover:bg-rose-600 transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
           >
-            {submitting ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Registering...</>
-            ) : (
-              'Register Donor'
-            )}
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add to Network'}
           </button>
         </form>
       </div>
 
-      {/* Donor List */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-700">Registered Donors</h2>
-        </div>
-
-        {loading && (
-          <div className="flex items-center justify-center py-16 text-gray-500 gap-2">
+      {/* Grid */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h2 className="text-xl font-bold text-gray-700 mb-4">Master Donor Directory</h2>
+        {loading ? (
+          <div className="flex items-center justify-center py-10 text-gray-500 gap-2">
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span>Loading donors...</span>
+            <span>Syncing records...</span>
           </div>
-        )}
-
-        {error && (
-          <div className="flex items-center gap-2 p-6 bg-red-50 text-red-700">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <span>Error: {error}</span>
+        ) : error ? (
+          <div className="p-4 rounded-lg bg-red-50 text-red-700 flex gap-2"><AlertCircle/>{error}</div>
+        ) : donors.length === 0 ? (
+          <div className="text-center py-10 text-gray-400">
+            <Droplet className="w-12 h-12 mx-auto mb-3 opacity-50 text-rose-400" />
+            <p className="font-medium">No donors found in database</p>
           </div>
-        )}
-
-        {!loading && !error && donors.length === 0 && (
-          <div className="text-center py-16 text-gray-400">
-            <HeartHandshake className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p className="font-medium">No donors registered yet</p>
-            <p className="text-sm">Register a new donor using the form above.</p>
-          </div>
-        )}
-
-        {!loading && !error && donors.length > 0 && (
-          <div className="divide-y divide-gray-100">
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {donors.map(donor => (
-              <div key={donor.id} className="flex justify-between items-center px-6 py-4 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center flex-shrink-0">
-                    <HeartHandshake className="w-5 h-5 text-rose-600" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-gray-800">{donor.name}</p>
-                    <div className="flex items-center gap-3 text-sm text-gray-500 mt-0.5">
-                      <span className="flex items-center gap-1">
-                        <Phone className="w-3 h-3" />
-                        {donor.phone}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {donor.location}
-                      </span>
-                    </div>
-                  </div>
+              <div key={donor.id} className="flex gap-4 p-4 border border-rose-100 rounded-xl bg-rose-50/50 hover:bg-rose-50 transition-colors">
+                <div className="w-14 h-14 rounded-full bg-rose-100 border border-rose-200 flex items-center justify-center text-rose-600 font-bold text-lg flex-shrink-0">
+                  {donor.blood_group}
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 ${bloodGroupColor(donor.blood_group)}`}>
-                    <Droplets className="w-3.5 h-3.5" />
-                    {donor.blood_group}
-                  </span>
-                  <button onClick={() => handleDeleteDonor(donor.id, donor.name)} className="text-red-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-all" title="Remove donor">
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                <div className="flex-grow">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-bold text-gray-800">{donor.name}</h3>
+                    <button onClick={() => handleDelete(donor.id, donor.name)} className="text-red-400 hover:text-red-600 p-1">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className="text-xs font-semibold uppercase text-rose-500 mt-1">{donor.status}</p>
+                  <p className="text-xs flex items-center gap-1 text-gray-500 mt-1 truncate">
+                    <MapPin className="w-3 h-3"/> {donor.location} • {donor.distance_km} km
+                  </p>
                 </div>
               </div>
             ))}

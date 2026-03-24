@@ -13,6 +13,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
+  const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
   const { count } = useCart();
   const { user, loading: userLoading } = useUser();
@@ -36,11 +37,15 @@ const Navbar = () => {
       if (user) {
         setLoggedIn(true);
         const name = user.user_metadata?.full_name || user.user_metadata?.name;
-        if (name) {
-          setUserName(name);
-        } else {
-          setUserName(localStorage.getItem("az_user_name"));
-        }
+        if (name) setUserName(name);
+        else setUserName(localStorage.getItem("az_user_name"));
+
+        const fetchAvatar = async () => {
+          const supabase = createClient();
+          const { data } = await supabase.from('profiles').select('avatar_url').eq('id', user.id).single();
+          if (data?.avatar_url) setUserAvatarUrl(data.avatar_url);
+        };
+        fetchAvatar();
       } else {
         setLoggedIn(false);
         setUserName(null);
@@ -140,10 +145,12 @@ const Navbar = () => {
               </button>
               
               <div className={`absolute top-full -left-4 mt-3 w-60 border rounded-3xl shadow-2xl p-3 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 z-[100] ${dropdownBg} before:content-[''] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3`}>
-                {[
-                  { name: t("nav_store") || "Pharmacy", path: "/store", desc: "Medicines and health devices" },
-                  { name: "Profile", path: "/profile", desc: "Patient details and logout" }
-                ].map((item) => (
+                {(
+                  [
+                    { name: t("nav_store") || "Pharmacy", path: "/prescription", desc: "Medicines and health devices" },
+                    loggedIn ? { name: "Profile", path: "/dashboard/settings", desc: "Patient details and logout" } : null
+                  ].filter(Boolean) as {name: string, path: string, desc: string}[]
+                ).map((item) => (
                   <Link
                     key={item.path}
                     href={item.path}
@@ -238,9 +245,18 @@ const Navbar = () => {
 
           {firstName ? (
             <div className="hidden lg:flex items-center gap-4">
-              <span className={`text-sm font-semibold ${navText}`}>
-                Hi, {firstName}
-              </span>
+              <Link href="/dashboard/settings" className="flex items-center gap-2 group cursor-pointer transition-all">
+                {userAvatarUrl ? (
+                  <img src={userAvatarUrl} alt="Profile" className="w-8 h-8 rounded-full border-2 border-primary object-cover group-hover:scale-105 transition-transform" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold border border-primary/30 group-hover:bg-primary/30 transition-colors">
+                    {firstName[0]}
+                  </div>
+                )}
+                <span className={`text-sm font-semibold group-hover:text-primary transition-colors ${navText}`}>
+                  Hi, {firstName}
+                </span>
+              </Link>
               <button 
                 onClick={async () => {
                    const supabase = createClient();

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/lib/context/LanguageContext";
 import {
@@ -34,79 +35,7 @@ type Donor = {
   phone: string;
 };
 
-const DONORS: Donor[] = [
-  {
-    id: "d-1",
-    name: "Ananya Rao",
-    group: "O+",
-    location: "Indiranagar, Bengaluru",
-    distanceKm: 2.1,
-    lastDonation: "2025-12-18",
-    status: "Available",
-    phone: "+91 98765 43210"
-  },
-  {
-    id: "d-2",
-    name: "Karthik Mehta",
-    group: "A-",
-    location: "Koramangala, Bengaluru",
-    distanceKm: 3.6,
-    lastDonation: "2026-02-02",
-    status: "Recently Donated",
-    phone: "+91 99887 11223"
-  },
-  {
-    id: "d-3",
-    name: "Priya Menon",
-    group: "B+",
-    location: "HSR Layout, Bengaluru",
-    distanceKm: 1.4,
-    lastDonation: "2025-10-01",
-    status: "Available",
-    phone: "+91 99001 22445"
-  },
-  {
-    id: "d-4",
-    name: "Rohit Singh",
-    group: "O-",
-    location: "Whitefield, Bengaluru",
-    distanceKm: 6.8,
-    lastDonation: "2026-01-10",
-    status: "Unavailable",
-    phone: "+91 90123 45789"
-  },
-  {
-    id: "d-5",
-    name: "Neha Kapoor",
-    group: "AB+",
-    location: "Jayanagar, Bengaluru",
-    distanceKm: 4.2,
-    lastDonation: "2025-11-12",
-    status: "Available",
-    phone: "+91 97654 31987"
-  },
-  { id: "d-6", name: "Sanya Malhotra", group: "B+", location: "Lucknow", distanceKm: 5.2, lastDonation: "2025-11-20", status: "Available", phone: "Hidden" },
-  { id: "d-7", name: "Kabir Joshi", group: "O+", location: "Jaipur", distanceKm: 8.4, lastDonation: "2025-12-05", status: "Available", phone: "Hidden" },
-  { id: "d-8", name: "Meera Iyer", group: "AB-", location: "Ahmedabad", distanceKm: 12.1, lastDonation: "2026-01-15", status: "Available", phone: "Hidden" },
-  { id: "d-9", name: "Aditya Reddy", group: "B+", location: "Kolkata", distanceKm: 15.6, lastDonation: "2025-10-10", status: "Available", phone: "Hidden" },
-  { id: "d-10", name: "Ishita Verma", group: "A-", location: "Pune", distanceKm: 4.8, lastDonation: "2026-02-20", status: "Available", phone: "Hidden" },
-  { id: "d-11", name: "Rohan Kumar", group: "O-", location: "Chennai", distanceKm: 22.3, lastDonation: "2025-09-05", status: "Available", phone: "Hidden" },
-  { id: "d-12", name: "Ananya Gupta", group: "AB+", location: "Hyderabad", distanceKm: 3.2, lastDonation: "2026-03-01", status: "Available", phone: "Hidden" },
-  { id: "d-13", name: "Vihaan Singh", group: "B-", location: "Bangalore", distanceKm: 1.1, lastDonation: "2025-12-25", status: "Available", phone: "Hidden" },
-  { id: "d-14", name: "Diya Sharma", group: "A+", location: "Delhi", distanceKm: 18.2, lastDonation: "2026-01-30", status: "Available", phone: "Hidden" },
-  { id: "d-15", name: "Aarav Patel", group: "O+", location: "Mumbai", distanceKm: 25.5, lastDonation: "2025-11-15", status: "Available", phone: "Hidden" },
-  { id: "d-16", name: "Sreaya Gupta", group: "B+", location: "Bangalore", distanceKm: 0.8, lastDonation: "2026-02-14", status: "Available", phone: "Hidden" },
-  { id: "d-17", name: "Varshini Reddy", group: "O+", location: "Hyderabad", distanceKm: 2.5, lastDonation: "2026-01-05", status: "Available", phone: "Hidden" },
-  { id: "d-18", name: "varshini", group: "O+", location: "hyderabad", distanceKm: 4.1, lastDonation: "2025-12-12", status: "Available", phone: "Hidden" },
-  { id: "d-19", name: "sravya", group: "A+", location: "warangal", distanceKm: 145, lastDonation: "2026-01-20", status: "Available", phone: "Hidden" },
-  { id: "d-20", name: "Sai yashvanth reddy", group: "O+", location: "mahabubnagar", distanceKm: 95, lastDonation: "2025-11-30", status: "Available", phone: "Hidden" },
-  { id: "d-21", name: "KOMAL .V", group: "A+", location: "dubai", distanceKm: 2500, lastDonation: "2026-03-10", status: "Available", phone: "Hidden" },
-  { id: "d-22", name: "Saketh", group: "A+", location: "hanamkonda", distanceKm: 142, lastDonation: "2026-02-05", status: "Available", phone: "Hidden" },
-  { id: "d-23", name: "Asish Chowdary", group: "O+", location: "rajamundry", distanceKm: 450, lastDonation: "2026-01-15", status: "Available", phone: "Hidden" },
-  { id: "d-24", name: "Venkata Reddy", group: "A+", location: "guntur", distanceKm: 270, lastDonation: "2026-03-05", status: "Available", phone: "Hidden" },
-  { id: "d-25", name: "Asish chowdary", group: "A+", location: "rajamundry", distanceKm: 451, lastDonation: "2025-10-10", status: "Available", phone: "Hidden" },
-  { id: "d-26", name: "varshini", group: "B+", location: "hyderabad", distanceKm: 3.9, lastDonation: "2026-02-28", status: "Available", phone: "Hidden" }
-];
+// Dynamic Donors State Loaded via Supabase
 
 const REQUESTS_SEED = [
   {
@@ -143,6 +72,10 @@ const daysSince = (dateStr: string) => {
 
 const BloodDonorNetwork = () => {
   const { t } = useLanguage();
+  const [donors, setDonors] = useState<Donor[]>([]);
+  const [loadingDonors, setLoadingDonors] = useState(true);
+
+  // Filters
   const [searchGroup, setSearchGroup] = useState("");
   const [searchLocation, setSearchLocation] = useState("");
   const [radius, setRadius] = useState(10);
@@ -162,6 +95,28 @@ const BloodDonorNetwork = () => {
 
   const [dashboardStatus, setDashboardStatus] = useState<DonorStatus>("Available");
   const [selectedDonor, setSelectedDonor] = useState<Donor | null>(null);
+
+  useEffect(() => {
+    const fetchDonors = async () => {
+      setLoadingDonors(true);
+      const supabase = createClient();
+      const { data } = await supabase.from('blood_donors').select('*');
+      if (data) {
+        setDonors(data.map((d: any) => ({
+          id: d.id,
+          name: d.name,
+          group: d.blood_group,
+          location: d.location,
+          distanceKm: parseFloat(d.distance_km),
+          lastDonation: d.last_donation,
+          status: d.status,
+          phone: d.phone
+        })));
+      }
+      setLoadingDonors(false);
+    };
+    fetchDonors();
+  }, []);
 
   const DonorChatModal = ({ donor, onClose }: { donor: Donor; onClose: () => void }) => {
     return (
@@ -238,7 +193,7 @@ const BloodDonorNetwork = () => {
   };
 
   const filteredDonors = useMemo(() => {
-    return DONORS.filter((donor) => {
+    return donors.filter((donor) => {
       if (searchGroup && donor.group !== searchGroup) return false;
       if (availability !== "Any" && donor.status !== availability) return false;
       if (searchLocation && !donor.location.toLowerCase().includes(searchLocation.toLowerCase())) return false;
@@ -250,7 +205,7 @@ const BloodDonorNetwork = () => {
         d.status === "Available" ? 0 : d.status === "Recently Donated" ? 1 : 2;
       return priority(a) - priority(b) || a.distanceKm - b.distanceKm;
     });
-  }, [availability, minDays, radius, searchGroup, searchLocation]);
+  }, [donors, availability, minDays, radius, searchGroup, searchLocation]);
 
   const aiMatches = filteredDonors.slice(0, 3);
 
@@ -515,7 +470,16 @@ const BloodDonorNetwork = () => {
           </div>
 
           <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredDonors.map((donor) => (
+            {loadingDonors ? (
+              <div className="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-20">
+                <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto"></div>
+                <p className="mt-4 text-muted-foreground">Loading donor network...</p>
+              </div>
+            ) : filteredDonors.length === 0 ? (
+              <div className="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-10">
+                <p className="text-muted-foreground">No donors matched those filters.</p>
+              </div>
+            ) : filteredDonors.map((donor) => (
               <motion.div
                 key={donor.id}
                 initial={{ opacity: 0, y: 14 }}

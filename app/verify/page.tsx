@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Webcam from "react-webcam";
 import { createClient } from "@/lib/supabase/client";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 import { useUser } from "@/lib/hooks/useUser";
 import { Camera, CheckCircle2, User, Mail, ShieldAlert, Loader2 } from "lucide-react";
 
@@ -32,20 +33,25 @@ function VerifyContent() {
   const [name, setName] = useState("");
 
   useEffect(() => {
+    const queryEmail = searchParams.get("email");
+    const queryName = searchParams.get("name");
+
     if (user?.email) {
       setEmail(user.email);
       const fetchProfile = async () => {
         const supabase = createClient();
         const { data } = await supabase.from("profiles").select("name, face_descriptor").eq("id", user.id).single();
         if (data?.name) setName(data.name);
-        // Block register mode if face already exists
         if (mode === "register" && data?.face_descriptor) {
           setFaceAlreadyRegistered(true);
         }
       };
       fetchProfile();
+    } else if (queryEmail) {
+      setEmail(queryEmail);
+      if (queryName) setName(queryName);
     }
-  }, [user, mode]);
+  }, [user, mode, searchParams]);
 
   // Store faceapi instance
   const [faceapi, setFaceapi] = useState<any>(null);
@@ -178,7 +184,7 @@ function VerifyContent() {
       return;
     }
 
-    if ((mode === "login" || mode === "2fa") && !email) {
+    if (mode === "2fa" && !email) {
       alert("Please enter the email associated with your account.");
       return;
     }
@@ -285,7 +291,19 @@ function VerifyContent() {
       if (descriptor) {
         updateData.face_descriptor = Array.from(descriptor);
       }
-      if (base64Avatar) updateData.avatar_base64 = base64Avatar;
+      
+      // Execute Cloudinary Upload Pipeline
+      if (base64Avatar) {
+        try {
+          setStatusMsg("Uploading avatar to Cloudinary...");
+          const cdnUrl = await uploadToCloudinary(base64Avatar);
+          updateData.avatar_url = cdnUrl;
+        } catch (uploadError) {
+          console.error("Cloudinary Failed:", uploadError);
+          // Fallback if cloud name is strictly missing/banned
+          updateData.avatar_url = base64Avatar; 
+        }
+      }
 
       // Update the user's profile with face data
       if (Object.keys(updateData).length > 0) {
@@ -310,48 +328,73 @@ function VerifyContent() {
 
   // --- LOGIN LOGIC ---
   const processLogin = async (currentDescriptor?: Float32Array) => {
-    setStatusMsg("Verifying identity...");
+    setStatusMsg("Verifying biometric map against global registry...");
     try {
       const supabase = createClient();
-      
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("id, face_descriptor, face_verification_disabled")
-        .eq("email", email)
-        .single();
+      let matchedEmail = email;
+      let matchedProfile = null;
+      const isSkipParam = searchParams.get('skip') === 'true' || (typeof window !== 'undefined' && window.location.href.includes('=skip'));
 
-      if (error) {
-        throw new Error("No biometric profile found for this email. Please register first.");
+      if (email) {
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("id, face_descriptor, face_verification_disabled, email")
+          .eq("email", email)
+          .single();
+        if (error) throw new Error("No biometric profile found for this email. Please register first.");
+        matchedProfile = profile;
+      } else {
+        if (!currentDescriptor) throw new Error("Face scan missing but required for global login.");
+        const { data: profiles, error } = await supabase
+          .from("profiles")
+          .select("id, face_descriptor, face_verification_disabled, email")
+          .not("face_descriptor", "is", null);
+          
+        if (error || !profiles) throw new Error("Failed to fetch database mapping profiles.");
+        
+        for (const p of profiles) {
+          if (p.face_descriptor) {
+            const registeredDescriptor = new Float32Array(p.face_descriptor);
+            const distance = faceapi.euclideanDistance(registeredDescriptor, currentDescriptor);
+            if (distance < 0.45) {
+              matchedProfile = p;
+              matchedEmail = p.email;
+              break;
+            }
+          }
+        }
+        
+        if (!matchedProfile) {
+          throw new Error("Face not recognized in our database. Please try again or use standard email credentials.");
+        }
       }
 
-      const isSkipParam = searchParams.get('skip') === 'true' || (typeof window !== 'undefined' && window.location.href.includes('=skip'));
-      const isBypass = isSkipParam || profile.face_verification_disabled;
+      const isBypass = isSkipParam || matchedProfile.face_verification_disabled;
 
       if (!isBypass) {
-        if (!profile?.face_descriptor) {
-          throw new Error("No biometric profile found for this email. Please register first.");
+        if (!matchedProfile?.face_descriptor) {
+          throw new Error("No biometric profile found for this account. Please register your face first.");
         }
         if (!currentDescriptor) {
           throw new Error("Face scan missing but required.");
         }
-        const registeredDescriptor = new Float32Array(profile.face_descriptor);
-        const distance = faceapi.euclideanDistance(registeredDescriptor, currentDescriptor);
         
-        // Strict threshold of 0.45 for ~90-95% accuracy as requested
-        if (distance > 0.45) {
-          throw new Error(`Facial verification failed (accuracy too low). Please try again.`);
+        if (email) {
+          const registeredDescriptor = new Float32Array(matchedProfile.face_descriptor);
+          const distance = faceapi.euclideanDistance(registeredDescriptor, currentDescriptor);
+          if (distance > 0.45) {
+            throw new Error(`Facial verification failed. Please try again.`);
+          }
         }
       }
 
       if (mode !== "2fa") {
         const { error: loginError } = await supabase.auth.signInWithPassword({
-          email,
+          email: matchedEmail,
           password: BIOMETRIC_DUMMY_PASSWORD
         });
 
-        if (loginError) {
-          throw new Error("Supabase auth failed. You may not have registered via the biometric portal.");
-        }
+        if (loginError) throw new Error("Supabase auth failed. You may not have registered via the biometric portal.");
       }
 
       sessionStorage.removeItem('needs_2fa');

@@ -1,177 +1,260 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { User, Mail, Camera, Save, Loader2, Link as LinkIcon } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { useUser } from "@/lib/hooks/useUser";
-import { t } from "@/lib/i18n/translations";
-import { useLanguage } from "@/lib/i18n/context";
-import Link from "next/link";
-import GlassCard from "@/components/ui/GlassCard";
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { useUser } from '@/lib/hooks/useUser';
+import { User, Activity, AlertCircle, CheckCircle2, Loader2, Save, LogOut, Camera } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-export default function DashboardSettings() {
-  const { lang } = useLanguage();
+export default function ProfileSettingsPage() {
   const { user, loading: userLoading } = useUser();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [hasFaceId, setHasFaceId] = useState(false);
+  const router = useRouter();
+  const supabase = createClient();
+
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [statusMsg, setStatusMsg] = useState("");
+  const [hasFaceRegistered, setHasFaceRegistered] = useState(false);
+  const [notification, setNotification] = useState<{type: 'success'|'error', msg: string}|null>(null);
+
+  const [formData, setFormData] = useState({
+    name: '',
+    age: '',
+    gender: 'Prefer not to say',
+    blood_group: 'Unknown',
+    conditions: '',
+    allergies: ''
+  });
+
+  const showNotification = (type: 'success'|'error', msg: string) => {
+    setNotification({ type, msg });
+    setTimeout(() => setNotification(null), 4000);
+  };
 
   useEffect(() => {
-    if (user) {
-      setEmail(user.email || "");
-      // Fetch profile data
-      const fetchProfile = async () => {
-        const supabase = createClient();
-        const { data } = await supabase
-          .from("profiles")
-          .select("name, face_descriptor")
-          .eq("id", user.id)
-          .single();
-
-        if (data) {
-          setName(data.name || "");
-          setHasFaceId(!!data.face_descriptor);
-        }
-      };
-      fetchProfile();
+    if (!userLoading && !user) {
+      router.push('/auth');
+      return;
     }
-  }, [user]);
 
-  const handleSave = async (e: React.FormEvent) => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      
+      if (data) {
+        setFormData({
+          name: data.name || user.user_metadata?.full_name || '',
+          age: data.age?.toString() || '',
+          gender: data.gender || 'Prefer not to say',
+          blood_group: data.blood_group || 'Unknown',
+          conditions: data.conditions || '',
+          allergies: data.allergies || ''
+        });
+        if (data.face_descriptor) {
+          setHasFaceRegistered(true);
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchProfile();
+  }, [user, userLoading, supabase, router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     setSaving(true);
-    setStatusMsg("");
 
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("profiles")
-      .update({ name })
-      .eq("id", user.id);
+    const payload = {
+      id: user.id,
+      name: formData.name,
+      age: formData.age ? parseInt(formData.age) : null,
+      gender: formData.gender,
+      blood_group: formData.blood_group,
+      conditions: formData.conditions,
+      allergies: formData.allergies
+    };
 
-    setSaving(false);
+    const { error } = await supabase.from('profiles').upsert(payload, { onConflict: 'id' });
+
     if (error) {
-      setStatusMsg("Error updating profile: " + error.message);
+      showNotification('error', error.message);
     } else {
-      setStatusMsg("Profile updated successfully!");
-      setTimeout(() => setStatusMsg(""), 3000);
+      showNotification('success', 'Profile settings secured successfully.');
     }
+    setSaving(false);
   };
 
-  if (userLoading) {
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
+  };
+
+  if (loading || userLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="w-10 h-10 animate-spin text-emerald-500" />
+      <div className="min-h-screen pt-32 pb-24 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="px-4 py-8 max-w-4xl mx-auto space-y-8">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Account Settings</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">Manage your personal information and security preferences.</p>
-      </motion.div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div className="min-h-screen bg-background text-foreground pt-32 pb-24">
+      <div className="container mx-auto px-6 max-w-3xl">
         
-        {/* Left Column - Profile Form */}
-        <div className="md:col-span-2 space-y-6">
-          <GlassCard noHover>
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-6">Personal Details</h2>
-            <form onSubmit={handleSave} className="space-y-5">
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email Address (Read-only)</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <input
-                    type="email"
-                    value={email}
-                    disabled
-                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50 text-gray-500 cursor-not-allowed outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your full name"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-shadow"
-                  />
-                </div>
-              </div>
-
-              {statusMsg && (
-                <div className={`p-3 rounded-lg text-sm font-semibold ${statusMsg.includes("Error") ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"}`}>
-                  {statusMsg}
-                </div>
-              )}
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors shadow-sm disabled:opacity-50"
-                >
-                  {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </GlassCard>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              <User className="w-8 h-8 text-primary" />
+              Profile & Security
+            </h1>
+            <p className="text-sm text-muted-foreground mt-2">Manage your clinical demographic properties natively.</p>
+          </div>
+          <button 
+            onClick={handleSignOut}
+            className="flex items-center gap-2 hover:bg-destructive/10 text-destructive border border-destructive/20 px-4 py-2 rounded-xl transition-colors text-sm font-semibold"
+          >
+            <LogOut className="w-4 h-4" />
+            Sign Out
+          </button>
         </div>
 
-        {/* Right Column - Security & Biometrics */}
-        <div className="space-y-6">
-          <GlassCard noHover>
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">Security</h2>
-            
-            <div className="p-5 border border-gray-100 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg">
-                  <Camera className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Face ID Authentication</h3>
-                </div>
-              </div>
-              
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Securely log into your account without a password using your webcam.
-              </p>
+        {notification && (
+          <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 border ${
+            notification.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600' : 'bg-red-500/10 border-red-500/30 text-red-600'
+          }`}>
+            {notification.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+            <span className="text-sm font-semibold">{notification.msg}</span>
+          </div>
+        )}
 
-              {hasFaceId ? (
-                <div className="flex flex-col gap-3">
-                  <span className="inline-flex items-center justify-center py-2 px-3 text-sm font-semibold rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-                    <User className="w-4 h-4 mr-2" />
-                    Biometrics Registered & Locked
-                  </span>
-                  <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Your face is permanently mapped for security. Contact an admin to request a reset.
-                  </p>
-                </div>
-              ) : (
-                <Link
-                  href="/verify?mode=register"
-                  className="w-full flex justify-center items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-brand-600 dark:hover:bg-brand-700 text-white text-sm font-semibold rounded-lg transition-colors no-underline shadow-md"
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="bg-card/70 border border-border/60 rounded-[2rem] p-8 shadow-sm">
+            <h2 className="text-lg font-bold mb-6 border-b border-border/60 pb-3 flex items-center gap-2">
+              <User className="w-5 h-5 text-primary" /> Core Identity
+            </h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Legal Name</label>
+                <input 
+                  type="text" 
+                  value={formData.name} 
+                  onChange={e => setFormData({...formData, name: e.target.value})}
+                  className="w-full bg-background border border-border/60 rounded-xl px-4 py-3 text-sm focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Account Email</label>
+                <input 
+                  type="text" 
+                  value={user?.email || ''} 
+                  disabled
+                  className="w-full bg-muted/50 border border-border/60 rounded-xl px-4 py-3 text-sm text-muted-foreground cursor-not-allowed"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Age</label>
+                <input 
+                  type="number" 
+                  value={formData.age} 
+                  onChange={e => setFormData({...formData, age: e.target.value})}
+                  className="w-full bg-background border border-border/60 rounded-xl px-4 py-3 text-sm focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Gender identity</label>
+                <select 
+                  value={formData.gender} 
+                  onChange={e => setFormData({...formData, gender: e.target.value})}
+                  className="w-full bg-background border border-border/60 rounded-xl px-4 py-3 text-sm focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition"
                 >
-                  <LinkIcon className="w-4 h-4" />
-                  Map My Face Now
-                </Link>
-              )}
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Non-binary">Non-binary</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+              </div>
             </div>
-          </GlassCard>
-        </div>
+          </div>
+
+          <div className="bg-card/70 border border-border/60 rounded-[2rem] p-8 shadow-sm">
+            <h2 className="text-lg font-bold mb-6 border-b border-border/60 pb-3 flex items-center gap-2">
+              <Activity className="w-5 h-5 text-primary" /> Precision Medical Data
+            </h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-1 md:col-span-2">
+                <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Blood Type</label>
+                <select 
+                  value={formData.blood_group} 
+                  onChange={e => setFormData({...formData, blood_group: e.target.value})}
+                  className="w-full md:w-1/2 bg-background border border-border/60 rounded-xl px-4 py-3 text-sm focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition"
+                >
+                  <option value="Unknown">Unknown</option>
+                  {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(g => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Primary Conditions</label>
+                <textarea 
+                  rows={3}
+                  value={formData.conditions} 
+                  onChange={e => setFormData({...formData, conditions: e.target.value})}
+                  placeholder="e.g. Type 2 Diabetes, Mild Hypertension"
+                  className="w-full bg-background border border-border/60 rounded-xl px-4 py-3 text-sm focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition resize-none"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Known Allergies</label>
+                <textarea 
+                  rows={3}
+                  value={formData.allergies} 
+                  onChange={e => setFormData({...formData, allergies: e.target.value})}
+                  placeholder="e.g. Penicillin, Latex, Peanuts"
+                  className="w-full bg-background border border-border/60 rounded-xl px-4 py-3 text-sm focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition resize-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-card/70 border border-border/60 rounded-[2rem] p-8 shadow-sm">
+            <h2 className="text-lg font-bold mb-6 border-b border-border/60 pb-3 flex items-center gap-2">
+              <Camera className="w-5 h-5 text-emerald-500" /> Biometric Identity
+            </h2>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-4 rounded-xl bg-background border border-border/60">
+              <div>
+                <p className="font-semibold">{hasFaceRegistered ? "Face ID Active & Secured" : "No Face Registered"}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {hasFaceRegistered 
+                    ? "Your biometric matrix is actively securing your login access." 
+                    : "Register your face to enable passwordless global sign-ins natively."}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => router.push("/verify?mode=register")}
+                className={`shrink-0 px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2 ${
+                  hasFaceRegistered 
+                    ? "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20" 
+                    : "bg-primary text-primary-foreground shadow-lg hover:scale-105 active:scale-95"
+                }`}
+              >
+                {hasFaceRegistered ? <CheckCircle2 className="w-4 h-4" /> : <Camera className="w-4 h-4" />}
+                {hasFaceRegistered ? "Verified Identity" : "Setup Face ID"}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4">
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-8 py-3 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Save Configuration
+            </button>
+          </div>
+        </form>
+
       </div>
     </div>
   );
