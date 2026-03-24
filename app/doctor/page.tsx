@@ -45,7 +45,7 @@ interface Notification {
 const DoctorDashboardPage = () => {
   const { user, loading: userLoading } = useUser();
   const [doctorProfile, setDoctorProfile] = useState<Doctor | null>(null);
-  const [patientIdSearch, setPatientIdSearch] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchedPatient, setSearchedPatient] = useState<Patient | null>(null);
   const [patientRecords, setPatientRecords] = useState<MedicalRecord[]>([]);
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
@@ -67,6 +67,10 @@ const DoctorDashboardPage = () => {
 
   // Fetch doctor profile based on logged-in user email
   useEffect(() => {
+    // Autofill search query with today's YYYYMMDD prefix
+    const todayStr = new Date().toISOString().split("T")[0];
+    setSearchQuery(todayStr.replace(/-/g, ""));
+
     const fetchDoctorProfile = async () => {
       if (!user?.email) return;
       const { data } = await supabase
@@ -105,23 +109,59 @@ const DoctorDashboardPage = () => {
 
   const handleSearchPatient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!patientIdSearch) return;
+    const query = searchQuery.trim();
+    if (!query) return;
 
     setLoading(true);
     setError(null);
     setSearchedPatient(null);
     setPatientRecords([]);
 
-    const { data: patientData, error: patientError } = await supabase
-      .from('patients')
-      .select('*')
-      .eq('patient_id', parseInt(patientIdSearch))
-      .single();
+    let patientData = null;
 
-    if (patientError || !patientData) {
-      setError('Patient not found. Please check the ID and try again.');
-      setLoading(false);
-      return;
+    // Check if it looks like a booking number (length > 6)
+    if (query.length > 6) {
+      // Find patient user_id from appointments
+      const { data: appt, error: apptError } = await supabase
+        .from('appointments')
+        .select('user_id')
+        .eq('booking_number', query)
+        .single();
+
+      if (apptError || !appt) {
+        setError('Booking number not found. Please check and try again.');
+        setLoading(false);
+        return;
+      }
+
+      // Fetch the actual patient profile using user_id
+      const { data: pData, error: pError } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('user_id', appt.user_id)
+        .single();
+
+      if (pError || !pData) {
+        setError('Patient profile linked to this booking not found.');
+        setLoading(false);
+        return;
+      }
+      patientData = pData;
+
+    } else {
+      // Treat as a 5-digit Patient ID
+      const { data: pData, error: patientError } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('patient_id', parseInt(query))
+        .single();
+
+      if (patientError || !pData) {
+        setError('Patient not found. Please check the 5-digit ID and try again.');
+        setLoading(false);
+        return;
+      }
+      patientData = pData;
     }
 
     setSearchedPatient(patientData as Patient);
@@ -266,18 +306,18 @@ const DoctorDashboardPage = () => {
 
       {/* Patient Search */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <h2 className="text-lg font-semibold text-gray-700 mb-3">Search Patient by ID</h2>
+        <h2 className="text-lg font-semibold text-gray-700 mb-3">Search Patient (Booking No. or ID)</h2>
         <form onSubmit={handleSearchPatient} className="flex items-center gap-4">
           <Search className="w-6 h-6 text-gray-400 flex-shrink-0" />
           <input
-            type="number"
-            placeholder="Enter 5-Digit Patient ID..."
-            value={patientIdSearch}
-            onChange={(e) => setPatientIdSearch(e.target.value)}
-            className="flex-grow p-3 border-2 border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-emerald-300 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder-gray-400"
+            type="text"
+            placeholder="Enter YYYYMMDD Booking Number or 5-Digit Patient ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-grow p-3 border-2 border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-emerald-300 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder-gray-400 font-mono text-lg tracking-wider"
           />
-          <button type="submit" disabled={loading} className="bg-emerald-500 text-white py-3 px-6 rounded-md hover:bg-emerald-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2">
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Searching...</> : 'Search'}
+          <button type="submit" disabled={loading || !searchQuery} className="bg-emerald-500 text-white py-3 px-6 rounded-md hover:bg-emerald-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2 font-semibold">
+            {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> Searching</> : 'Lookup Patient'}
           </button>
         </form>
       </div>
@@ -418,10 +458,12 @@ const DoctorDashboardPage = () => {
 
       {/* Pre-search empty state */}
       {!searchedPatient && !error && !loading && (
-        <div className="bg-white p-12 rounded-lg shadow-md text-center text-gray-400">
-          <Search className="w-16 h-16 mx-auto mb-4 opacity-30" />
-          <p className="text-lg font-medium text-gray-500">Search for a patient</p>
-          <p className="text-sm">Enter a 5-digit Patient ID to view their records and add new entries.</p>
+        <div className="bg-white p-12 rounded-lg shadow-md text-center text-gray-400 mt-6 border-2 border-dashed border-gray-200">
+          <Search className="w-16 h-16 mx-auto mb-4 opacity-30 text-emerald-500" />
+          <p className="text-xl font-bold text-gray-600 mb-2">Search for a patient appointment</p>
+          <p className="text-sm max-w-md mx-auto leading-relaxed">
+            The search bar is automatically pre-filled with today's date prefix. Just type the last 4 digits of the patient's booking number to pull up their profile and add securely to their medical records! You can also clear it and search by their 5-digit Patient ID.
+          </p>
         </div>
       )}
     </div>
