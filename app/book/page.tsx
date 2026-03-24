@@ -105,16 +105,13 @@ function BookContent() {
     if (!doc) return;
 
     // Generate YYYYMMDD0001 format
+    // Generate YYYYMMDD prefix
     const todayStr = new Date().toISOString().split("T")[0];
     const yyyymmdd = todayStr.replace(/-/g, "");
     
-    // Get count for today to make sequential ID
-    const { count } = await supabase
-      .from('appointments')
-      .select('*', { count: 'exact', head: true })
-      .like('booking_number', `${yyyymmdd}%`);
-      
-    const sequence = ((count || 0) + 1).toString().padStart(4, '0');
+    // Important: Replaced count() with a 4-digit random sequence to prevent 
+    // duplicate "YYYYMMDD0001" constraint errors caused by RLS policies hiding other users' rows.
+    const sequence = Math.floor(1000 + Math.random() * 9000).toString();
     const generatedBookingNumber = `${yyyymmdd}${sequence}`;
 
     // Try to insert the appointment

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { CalendarDays, FileText, Clock, CheckCircle, XCircle, Plus, User } from "lucide-react";
+import { CalendarDays, FileText, Clock, CheckCircle, XCircle, Plus, User, Download } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 import { useLanguage } from "@/lib/i18n/context";
 import { t } from "@/lib/i18n/translations";
@@ -17,6 +17,8 @@ interface MedicalRecord {
   description: string;
   blood_pressure: string;
   blood_sugar: string;
+  file_url: string | null;
+  file_name: string | null;
   doctors: {
     name: string;
     specialty: string;
@@ -77,7 +79,7 @@ export default function DashboardPage() {
       const { data: recordsData, error: recordsError } = await supabase
         .from('records')
         .select(`
-          id, record_date, description, blood_pressure, blood_sugar,
+          id, record_date, description, blood_pressure, blood_sugar, file_url, file_name,
           doctors ( name, specialty )
         `)
         .eq('patient_id', profileData.id)
@@ -237,6 +239,19 @@ export default function DashboardPage() {
                                 <p className="text-xs text-white/50 uppercase tracking-widest mb-1">Doctor Notes</p>
                                 <p className="text-white/90 leading-relaxed text-sm">{rec.description}</p>
                               </div>
+                              {rec.file_url && (
+                                <div className="mt-3">
+                                  <a
+                                    href={rec.file_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-accent/20 text-accent-lighter rounded-lg hover:bg-accent/30 transition-colors text-sm font-semibold border border-accent/20"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                    {rec.file_name || 'Download Report'}
+                                  </a>
+                                </div>
+                              )}
                           </div>
                       ))}
                   </div>

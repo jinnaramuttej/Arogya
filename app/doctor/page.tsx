@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useUser } from '@/lib/hooks/useUser';
-import { Search, User, PlusCircle, BookText, Stethoscope, AlertCircle, CheckCircle2, Loader2, Activity, Droplets, FileText, Hash, CalendarDays, Clock } from 'lucide-react';
+import { Search, User, PlusCircle, BookText, Stethoscope, AlertCircle, CheckCircle2, Loader2, Activity, Droplets, FileText, Hash, CalendarDays, Clock, Upload, Download } from 'lucide-react';
 
 interface Doctor {
   id: string;
@@ -34,6 +34,8 @@ interface MedicalRecord {
   blood_pressure: string;
   blood_sugar: string;
   description: string;
+  file_url: string | null;
+  file_name: string | null;
   doctors: { name: string; specialty: string };
 }
 
@@ -56,6 +58,7 @@ const DoctorDashboardPage = () => {
   const [newBp, setNewBp] = useState('');
   const [newSugar, setNewSugar] = useState('');
   const [newDescription, setNewDescription] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const supabase = createClient();
@@ -194,6 +197,33 @@ const DoctorDashboardPage = () => {
     }
 
     setSubmitting(true);
+
+    let fileUrl: string | null = null;
+    let fileName: string | null = null;
+
+    // Upload file to Supabase Storage if selected
+    if (selectedFile) {
+      const fileExt = selectedFile.name.split('.').pop();
+      const filePath = `${searchedPatient.patient_id}/${Date.now()}.${fileExt}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('medical-reports')
+        .upload(filePath, selectedFile);
+
+      if (uploadError) {
+        showNotification('error', 'File upload failed: ' + uploadError.message);
+        setSubmitting(false);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('medical-reports')
+        .getPublicUrl(filePath);
+      
+      fileUrl = urlData.publicUrl;
+      fileName = selectedFile.name;
+    }
+
     const { error: insertError } = await supabase
       .from('records')
       .insert([{
@@ -202,6 +232,8 @@ const DoctorDashboardPage = () => {
         blood_pressure: newBp,
         blood_sugar: newSugar,
         description: newDescription,
+        file_url: fileUrl,
+        file_name: fileName,
       }]);
 
     if (insertError) {
@@ -213,6 +245,7 @@ const DoctorDashboardPage = () => {
       setNewBp('');
       setNewSugar('');
       setNewDescription('');
+      setSelectedFile(null);
     }
     setSubmitting(false);
   };
@@ -381,8 +414,24 @@ const DoctorDashboardPage = () => {
                 placeholder="Doctor's notes and observations..."
                 value={newDescription}
                 onChange={e => setNewDescription(e.target.value)}
-                className="w-full p-3 border-2 border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-emerald-300 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder-gray-400 h-28 resize-none"
+                className="w-full p-3 border-2 border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-emerald-300 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder-gray-400 h-28 resize-none text-gray-800"
               />
+              {/* File Upload */}
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 hover:bg-emerald-50/50 transition-colors">
+                <label className="flex flex-col items-center gap-2 cursor-pointer">
+                  <Upload className="w-6 h-6 text-emerald-500" />
+                  <span className="text-sm font-medium text-gray-600">
+                    {selectedFile ? selectedFile.name : 'Upload Prescription / Report (PDF, Image)'}
+                  </span>
+                  <span className="text-xs text-gray-400">Click to browse or drag and drop</span>
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    className="hidden"
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                  />
+                </label>
+              </div>
               <button
                 type="submit"
                 disabled={submitting}
@@ -442,6 +491,19 @@ const DoctorDashboardPage = () => {
                         </div>
                       )}
                     </div>
+                    {record.file_url && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <a
+                          href={record.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors text-sm font-medium border border-emerald-200"
+                        >
+                          <Download className="w-4 h-4" />
+                          {record.file_name || 'Download Report'}
+                        </a>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
