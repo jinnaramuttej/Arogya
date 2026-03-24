@@ -85,15 +85,15 @@ function VerifyContent() {
       .withFaceDescriptor();
       
     if (detections) {
-      // 1. Enforce High Quality Capture
-      if (detections.detection.score < 0.8) {
-        setStatusMsg("Picture is not clear or bright enough. Please look directly at the camera with good lighting.");
+      // 1. Enforce Reasonable Quality Capture
+      if (detections.detection.score < 0.65) {
+        setStatusMsg("Picture is not clear enough. Please look directly at the camera.");
         return null; // Force retry
       }
 
       // 2. Liveness Check (Prevent Screen Spoofing)
-      if (detections.expressions.happy < 0.6) {
-        setStatusMsg("Liveness Check: Please SMILE to verify you are a real person and not a photo.");
+      if (detections.expressions.happy < 0.3) {
+        setStatusMsg("Liveness Check: Please SMILE at the camera to continue.");
         return null; // Force retry
       }
 

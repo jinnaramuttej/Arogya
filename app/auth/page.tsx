@@ -92,7 +92,15 @@ export default function AuthPage() {
         router.push("/dashboard");
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const msg = err instanceof Error ? err.message : "An error occurred";
+      // Make common Supabase auth errors more user-friendly
+      if (msg.includes("Invalid login")) {
+        setError("Invalid email or password. Please try again.");
+      } else if (msg.includes("Email not confirmed")) {
+        setError("Please confirm your email before logging in.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
