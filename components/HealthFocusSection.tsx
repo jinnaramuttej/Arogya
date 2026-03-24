@@ -46,7 +46,7 @@ const HealthFocusSection = () => (
             A calmer, clearer path to everyday wellness.
           </h2>
           <p className="text-lg text-muted-foreground mt-5 max-w-xl leading-relaxed">
-            Arogya Zenith is not only about features. It is about helping people stay
+            Arogya is not only about features. It is about helping people stay
             well with consistent guidance, gentle monitoring, and support that fits
             real life.
           </p>

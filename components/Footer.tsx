@@ -71,7 +71,7 @@ const Footer = () => (
 
       <div className="mt-20 pt-8 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-6">
         <p className="text-xs text-muted-foreground font-medium">
-          © {new Date().getFullYear()} Arogya Zenith. Powered by Neural Systems.
+          © {new Date().getFullYear()} Arogya. Powered by Neural Systems.
         </p>
         <p className="text-xs text-muted-foreground flex items-center gap-2">
           Encrypted with <Heart className="w-3 h-3 text-primary fill-primary" /> for your security

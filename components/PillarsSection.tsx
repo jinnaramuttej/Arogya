@@ -73,7 +73,7 @@ const PillarsSection = () => (
             <div className="w-12 h-12 rounded-full bg-primary/20" />
             <div className="text-left">
               <p className="font-bold text-lg">Dr. Elena Vance</p>
-              <p className="text-sm text-muted-foreground">Chief Medical Officer, Arogya Zenith</p>
+              <p className="text-sm text-muted-foreground">Chief Medical Officer, Arogya</p>
             </div>
           </div>
         </div>

@@ -22,7 +22,7 @@ const About = () => (
           Defining <span className="gradient-text">Care.</span>
         </h1>
         <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-medium">
-          Arogya Zenith is more than a platform—it's a commitment to human-centric intelligence, transparency, and the democratization of healthcare.
+          Arogya is more than a platform—it's a commitment to human-centric intelligence, transparency, and the democratization of healthcare.
         </p>
       </motion.div>
       

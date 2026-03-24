@@ -191,7 +191,7 @@ const Login = () => {
                     <span className="text-primary-foreground font-semibold text-base">A</span>
                   </div>
                   <div>
-                    <p className="text-xs uppercase tracking-[0.35em] text-white/60">Arogya Zenith</p>
+                    <p className="text-xs uppercase tracking-[0.35em] text-white/60">Arogya</p>
                     <p className="login-font-heading text-2xl font-semibold text-white">
                       {mode === "login" ? "Sign in" : "Create account"}
                     </p>
