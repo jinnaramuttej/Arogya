@@ -7,7 +7,7 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
   const { messages } = await req.json();
 
-  const result = streamText({
+  const result = await streamText({
     model: anthropic("claude-3-5-haiku-20241022"),
     system: `You are Arogya, an intelligent healthcare assistant. 
     Your goal is to help users understand their symptoms.
