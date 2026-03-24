@@ -32,6 +32,7 @@ function BookContent() {
   const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [booked, setBooked] = useState(false);
+  const [bookingId, setBookingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -103,17 +104,32 @@ function BookContent() {
     const doc = dbDoctors.find((d) => d.id === selectedDoctor);
     if (!doc) return;
 
+    // Generate YYYYMMDD0001 format
+    const todayStr = new Date().toISOString().split("T")[0];
+    const yyyymmdd = todayStr.replace(/-/g, "");
+    
+    // Get count for today to make sequential ID
+    const { count } = await supabase
+      .from('appointments')
+      .select('*', { count: 'exact', head: true })
+      .like('booking_number', `${yyyymmdd}%`);
+      
+    const sequence = ((count || 0) + 1).toString().padStart(4, '0');
+    const generatedBookingNumber = `${yyyymmdd}${sequence}`;
+
     // Try to insert the appointment
     const { error: insertError } = await supabase
       .from("appointments")
       .insert([
         {
           user_id: user.id,
+          doctor_id: doc.id,
           doctor_name: doc.name,
           specialty: doc.specialty,
           date: new Date().toISOString().split("T")[0],
           time: selectedSlot,
           status: "pending",
+          booking_number: generatedBookingNumber,
         },
       ]);
 
@@ -121,14 +137,18 @@ function BookContent() {
 
     if (insertError) {
       // Handle the missing table gracefully
-      if (insertError.message.includes('relation "public.appointments" does not exist')) {
-        setError("Database error: The 'appointments' table is missing. Please ask an Admin to run the appointments_schema.sql script.");
+      if (insertError.message.includes('relation "public.appointments" does not exist') || insertError.message.includes('booking_number')) {
+        setError("Database error: Run the updated appointments_schema.sql script as Admin.");
       } else {
         setError(insertError.message);
       }
     } else {
+      setBookingId(generatedBookingNumber);
       setBooked(true);
-      setTimeout(() => setBooked(false), 3000);
+      setTimeout(() => {
+        setBooked(false);
+        setBookingId(null);
+      }, 15000); // Give them 15 seconds to read
       setSelectedDoctor(null);
       setSelectedSlot(null);
     }
@@ -164,10 +184,19 @@ function BookContent() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-200 text-sm text-center flex items-center justify-center gap-2"
+          className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-100 text-center shadow-[0_0_30px_rgba(16,185,129,0.15)]"
         >
-          <CheckCircle className="w-5 h-5 flex-shrink-0" />
-          <span className="font-medium">Appointment booked successfully!</span>
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <CheckCircle className="w-6 h-6 flex-shrink-0 text-emerald-400" />
+            <span className="font-bold text-lg">Appointment booked successfully!</span>
+          </div>
+          {bookingId && (
+            <div className="bg-black/30 backdrop-blur-md inline-block px-8 py-4 rounded-xl border border-white/10 mt-2 shadow-inner">
+              <p className="text-sm text-emerald-200/70 mb-1 uppercase tracking-wider font-semibold">Your Booking ID</p>
+              <p className="text-3xl font-mono font-bold tracking-widest text-white">{bookingId}</p>
+            </div>
+          )}
+          <p className="text-sm text-emerald-100/70 mt-4">Save this reference number. You can also view it in your dashboard.</p>
         </motion.div>
       )}
 

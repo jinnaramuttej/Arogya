@@ -3,13 +3,22 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useUser } from '@/lib/hooks/useUser';
-import { Search, User, PlusCircle, BookText, Stethoscope, AlertCircle, CheckCircle2, Loader2, Activity, Droplets, FileText, Hash } from 'lucide-react';
+import { Search, User, PlusCircle, BookText, Stethoscope, AlertCircle, CheckCircle2, Loader2, Activity, Droplets, FileText, Hash, CalendarDays, Clock } from 'lucide-react';
 
 interface Doctor {
   id: string;
   doctor_id: number;
   name: string;
   specialty: string;
+}
+
+interface Appointment {
+  id: string;
+  date: string;
+  time: string;
+  status: string;
+  booking_number: string;
+  patient_name: string;
 }
 
 interface Patient {
@@ -39,6 +48,7 @@ const DoctorDashboardPage = () => {
   const [patientIdSearch, setPatientIdSearch] = useState('');
   const [searchedPatient, setSearchedPatient] = useState<Patient | null>(null);
   const [patientRecords, setPatientRecords] = useState<MedicalRecord[]>([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState<Notification | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +74,30 @@ const DoctorDashboardPage = () => {
         .select('id, doctor_id, name, specialty')
         .eq('email', user.email)
         .single();
-      if (data) setDoctorProfile(data as Doctor);
+        
+      if (data) {
+        setDoctorProfile(data as Doctor);
+        
+        // Fetch upcoming appointments for this doctor
+        const { data: apptData } = await supabase
+          .from('appointments')
+          .select('*')
+          .eq('doctor_id', data.id)
+          .order('date', { ascending: true })
+          .order('time', { ascending: true });
+
+        if (apptData && apptData.length > 0) {
+          // Fetch patient names
+          const userIds = apptData.map((a: any) => a.user_id);
+          const { data: profiles } = await supabase.from('profiles').select('id, name').in('id', userIds);
+          
+          const mappedAppts = apptData.map((a: any) => ({
+            ...a,
+            patient_name: profiles?.find(p => p.id === a.user_id)?.name || 'Unknown Patient'
+          }));
+          setUpcomingAppointments(mappedAppts);
+        }
+      }
     };
     fetchDoctorProfile();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -186,6 +219,50 @@ const DoctorDashboardPage = () => {
           <span className="text-sm font-medium">{notification.message}</span>
         </div>
       )}
+
+      {/* Upcoming Appointments */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h2 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
+          <CalendarDays className="w-6 h-6 text-emerald-500" />
+          My Scheduled Appointments
+        </h2>
+        
+        {upcomingAppointments.length === 0 ? (
+          <div className="text-center py-6 text-gray-400">
+            <CalendarDays className="w-10 h-10 mx-auto mb-2 opacity-30" />
+            <p>No upcoming appointments found.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {upcomingAppointments.map(appt => (
+              <div key={appt.id} className="border border-gray-100 bg-gray-50 rounded-lg p-5 hover:bg-emerald-50/50 transition-colors">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="font-bold text-gray-800 text-lg">{appt.patient_name}</p>
+                    <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
+                      <span className="flex items-center gap-1"><CalendarDays className="w-4 h-4"/> {new Date(appt.date).toLocaleDateString()}</span>
+                      <span className="flex items-center gap-1"><Clock className="w-4 h-4"/> {appt.time}</span>
+                    </div>
+                  </div>
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase ${
+                    appt.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' :
+                    appt.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-gray-200 text-gray-700'
+                  }`}>
+                    {appt.status}
+                  </span>
+                </div>
+                {appt.booking_number && (
+                  <div className="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
+                    <span className="text-xs text-gray-500 uppercase font-semibold">Booking ID</span>
+                    <span className="font-mono text-sm font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">{appt.booking_number}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Patient Search */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
