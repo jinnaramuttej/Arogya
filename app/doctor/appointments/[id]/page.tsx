@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, use } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useUser } from '@/lib/hooks/useUser';
 import {
@@ -55,7 +54,6 @@ interface PatientInfo {
 
 export default function AppointmentSessionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const router = useRouter();
   const { user, loading: userLoading } = useUser();
   const supabase = createClient();
 
@@ -72,6 +70,9 @@ export default function AppointmentSessionPage({ params }: { params: Promise<{ i
   const [newDescription, setNewDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
+  const [customFieldUploading, setCustomFieldUploading] = useState<Record<string, boolean>>({});
+  const [customFieldProgress, setCustomFieldProgress] = useState<Record<string, number>>({});
+  const [customFieldNames, setCustomFieldNames] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [notification, setNotification] = useState<Notification | null>(null);
 
@@ -198,65 +199,77 @@ export default function AppointmentSessionPage({ params }: { params: Promise<{ i
 
     setSubmitting(true);
 
-    let fileUrl: string | null = null;
-    let fileName: string | null = null;
+    try {
+      let fileUrl: string | null = null;
+      let fileName: string | null = null;
 
-    if (selectedFile) {
-      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-      if (!cloudName) {
-        showNotification('error', 'Cloudinary cloud name not configured.');
-        setSubmitting(false);
-        return;
-      }
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('upload_preset', 'oqens-arogya');
-      formData.append('folder', `arogya/medical-reports/${patient.patient_id}`);
-      try {
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
-          method: 'POST',
-          body: formData,
-        });
-        const data = await res.json();
-        if (data.error) {
-          showNotification('error', 'Upload failed: ' + data.error.message);
-          setSubmitting(false);
+      if (selectedFile) {
+        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+        if (!cloudName) {
+          showNotification('error', 'Cloudinary cloud name not configured.');
           return;
         }
-        fileUrl = data.secure_url;
-        fileName = selectedFile.name;
-      } catch {
-        showNotification('error', 'Upload failed: network error');
-        setSubmitting(false);
-        return;
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('upload_preset', 'oqens-arogya');
+        formData.append('folder', `arogya/medical-reports/${patient.patient_id}`);
+
+        // Upload with 30-second timeout
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000);
+        try {
+          const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+            method: 'POST',
+            body: formData,
+            signal: controller.signal,
+          });
+          clearTimeout(timeout);
+          const data = await res.json();
+          if (data.error) {
+            showNotification('error', 'Upload failed: ' + data.error.message);
+            return;
+          }
+          fileUrl = data.secure_url;
+          fileName = selectedFile.name;
+        } catch (uploadErr: unknown) {
+          clearTimeout(timeout);
+          const msg = uploadErr instanceof Error && uploadErr.name === 'AbortError'
+            ? 'Upload timed out (30s). Check your connection.'
+            : 'Upload failed: network error';
+          showNotification('error', msg);
+          return;
+        }
       }
-    }
 
-    const { data: newRec, error } = await supabase
-      .from('records')
-      .insert([{
-        patient_id: patient.id,
-        doctor_id: doctorId,
-        blood_pressure: newBp,
-        blood_sugar: newSugar,
-        description: newDescription,
-        file_url: fileUrl,
-        file_name: fileName,
-        custom_data: customFieldValues,
-      }])
-      .select('*, doctors(name, specialty)')
-      .single();
+      const { data: newRec, error } = await supabase
+        .from('records')
+        .insert([{
+          patient_id: patient.id,
+          doctor_id: doctorId,
+          blood_pressure: newBp,
+          blood_sugar: newSugar,
+          description: newDescription,
+          file_url: fileUrl,
+          file_name: fileName,
+          custom_data: customFieldValues,
+        }])
+        .select('*, doctors(name, specialty)')
+        .single();
 
-    if (error) {
-      showNotification('error', 'Failed to save record: ' + error.message);
-    } else {
-      showNotification('success', 'Record saved successfully!');
-      setRecords(prev => [newRec as MedicalRecord, ...prev]);
-      setNewBp(''); setNewSugar(''); setNewDescription('');
-      setSelectedFile(null); setCustomFieldValues({});
+      if (error) {
+        showNotification('error', 'Failed to save record: ' + error.message);
+      } else {
+        showNotification('success', 'Record saved successfully!');
+        setRecords(prev => [newRec as MedicalRecord, ...prev]);
+        setNewBp(''); setNewSugar(''); setNewDescription('');
+        setSelectedFile(null); setCustomFieldValues({});
+      }
+    } finally {
+      // Always reset — no matter what happens above
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
+
 
   if (loading || userLoading) {
     return (
@@ -397,13 +410,97 @@ export default function AppointmentSessionPage({ params }: { params: Promise<{ i
                     <label className="text-sm font-medium text-gray-700 mb-1 block">
                       {field.field_name}{field.is_required && <span className="text-red-500 ml-1">*</span>}
                     </label>
-                    <input
-                      type={field.field_type === 'file' ? 'text' : field.field_type === 'url' ? 'url' : field.field_type === 'time' ? 'time' : field.field_type === 'date' ? 'date' : 'text'}
-                      placeholder={field.field_type === 'file' ? 'Paste Cloudinary URL...' : field.field_type === 'url' ? 'https://...' : `Enter ${field.field_name}...`}
-                      value={customFieldValues[field.field_name] || ''}
-                      onChange={e => setCustomFieldValues({ ...customFieldValues, [field.field_name]: e.target.value })}
-                      className="p-3 border-2 border-gray-300 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-emerald-300 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder-gray-400 text-gray-800"
-                    />
+                    {field.field_type === 'file' ? (
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg overflow-hidden bg-white">
+                        {customFieldValues[field.field_name] ? (
+                          // Uploaded — show filename
+                          <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50">
+                            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                              <Download className="w-4 h-4 text-emerald-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-emerald-700 truncate">{customFieldNames[field.field_name] || 'File uploaded'}</p>
+                              <p className="text-xs text-emerald-500">Upload complete ✓</p>
+                            </div>
+                            <button type="button"
+                              onClick={() => {
+                                setCustomFieldValues(prev => { const n = {...prev}; delete n[field.field_name]; return n; });
+                                setCustomFieldNames(prev => { const n = {...prev}; delete n[field.field_name]; return n; });
+                              }}
+                              className="text-xs text-red-400 hover:text-red-600 flex-shrink-0 font-medium">Remove</button>
+                          </div>
+                        ) : customFieldUploading[field.field_name] ? (
+                          // Uploading — show progress bar
+                          <div className="p-4 space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-500 font-medium flex items-center gap-1.5">
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-500" />
+                                Uploading {field.field_name}...
+                              </span>
+                              <span className="font-bold text-emerald-600">{customFieldProgress[field.field_name] || 0}%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                              <div
+                                className="h-2 bg-emerald-500 rounded-full transition-all duration-200"
+                                style={{ width: `${customFieldProgress[field.field_name] || 0}%` }}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          // Idle — show upload button
+                          <label className="flex flex-col items-center gap-1.5 p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                            <Upload className="w-5 h-5 text-gray-400" />
+                            <span className="text-sm text-gray-500 font-medium">Upload {field.field_name}</span>
+                            <span className="text-xs text-gray-400">PDF · Image</span>
+                            <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+                                if (!cloudName) return;
+                                const fd = new FormData();
+                                fd.append('file', file);
+                                fd.append('upload_preset', 'oqens-arogya');
+                                setCustomFieldUploading(prev => ({ ...prev, [field.field_name]: true }));
+                                setCustomFieldProgress(prev => ({ ...prev, [field.field_name]: 0 }));
+                                setCustomFieldNames(prev => ({ ...prev, [field.field_name]: file.name }));
+                                const xhr = new XMLHttpRequest();
+                                xhr.upload.addEventListener('progress', (ev) => {
+                                  if (ev.lengthComputable) {
+                                    const pct = Math.round((ev.loaded / ev.total) * 100);
+                                    setCustomFieldProgress(prev => ({ ...prev, [field.field_name]: pct }));
+                                  }
+                                });
+                                xhr.addEventListener('load', () => {
+                                  try {
+                                    const data = JSON.parse(xhr.responseText);
+                                    if (data.secure_url) {
+                                      setCustomFieldValues(prev => ({ ...prev, [field.field_name]: data.secure_url }));
+                                    }
+                                  } finally {
+                                    setCustomFieldUploading(prev => ({ ...prev, [field.field_name]: false }));
+                                  }
+                                });
+                                xhr.addEventListener('error', () => {
+                                  setCustomFieldUploading(prev => ({ ...prev, [field.field_name]: false }));
+                                  showNotification('error', 'Upload failed for ' + field.field_name);
+                                });
+                                xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`);
+                                xhr.send(fd);
+                              }}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    ) : (
+                      <input
+                        type={field.field_type === 'url' ? 'url' : field.field_type === 'time' ? 'time' : field.field_type === 'date' ? 'date' : 'text'}
+                        placeholder={field.field_type === 'url' ? 'https://...' : `Enter ${field.field_name}...`}
+                        value={customFieldValues[field.field_name] || ''}
+                        onChange={e => setCustomFieldValues({ ...customFieldValues, [field.field_name]: e.target.value })}
+                        className="p-3 border-2 border-gray-300 rounded-lg w-full bg-gray-50 focus:ring-2 focus:ring-emerald-300 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder-gray-400 text-gray-800"
+                      />
+                    )}
                   </div>
                 ))}
               </div>

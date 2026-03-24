@@ -23,13 +23,14 @@ import { t } from "@/lib/i18n/translations";
 import { useUser } from "@/lib/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "@/lib/theme/ThemeProvider";
+import ProfileDropdown from "./ProfileDropdown";
 
 const navLinks = [
   { href: "/symptom",   label: "AI Symptom Checker", icon: Stethoscope },
   { href: "/donor",     label: "Blood Donor",         icon: Droplet },
   { href: "/pharmacy",  label: "Pharmacy",            icon: ShoppingBag },
   { href: "/emergency", label: "Emergency",           icon: Siren    },
-  { href: "/dashboard", label: "Records",             icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard",           icon: LayoutDashboard },
 ];
 
 export default function Navbar() {
@@ -129,13 +130,7 @@ export default function Navbar() {
 
           {/* Login / Logout */}
           {user ? (
-            <button
-              onClick={handleLogout}
-              className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors cursor-pointer border-none shadow-brand"
-            >
-              <LogOut className="w-4 h-4" />
-              {t("navLogout", lang)}
-            </button>
+            <ProfileDropdown userId={user.id} userEmail={user.email || "User"} onLogout={handleLogout} />
           ) : (
             <Link
               href="/auth"

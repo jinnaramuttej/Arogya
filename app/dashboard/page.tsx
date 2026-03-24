@@ -12,6 +12,7 @@ import {
   Plus,
   Pill,
   FolderOpen,
+  LayoutDashboard,
 } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 import PrescriptionCard from "@/components/features/PrescriptionCard";
@@ -64,9 +65,17 @@ export default function DashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [userName, setUserName] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [showRxForm, setShowRxForm] = useState(false);
   const [reportRefreshKey, setReportRefreshKey] = useState(0);
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
 
   const fetchData = useCallback(async () => {
     if (!user) {
@@ -101,6 +110,17 @@ export default function DashboardPage() {
       setPrescriptions((rxRes.data as Prescription[]) || []);
     }
 
+    // Fetch profile name
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("name")
+      .eq("id", user.id)
+      .single();
+    
+    if (profile) {
+      setUserName(profile.name);
+    }
+
     setIsLoadingData(false);
   }, [user]);
 
@@ -131,17 +151,30 @@ export default function DashboardPage() {
     <div className="px-4 sm:px-6 py-8 max-w-5xl mx-auto">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-8"
+        className="mb-10"
       >
-        <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white">
-          {t("dashTitle", lang)}
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">{t("dashSubtitle", lang)}</p>
-        {user && (
-          <p className="text-red-500 text-sm mt-1">{user.email}</p>
-        )}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+              <LayoutDashboard className="w-8 h-8 text-red-600" />
+              {getGreeting()}, {userName || user?.email?.split('@')[0] || "User"}
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1 text-lg">
+              Welcome back to your health companion.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/book"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-sm font-semibold shadow-brand hover:shadow-brand-hover transition-all no-underline"
+            >
+              <Plus className="w-4 h-4" />
+              {t("bookNow", lang)}
+            </Link>
+          </div>
+        </div>
       </motion.div>
 
       {/* Tabs */}

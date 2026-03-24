@@ -4,7 +4,15 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { useUser } from '@/lib/hooks/useUser';
-import { Search, User, PlusCircle, BookText, Stethoscope, AlertCircle, CheckCircle2, Loader2, Activity, Droplets, FileText, Hash, CalendarDays, Clock, Upload, Download, Check, XCircle, Ticket, ChevronRight } from 'lucide-react';
+import { Search, User, PlusCircle, BookText, Stethoscope, AlertCircle, CheckCircle2, Loader2, Activity, Droplets, FileText, Hash, CalendarDays, Clock, Upload, Download, Check,  CheckCircle,
+  XCircle,
+  Plus,
+  Pill,
+  FolderOpen,
+  LayoutDashboard,
+  Ticket,
+  ChevronRight
+} from "lucide-react";
 
 interface Doctor {
   id: string;
@@ -463,7 +471,7 @@ const DoctorDashboardPage = () => {
             placeholder="Enter YYYYMMDD Booking Number or 5-Digit Patient ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-grow p-3 border-2 border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-emerald-300 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder-gray-400 font-mono text-lg tracking-wider"
+            className="flex-grow p-3 border-2 border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-emerald-300 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder-gray-400 font-mono text-lg tracking-wider text-slate-900"
           />
           <button type="submit" disabled={loading || !searchQuery} className="bg-emerald-500 text-white py-3 px-6 rounded-md hover:bg-emerald-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2 font-semibold">
             {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> Searching</> : 'Lookup Patient'}

@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import SOSButton from "@/components/ui/SOSButton";
+import ConditionalLayout from "@/components/layout/ConditionalLayout";
 import { LanguageProvider } from "@/lib/i18n/context";
 import { ThemeProvider } from "@/lib/theme/ThemeProvider";
 
@@ -30,13 +28,13 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <ThemeProvider>
           <LanguageProvider>
-            <Navbar />
-            <main className="pt-24 min-h-screen">{children}</main>
-            <Footer />
-            <SOSButton />
+            <ConditionalLayout>
+              {children}
+            </ConditionalLayout>
           </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>
   );
 }
+
