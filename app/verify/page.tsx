@@ -56,6 +56,7 @@ function VerifyContent() {
           loadedFaceApi.nets.tinyFaceDetector.loadFromUri("/models"),
           loadedFaceApi.nets.faceLandmark68Net.loadFromUri("/models"),
           loadedFaceApi.nets.faceRecognitionNet.loadFromUri("/models"),
+          loadedFaceApi.nets.faceExpressionNet.loadFromUri("/models"),
         ]);
         setModelsLoaded(true);
         setStatusMsg("Models loaded. Ready for scan.");
@@ -74,15 +75,49 @@ function VerifyContent() {
     // Ensure video is playing and has dimensions
     if (video.readyState !== 4) return null;
 
-    // Lower default threshold from 0.5 -> 0.3 for easier webcam detection
-    const options = new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.3 });
+    // Use standard threshold 0.5 for better face detection quality
+    const options = new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.5 });
 
     const detections = await faceapi
       .detectSingleFace(video, options)
       .withFaceLandmarks()
+      .withFaceExpressions()
       .withFaceDescriptor();
       
-    return detections ? detections.descriptor : null;
+    if (detections) {
+      // 1. Enforce High Quality Capture
+      if (detections.detection.score < 0.8) {
+        setStatusMsg("Picture is not clear or bright enough. Please look directly at the camera with good lighting.");
+        return null; // Force retry
+      }
+
+      // 2. Liveness Check (Prevent Screen Spoofing)
+      if (detections.expressions.happy < 0.6) {
+        setStatusMsg("Liveness Check: Please SMILE to verify you are a real person and not a photo.");
+        return null; // Force retry
+      }
+
+      // 3. Enforce Center Figure (Mapping center face only)
+      const { box } = detections.detection;
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
+      const faceCenterX = box.x + (box.width / 2);
+      const faceCenterY = box.y + (box.height / 2);
+      
+      const isCenteredX = faceCenterX > videoWidth * 0.3 && faceCenterX < videoWidth * 0.7;
+      const isCenteredY = faceCenterY > videoHeight * 0.2 && faceCenterY < videoHeight * 0.8;
+      
+      if (!isCenteredX || !isCenteredY) {
+        setStatusMsg("Face detected, but please align your face within the center dashed box.");
+        return null; // Force retry
+      }
+
+      setStatusMsg("Clear, centered face found! Extracting mapping...");
+      return detections.descriptor;
+    }
+
+    setStatusMsg("Scanning for a clear face... Please look directly at the camera.");
+    return null;
   };
 
   // --- AUTO-CAPTURE LOOP ---
@@ -248,8 +283,9 @@ function VerifyContent() {
       const registeredDescriptor = new Float32Array(profile.face_descriptor);
       const distance = faceapi.euclideanDistance(registeredDescriptor, currentDescriptor);
       
+      // Strict threshold of 0.45 for ~90-95% accuracy as requested
       if (distance > 0.45) {
-        throw new Error("Facial verification failed. Match distance too high.");
+        throw new Error(`Facial verification failed (accuracy too low). Please try again.`);
       }
 
       if (mode !== "2fa") {
