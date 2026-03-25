@@ -70,9 +70,9 @@ const Navbar = () => {
   const toggleMobile = () => setMobileOpen(prev => !prev);
 
   const isDark = theme === "dark";
-  const navText = scrolled || !isDark ? "text-foreground" : "text-white";
-  const navMuted = scrolled || !isDark ? "text-muted-foreground" : "text-white/75";
-  const navHover = scrolled || !isDark ? "hover:text-primary" : "hover:text-white";
+  const navText = isDark ? (scrolled ? "text-foreground" : "text-white") : "text-gray-800";
+  const navMuted = isDark ? (scrolled ? "text-muted-foreground" : "text-white/75") : "text-gray-600";
+  const navHover = isDark ? (scrolled ? "hover:text-primary" : "hover:text-white") : "hover:text-primary";
   const navBorder = scrolled ? "border-border/40" : (isDark ? "border-white/15" : "border-black/5");
   const navBg = scrolled
     ? "bg-background/85 shadow-[0_12px_30px_rgba(15,23,42,0.18)]"
@@ -273,11 +273,7 @@ const Navbar = () => {
               Login
             </Link>
           )}
-            {!loggedIn && (
-              <Link href="/auth" className="btn-orange hidden md:flex items-center shadow-orange-500/20">
-                Get Started
-              </Link>
-            )}
+
             <button
               onClick={toggleMobile}
               className={`lg:hidden w-10 h-10 flex items-center justify-center rounded-2xl transition-all ${controlBg}`}
