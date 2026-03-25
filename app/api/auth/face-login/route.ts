@@ -28,12 +28,13 @@ export async function POST(request: NextRequest) {
       email: email,
     });
 
-    if (error || !data.properties.action_link) {
+    if (error || !data.properties.hashed_token) {
       console.error("[Face Login Error]", error);
       return NextResponse.json({ error: "Failed to generate login bypass link" }, { status: 500 });
     }
 
-    return NextResponse.json({ action_link: data.properties.action_link });
+    // Return the hashed PKCE token, which the client can verify directly to create a session locally
+    return NextResponse.json({ hashed_token: data.properties.hashed_token });
 
   } catch (error) {
     console.error("[Face Login Route Error]", error);

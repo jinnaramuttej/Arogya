@@ -404,12 +404,22 @@ function VerifyContent() {
 
             if (!res.ok) throw new Error("Backend session generation failed.");
             
-            const { action_link } = await res.json();
-            setStatusMsg("Access Granted. Securely logging you in...");
+            const { hashed_token } = await res.json();
             
-            // Redirect browser to Supabase Magic Link to set authorized cookies automatically
-            window.location.href = action_link;
-            return; // Stop further execution since the browser is navigating away
+            // Instantly exchange the PKCE token locally to establish the session without redirecting!
+            const { error: otpError } = await supabase.auth.verifyOtp({
+              token_hash: hashed_token,
+              type: 'magiclink'
+            });
+
+            if (otpError) {
+              console.error("OTP verification failed:", otpError);
+              throw new Error("Failed to securely verify the session token.");
+            }
+
+            setStatusMsg("Access Granted. Redirecting to your dashboard...");
+            setTimeout(() => router.push("/dashboard"), 1000);
+            return;
           } catch (err) {
             console.error("Face login fetch error:", err);
             // Fallback for extreme cases where API is down
