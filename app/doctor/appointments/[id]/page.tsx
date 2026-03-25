@@ -211,7 +211,7 @@ export default function AppointmentSessionPage({ params }: { params: Promise<{ i
         }
         const formData = new FormData();
         formData.append('file', selectedFile);
-        formData.append('upload_preset', 'oqens-arogya');
+        formData.append('upload_preset', 'arogya_preset');
         formData.append('folder', `arogya/medical-reports/${patient.patient_id}`);
 
         // Upload with 30-second timeout
@@ -460,7 +460,7 @@ export default function AppointmentSessionPage({ params }: { params: Promise<{ i
                                 if (!cloudName) return;
                                 const fd = new FormData();
                                 fd.append('file', file);
-                                fd.append('upload_preset', 'oqens-arogya');
+                                fd.append('upload_preset', 'arogya_preset');
                                 setCustomFieldUploading(prev => ({ ...prev, [field.field_name]: true }));
                                 setCustomFieldProgress(prev => ({ ...prev, [field.field_name]: 0 }));
                                 setCustomFieldNames(prev => ({ ...prev, [field.field_name]: file.name }));

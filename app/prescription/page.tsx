@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Search, ShoppingCart, Filter, Tag, CheckCircle2 } from "lucide-react";
+import { Search, ShoppingCart, Tag, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import { useUser } from "@/lib/hooks/useUser";
 import { useRouter } from "next/navigation";
+import { useCart } from "@/lib/cart";
 
 // Live Database Integrator
 interface Product {
@@ -20,12 +20,11 @@ interface Product {
 const EPrescription = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
-  const [purchasing, setPurchasing] = useState<string | null>(null);
   
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
-  const { user } = useUser();
+  const { addItem, items, count } = useCart();
   const supabase = createClient();
   const router = useRouter();
 
@@ -48,29 +47,18 @@ const EPrescription = () => {
     });
   }, [searchQuery, activeCategory, products]);
 
-  const handleBuy = async (product: Product) => {
-    if (!user) {
-      toast.error("Please log in to make a purchase.");
-      router.push("/auth");
-      return;
-    }
-    setPurchasing(product.id);
-    
-    const { error } = await supabase.from('user_prescriptions').insert([{
-      user_id: user.id,
-      medication_name: product.name,
-      dosage: product.dosage,
-      price: product.price,
-      status: 'pending'
-    }]);
-
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success(`${product.name} ordered! Check your dashboard.`);
-    }
-    setPurchasing(null);
+  const handleAddToCart = (product: Product) => {
+    addItem(
+      { id: product.id, name: product.name, price: product.price, note: product.dosage },
+      1
+    );
+    toast.success(`${product.name} added to cart!`, {
+      action: { label: "View Cart", onClick: () => router.push("/cart") },
+    });
   };
+
+  const getCartQty = (productId: string) =>
+    items.find((i) => i.id === productId)?.qty ?? 0;
 
   const categories = ["All", "Prescription", "Supplements", "Devices"];
 
@@ -93,17 +81,29 @@ const EPrescription = () => {
               </p>
             </div>
             
-            {/* Search and Filter */}
+            {/* Search, Filter and Cart */}
             <div className="w-full md:w-auto space-y-4">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <input 
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full md:w-80 rounded-2xl border border-border/60 bg-card/50 px-12 py-3 text-sm focus:border-primary/50 focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                />
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <input 
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full md:w-80 rounded-2xl border border-border/60 bg-card/50 px-12 py-3 text-sm focus:border-primary/50 focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  />
+                </div>
+                <button
+                  onClick={() => router.push("/cart")}
+                  className="relative flex items-center gap-2 rounded-2xl border border-primary/40 bg-primary/10 text-primary px-4 py-3 text-sm font-semibold hover:bg-primary hover:text-white transition-all"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  {count > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-primary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">{count}</span>
+                  )}
+                  Cart
+                </button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {categories.map(cat => (
@@ -165,13 +165,27 @@ const EPrescription = () => {
                     <p className="text-xl font-bold tracking-tight">
                       ₹{product.price}
                     </p>
-                    <button
-                      onClick={() => handleBuy(product)}
-                      disabled={purchasing === product.id}
-                      className="rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white px-4 py-2 text-sm font-semibold transition-all disabled:opacity-50 disabled:pointer-events-none"
-                    >
-                      {purchasing === product.id ? "Processing..." : "Buy Now"}
-                    </button>
+                    {getCartQty(product.id) > 0 ? (
+                      <div className="flex items-center gap-1 rounded-xl border border-primary/40 bg-primary/10 px-2 py-1">
+                        <button
+                          onClick={() => addItem({ id: product.id, name: product.name, price: product.price, note: product.dosage }, -1)}
+                          className="w-6 h-6 rounded-lg text-primary font-bold hover:bg-primary/20 transition-all"
+                        >−</button>
+                        <span className="text-sm font-bold text-primary w-5 text-center">{getCartQty(product.id)}</span>
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          className="w-6 h-6 rounded-lg text-primary font-bold hover:bg-primary/20 transition-all"
+                        >+</button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleAddToCart(product)}
+                        className="flex items-center gap-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white px-4 py-2 text-sm font-semibold transition-all"
+                      >
+                        <ShoppingBag className="w-4 h-4" />
+                        Add to Cart
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

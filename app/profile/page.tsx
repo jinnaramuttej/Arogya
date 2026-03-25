@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   Activity,
   CalendarDays,
@@ -14,9 +14,11 @@ import {
 } from "lucide-react";
 
 const Profile = () => {
-  const userName = useMemo(() => {
-    if (typeof window === "undefined") return "Aarav Mehta";
-    return localStorage.getItem("az_user_name") || "Aarav Mehta";
+  const [userName, setUserName] = useState("Aarav Mehta");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("az_user_name");
+    if (stored) setUserName(stored);
   }, []);
 
   return (

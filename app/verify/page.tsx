@@ -297,11 +297,11 @@ function VerifyContent() {
         try {
           setStatusMsg("Uploading avatar to Cloudinary...");
           const cdnUrl = await uploadToCloudinary(base64Avatar);
-          updateData.avatar_url = cdnUrl;
+          updateData.avatar_base64 = cdnUrl;
         } catch (uploadError) {
           console.error("Cloudinary Failed:", uploadError);
           // Fallback if cloud name is strictly missing/banned
-          updateData.avatar_url = base64Avatar; 
+          updateData.avatar_base64 = base64Avatar; 
         }
       }
 

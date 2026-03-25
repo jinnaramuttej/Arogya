@@ -1,0 +1,68 @@
+### git log --oneline -20
+84fce98 ui changes
+cdee712 app-error-1
+fb3236e vcd-error-4
+9668460 vcd-error-2
+04b9e8f vcd-error-1
+3f77330 fc13
+a8c81ca fc12
+6bb00ad fc11
+aea03c9 fc10
+eec5d09 Phase 2: Supabase E-Commerce API Integration
+1092343 Resolve merge conflicts; keep Vite migration state
+2b623bf feat: date-based doctor search, booking number generation, expandable appointments with records/cancel/delete
+e8344e1 fc8
+bf37e8e fix: book appointment page now fetches real doctors from DB and stores doctor_id for doctor review
+bf81e97 fix: handle 422 auth error - auto-sign-in after signup and better error messages
+3ef6293 initial commit: Healthcare Platform with Biometric Authentication, Admin Dashboard, and User Management
+08d4b05 fix: enforce one-time face registration with guest-check and hard-block UI
+bbfccff feat: block register page when face already enrolled, require admin reverify
+4dd39c1 fix: mobile settings/profile links and liveness check for mouth-open smiles
+0b38858 fix: faster face capture and better auth error messages
+
+### git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   app/auth/page.tsx
+	modified:   app/blood/page.tsx
+	modified:   app/dashboard/page.tsx
+	modified:   app/globals.css
+	modified:   app/symptom/page.tsx
+	modified:   components/AIBotExperience.tsx
+	modified:   components/Navbar.tsx
+	modified:   next.config.ts
+	modified:   tailwind.config.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	app/actions/
+	clean_git.js
+	components/ui/HeroSection.tsx
+	lib/hooks/useCountUp.ts
+	nav_log.txt
+	out1.txt
+	out2.txt
+	out3.txt
+	readFiles.js
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+### git diff HEAD~3 --name-only
+app/about/page.tsx
+app/auth/page.tsx
+app/blood/page.tsx
+app/dashboard/page.tsx
+app/globals.css
+app/symptom/page.tsx
+components/AIBotExperience.tsx
+components/Footer.tsx
+components/HealthFocusSection.tsx
+components/Navbar.tsx
+components/PillarsSection.tsx
+lib/ai-service.ts
+next.config.ts
+tailwind.config.ts

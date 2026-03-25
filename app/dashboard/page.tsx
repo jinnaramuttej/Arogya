@@ -74,14 +74,15 @@ const PatientDashboard = () => {
   const [profile, setProfile] = useState<any>(null);
   const [loadingMeds, setLoadingMeds] = useState(true);
 
-  const userName = useMemo(() => {
+  const [userName, setUserName] = useState("Aarav Mehta");
+
+  useEffect(() => {
     if (user?.user_metadata?.full_name || user?.user_metadata?.name) {
-      return user.user_metadata.full_name || user.user_metadata.name;
+      setUserName(user.user_metadata.full_name || user.user_metadata.name);
+    } else {
+      const stored = localStorage.getItem("az_user_name");
+      if (stored) setUserName(stored);
     }
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("az_user_name") || "Aarav Mehta";
-    }
-    return "Aarav Mehta";
   }, [user]);
 
   useEffect(() => {

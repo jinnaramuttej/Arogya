@@ -334,7 +334,7 @@ const DoctorDashboardPage = () => {
 
       const formData = new FormData();
       formData.append('file', selectedFile);
-      formData.append('upload_preset', 'oqens-arogya');
+      formData.append('upload_preset', 'arogya_preset');
       formData.append('folder', `arogya/medical-reports/${searchedPatient.patient_id}`);
 
       try {

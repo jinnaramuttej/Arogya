@@ -74,7 +74,7 @@ const SymptomChecker = () => {
             <div className="rounded-3xl border border-border/60 bg-card/80 p-7 shadow-lg shadow-primary/5">
               <h3 className="text-xl font-semibold">{t("symptoms_trend") || "Projected Symptom Trend"}</h3>
               <p className="text-xs text-muted-foreground mt-2">{t("home_ai_badge") || "24/7 Intelligent Monitoring"}</p>
-              <div className="mt-4 h-48">
+              <div className="mt-4" style={{ width: "100%", height: "300px", minWidth: 0, minHeight: 0 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={[
                     { time: "0h", level: 4 },
