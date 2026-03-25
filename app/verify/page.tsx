@@ -394,13 +394,25 @@ function VerifyContent() {
         const { data: { session: existingSession } } = await supabase.auth.getSession();
 
         if (!existingSession) {
-          const { error: loginError } = await supabase.auth.signInWithPassword({
-            email: matchedEmail,
-            password: BIOMETRIC_DUMMY_PASSWORD
-          });
+          setStatusMsg("Generating secure passwordless session...");
+          try {
+            const res = await fetch("/api/auth/face-login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: matchedEmail })
+            });
 
-          if (loginError) {
-            // User registered via /auth (not biometric portal) — redirect them to normal login
+            if (!res.ok) throw new Error("Backend session generation failed.");
+            
+            const { action_link } = await res.json();
+            setStatusMsg("Access Granted. Securely logging you in...");
+            
+            // Redirect browser to Supabase Magic Link to set authorized cookies automatically
+            window.location.href = action_link;
+            return; // Stop further execution since the browser is navigating away
+          } catch (err) {
+            console.error("Face login fetch error:", err);
+            // Fallback for extreme cases where API is down
             setStatusMsg("Face verified! Please sign in with your password to continue.");
             setTimeout(() => router.push(`/auth?email=${encodeURIComponent(matchedEmail)}`), 2000);
             return;
