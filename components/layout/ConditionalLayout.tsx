@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import Navbar from '../Navbar';
 import Footer from '../Footer';
 import SOSButton from "@/components/ui/SOSButton";
+import FloatingAIBot from "@/components/FloatingAIBot";
 
 const ConditionalLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
@@ -35,7 +36,8 @@ const ConditionalLayout = ({ children }: { children: React.ReactNode }) => {
         <Navbar />
         <main className="min-h-screen">{children}</main>
         <Footer />
-        <SOSButton />
+        <FloatingAIBot />
+        {/* <SOSButton /> Temporarily removed to prevent overlap with FloatingAIBot */}
       </>
     );
   }

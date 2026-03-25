@@ -1,0 +1,46 @@
+[
+  {
+    "title": "AI-Powered Diagnosis",
+    "headline": "Instant Health Insights at Your Fingertips",
+    "description": "Analyze symptoms with 94% accuracy using our advanced clinical models. Get immediate guidance on potential conditions and specialist recommendations.",
+    "benefit": "Reduce diagnostic wait times and make informed healthcare decisions faster.",
+    "stat": "94% Diagnostic Accuracy",
+    "source": "Clinical Validation Study 2025",
+    "category": "Diagnostics",
+    "link": "/symptoms",
+    "image": "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "title": "Emergency SOS Dispatch",
+    "headline": "Every Second Counts in an Emergency",
+    "description": "Activate a high-priority SOS alert that notifies the nearest ambulance and traffic authorities within 3 seconds. Real-time GPS tracking keeps you informed.",
+    "benefit": "Fastest emergency response times through intelligent routing and pre-notification.",
+    "stat": "40% Faster Response Time",
+    "source": "City Emergency Services Data",
+    "category": "Emergency",
+    "link": "/ambulance",
+    "image": "https://images.unsplash.com/photo-1587350859728-117622bb48cb?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "title": "Oasis Blood Network",
+    "headline": "Connecting Lifesavers with Those in Need",
+    "description": "Access a decentralized network of over 50,000 verified blood donors. Broadcast urgent requests and get responses within minutes.",
+    "benefit": "Eliminate the stress of finding donors during critical surgeries or accidents.",
+    "stat": "10,000+ Lives Impacted",
+    "source": "Community Impact Report",
+    "category": "Community",
+    "link": "/blood",
+    "image": "https://images.unsplash.com/photo-1615461066841-6116ecaaba7d?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    "title": "Digital Health Records",
+    "headline": "Your Medical History, Secure and Accessible",
+    "description": "Store all your medical reports, PDFs, and prescriptions in an encrypted digital vault. Share them instantly with authorized healthcare providers.",
+    "benefit": "Zero risk of losing records and 100% portability of your health data.",
+    "stat": "100% Data Portability",
+    "source": "User Satisfaction Survey",
+    "category": "Health Management",
+    "link": "/records",
+    "image": "https://images.unsplash.com/photo-1586773860418-d3b97976c661?auto=format&fit=crop&w=800&q=80"
+  }
+]
