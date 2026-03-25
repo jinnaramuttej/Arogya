@@ -36,41 +36,111 @@ const AIBotExperience = () => {
   const [autoSpeak, setAutoSpeak] = useState(true);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Keep a ref in sync so async closures (voice recognition) always get the latest messages
+  const messagesRef = useRef<Message[]>([]);
+  // Ref so recognition.onresult always calls the LATEST handleVoiceInput (avoids stale closure)
+  const handleVoiceInputRef = useRef<(transcript: string) => void>(() => {});
+
+  const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
+
+  // Preload voices — browser only populates getVoices() after voiceschanged fires
+  useEffect(() => {
+    const loadVoices = () => {
+      const v = window.speechSynthesis.getVoices();
+      if (v.length) voicesRef.current = v;
+    };
+    loadVoices();
+    window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+    return () => window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
+  }, []);
 
   const speak = (text: string, force: boolean = false) => {
     if (!autoSpeak && !force) return;
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+    // Strip emoji and markdown symbols so TTS reads cleanly
+    const cleanText = text
+      .replace(/[\u{1F000}-\u{1FFFF}]/gu, "")
+      .replace(/[💊🏥👨‍⚕️🛒✅🔍⚠️]/gu, "")
+      .replace(/\*+/g, "")
+      .replace(/#+/g, "")
+      .trim();
+
+    if (!cleanText) return;
+
+    // Chrome fix: cancel + resume before speaking to unstick paused state
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Auto-detect language (Hindi/Telugu scripts) or use local selection
-    const isHindi = /[\u0900-\u097F]/.test(text);
-    const isTelugu = /[\u0C00-\u0C7F]/.test(text);
-    
-    const langMap: Record<string, string> = {
-      "English": "en-US",
-      "Hindi": "hi-IN",
-      "Telugu": "te-IN"
+    window.speechSynthesis.resume();
+
+    console.log("[Arogya AI] Speaking:", cleanText.slice(0, 60) + "...");
+
+    const doSpeak = (voices: SpeechSynthesisVoice[]) => {
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+
+      const isHindi = /[\u0900-\u097F]/.test(text);
+      const isTelugu = /[\u0C00-\u0C7F]/.test(text);
+
+      const langMap: Record<string, string> = {
+        "English": "en-IN",
+        "Hindi": "hi-IN",
+        "Telugu": "te-IN"
+      };
+
+      let targetLang = "en-IN";
+      if (isTelugu) targetLang = "te-IN";
+      else if (isHindi) targetLang = "hi-IN";
+      else targetLang = langMap[getBotLang(localLanguage)] || "en-IN";
+
+      utterance.lang = targetLang;
+      utterance.rate = 1.05;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+
+      const voice = voices.find(v => v.lang.startsWith(targetLang.split("-")[0]))
+        ?? voices.find(v => v.lang.startsWith("en"))
+        ?? voices[0];
+      if (voice) utterance.voice = voice;
+
+      // Chrome kills TTS after ~15s — keep it alive with a periodic resume
+      const keepAlive = setInterval(() => {
+        if (window.speechSynthesis.speaking) window.speechSynthesis.resume();
+        else clearInterval(keepAlive);
+      }, 5000);
+
+      utterance.onend = () => clearInterval(keepAlive);
+      utterance.onerror = (e) => {
+        clearInterval(keepAlive);
+        console.error("[Arogya AI] TTS error:", e.error);
+      };
+
+      window.speechSynthesis.speak(utterance);
     };
-    
-    let targetLang = "en-US";
-    if (isTelugu) targetLang = "te-IN";
-    else if (isHindi) targetLang = "hi-IN";
-    else targetLang = langMap[getBotLang(localLanguage)] || "en-US";
-    
-    utterance.lang = targetLang;
-    
-    const voices = window.speechSynthesis.getVoices();
-    const voice = voices.find(v => v.lang.startsWith(targetLang));
-    if (voice) utterance.voice = voice;
-    
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    window.speechSynthesis.speak(utterance);
+
+    const voices = voicesRef.current.length
+      ? voicesRef.current
+      : window.speechSynthesis.getVoices();
+
+    if (voices.length) {
+      doSpeak(voices);
+    } else {
+      const handler = () => {
+        const v = window.speechSynthesis.getVoices();
+        voicesRef.current = v;
+        doSpeak(v);
+        window.speechSynthesis.removeEventListener("voiceschanged", handler);
+      };
+      window.speechSynthesis.addEventListener("voiceschanged", handler);
+    }
   };
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Keep messagesRef in sync with messages so async closures always have latest history
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     scrollToBottom();
@@ -95,11 +165,41 @@ const AIBotExperience = () => {
 
     const userMessage: Message = { role: "user", content: textToSend };
     setMessages(prev => [...prev, userMessage]);
+    messagesRef.current = [...messagesRef.current, userMessage];
     setInput("");
     setIsLoading(true);
-    
-    // Ensure the AI actually speaks the response
-    const botResponse = await getAIResponse([...messages, userMessage], getBotLang(localLanguage));
+
+    console.log("[Arogya AI] Sending:", textToSend);
+    const botResponse = await getAIResponse(messagesRef.current, getBotLang(localLanguage));
+    console.log("[Arogya AI] Response:", botResponse);
+    setMessages(prev => [...prev, { role: "assistant", content: botResponse }]);
+    speak(botResponse);
+    setIsLoading(false);
+  };
+
+  // Dedicated handler for voice — always shows transcript and always speaks reply
+  const handleVoiceInput = async (transcript: string) => {
+    if (!transcript.trim()) return;
+    const userMessage: Message = { role: "user", content: transcript };
+    setMessages(prev => [...prev, userMessage]);
+    messagesRef.current = [...messagesRef.current, userMessage];
+    setInput("");
+    setIsLoading(true);
+
+    console.log("[Arogya AI] Voice input:", transcript);
+    const botResponse = await getAIResponse(messagesRef.current, getBotLang(localLanguage));
+    console.log("[Arogya AI] Speaking:", botResponse);
+    setMessages(prev => [...prev, { role: "assistant", content: botResponse }]);
+    speak(botResponse, true);
+    setIsLoading(false);
+  };
+
+  // Keep the ref pointing at the latest function so recognition.onresult is never stale
+  handleVoiceInputRef.current = handleVoiceInput;
+
+  const handleAIResponse = async (userMsg: Message) => {
+    setIsLoading(true);
+    const botResponse = await getAIResponse(messagesRef.current, getBotLang(localLanguage));
     setMessages(prev => [...prev, { role: "assistant", content: botResponse }]);
     speak(botResponse);
     setIsLoading(false);
@@ -117,39 +217,73 @@ const AIBotExperience = () => {
     }
   };
 
-  const handleAIResponse = async (userMsg: Message) => {
-    setIsLoading(true);
-    const botResponse = await getAIResponse([...messages, userMsg], getBotLang(localLanguage));
-    setMessages(prev => [...prev, { role: "assistant", content: botResponse }]);
-    speak(botResponse);
-    setIsLoading(false);
-  };
-
   const startSpeechRecognition = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      toast.error("Speech recognition not supported in this browser.");
+      toast.error("Voice input not supported. Please use Chrome or Edge.");
       return;
     }
 
+    if (isRecording) return; // already recording
+
     const recognition = new SpeechRecognition();
-    // Default to a broad Indian locale if possible, or use the selected language
     const langMap: Record<string, string> = {
       "English": "en-IN",
       "Hindi": "hi-IN",
-      "Bengali": "bn-IN",
       "Telugu": "te-IN"
     };
     recognition.lang = langMap[getBotLang(localLanguage)] || "en-IN";
-    
-    recognition.onstart = () => setIsRecording(true);
-    recognition.onend = () => setIsRecording(false);
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(transcript);
-      handleSend(transcript);
+    recognition.continuous = false;
+    recognition.interimResults = true;  // show words in real-time as user speaks
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsRecording(true);
+      toast.info("🎙️ Listening... speak now");
     };
-    recognition.start();
+
+    recognition.onend = () => setIsRecording(false);
+
+    recognition.onresult = (event: any) => {
+      // Collect all results (interim + final)
+      let interimTranscript = "";
+      let finalTranscript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const t = event.results[i][0].transcript;
+        if (event.results[i].isFinal) finalTranscript += t;
+        else interimTranscript += t;
+      }
+      // Always show something in the input box live
+      setInput(finalTranscript || interimTranscript);
+      // Only send to AI when we have a final result
+      if (finalTranscript) {
+        console.log("[Arogya AI] Transcript:", finalTranscript);
+        handleVoiceInputRef.current(finalTranscript);
+      }
+    };
+
+    recognition.onnomatch = () => {
+      toast.error("Couldn't understand — please try again.");
+    };
+
+    recognition.onerror = (event: any) => {
+      setIsRecording(false);
+      const errorMessages: Record<string, string> = {
+        "not-allowed": "🎙️ Microphone permission denied. Please allow mic access in your browser settings.",
+        "no-speech": "No speech detected — please try again.",
+        "network": "Network error during voice input. Check your connection.",
+        "audio-capture": "No microphone found. Please connect a mic and try again.",
+        "service-not-allowed": "Voice input blocked. Make sure you're on localhost or HTTPS.",
+      };
+      toast.error(errorMessages[event.error] || `Voice error: ${event.error}`);
+    };
+
+    try {
+      recognition.start();
+    } catch {
+      toast.error("Could not start voice input. Please try again.");
+      setIsRecording(false);
+    }
   };
 
   return (

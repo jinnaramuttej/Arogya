@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, useScroll, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ChevronDown, Activity, Menu, ShoppingCart, X, Languages } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { useLanguage } from "@/lib/context/LanguageContext";
@@ -10,6 +11,8 @@ import { useUser } from "@/lib/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
 
 const Navbar = () => {
+  const pathname = usePathname();
+  const isLandingPage = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
@@ -41,9 +44,17 @@ const Navbar = () => {
         else setUserName(localStorage.getItem("az_user_name"));
 
         const fetchAvatar = async () => {
-          const supabase = createClient();
-          const { data } = await supabase.from('profiles').select('avatar_url').eq('id', user.id).single();
-          if (data?.avatar_url) setUserAvatarUrl(data.avatar_url);
+          try {
+            const supabase = createClient();
+            const { data } = await supabase
+              .from('profiles')
+              .select('avatar_url')
+              .eq('id', user.id)
+              .maybeSingle();
+            if (data?.avatar_url) setUserAvatarUrl(data.avatar_url);
+          } catch {
+            // profiles table may not have this user yet — ignore silently
+          }
         };
         fetchAvatar();
       } else {
@@ -70,13 +81,15 @@ const Navbar = () => {
   const toggleMobile = () => setMobileOpen(prev => !prev);
 
   const isDark = theme === "dark";
-  const navText = isDark ? (scrolled ? "text-foreground" : "text-white") : "text-gray-800";
-  const navMuted = isDark ? (scrolled ? "text-muted-foreground" : "text-white/75") : "text-gray-600";
-  const navHover = isDark ? (scrolled ? "hover:text-primary" : "hover:text-white") : "hover:text-primary";
-  const navBorder = scrolled ? "border-border/40" : (isDark ? "border-white/15" : "border-black/5");
-  const navBg = scrolled
-    ? "bg-background/85 shadow-[0_12px_30px_rgba(15,23,42,0.18)]"
-    : (isDark ? "bg-white/10 shadow-[0_14px_40px_rgba(0,0,0,0.35)]" : "bg-white/50 shadow-[0_10px_30px_rgba(0,0,0,0.05)]");
+  // On landing page: use dark glass when not scrolled. Elsewhere: always use scrolled (light) style.
+  const isGlass = isLandingPage && !scrolled;
+  const navText = isGlass ? "text-white" : "text-foreground";
+  const navMuted = isGlass ? "text-white/80" : "text-muted-foreground";
+  const navHover = isGlass ? "hover:text-white" : "hover:text-primary";
+  const navBorder = isGlass ? (isDark ? "border-white/15" : "border-white/20") : "border-border/40";
+  const navBg = isGlass
+    ? (isDark ? "bg-white/10 shadow-[0_14px_40px_rgba(0,0,0,0.35)]" : "bg-black/30 backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.2)]")
+    : "bg-background/85 shadow-[0_12px_30px_rgba(15,23,42,0.18)]";
   const dropdownBg = scrolled ? "bg-card border-border/50" : (isDark ? "bg-black/85 border-white/10" : "bg-white/90 border-black/5");
   const dropdownText = scrolled || !isDark ? "text-foreground" : "text-white";
   const dropdownMuted = scrolled || !isDark ? "text-muted-foreground" : "text-white/60";
@@ -216,11 +229,12 @@ const Navbar = () => {
               aria-label="Open cart"
             >
               <ShoppingCart className="w-5 h-5" />
-              {count > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center">
-                  {count}
-                </span>
-              )}
+              <span
+                suppressHydrationWarning
+                className={`absolute -top-1 -right-1 h-5 min-w-[20px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold items-center justify-center ${count > 0 ? 'flex' : 'hidden'}`}
+              >
+                {count}
+              </span>
             </Link>
             
             <label className="switch hidden sm:inline-block scale-75 origin-right" aria-label="Toggle theme">

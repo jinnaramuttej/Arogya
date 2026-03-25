@@ -389,12 +389,23 @@ function VerifyContent() {
       }
 
       if (mode !== "2fa") {
-        const { error: loginError } = await supabase.auth.signInWithPassword({
-          email: matchedEmail,
-          password: BIOMETRIC_DUMMY_PASSWORD
-        });
+        // If user already has an active session (e.g. standard-auth user doing verify),
+        // skip password-based sign-in — they're already authenticated.
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
 
-        if (loginError) throw new Error("Supabase auth failed. You may not have registered via the biometric portal.");
+        if (!existingSession) {
+          const { error: loginError } = await supabase.auth.signInWithPassword({
+            email: matchedEmail,
+            password: BIOMETRIC_DUMMY_PASSWORD
+          });
+
+          if (loginError) {
+            // User registered via /auth (not biometric portal) — redirect them to normal login
+            setStatusMsg("Face verified! Please sign in with your password to continue.");
+            setTimeout(() => router.push(`/auth?email=${encodeURIComponent(matchedEmail)}`), 2000);
+            return;
+          }
+        }
       }
 
       sessionStorage.removeItem('needs_2fa');
@@ -493,28 +504,39 @@ function VerifyContent() {
           {!user ? (
             <div className="space-y-4">
               {mode === "register" && (
-                <div className="relative">
-                  <User className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
-                  <input 
-                    type="text" 
-                    placeholder="Full Legal Name"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                  />
+                <>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                    <input 
+                      type="text" 
+                      placeholder="Full Legal Name"
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                    <input 
+                      type="email" 
+                      placeholder="Email Address"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                  </div>
+                </>
+              )}
+              {mode === "login" && (
+                <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 text-center">
+                  <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">
+                    No email needed — your face is your key.
+                  </p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                    Position your face in the frame and press Scan.
+                  </p>
                 </div>
               )}
-              
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
-                <input 
-                  type="email" 
-                  placeholder="Email Address"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                />
-              </div>
             </div>
           ) : (
             <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 text-center">
